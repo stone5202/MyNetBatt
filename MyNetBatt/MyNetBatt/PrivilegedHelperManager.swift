@@ -15,16 +15,18 @@ final class PrivilegedHelperManager: ObservableObject {
     }
 
     @Published private(set) var registrationState: RegistrationState = .unknown
-    @Published private(set) var isLowPowerModeEnabled = false
+    @Published private(set) var isLowPowerModeEnabled = ProcessInfo.processInfo.isLowPowerModeEnabled
     @Published private(set) var isBusy = false
     @Published private(set) var lastError: String?
 
     private let service = SMAppService.daemon(plistName: PrivilegedHelperConstants.daemonPlistName)
     private var connection: NSXPCConnection?
+    private var lowPowerModeTimer: AnyCancellable?
 
     private init() {
         refreshRegistrationState()
         refreshLowPowerMode()
+        startLowPowerModeStateMonitor()
     }
 
     var statusText: String {
@@ -92,34 +94,10 @@ final class PrivilegedHelperManager: ObservableObject {
         }
     }
 
+    /// UI 狀態統一直接採用 ProcessInfo，和狀態列小視窗使用同一個 macOS 狀態來源。
+    /// Helper 只負責需要 root 權限的寫入，避免 pmset profile 解析結果和目前系統狀態不同步。
     func refreshLowPowerMode() {
-        lastError = nil
-        refreshRegistrationState()
-
-        guard registrationState == .enabled else {
-            if let localValue = Self.readLowPowerModeLocally() {
-                isLowPowerModeEnabled = localValue
-            }
-            return
-        }
-
-        guard let proxy = remoteProxy() else {
-            if let localValue = Self.readLowPowerModeLocally() {
-                isLowPowerModeEnabled = localValue
-            }
-            return
-        }
-
-        proxy.getLowPowerMode { [weak self] enabled, errorText in
-            Task { @MainActor in
-                guard let self else { return }
-                if let errorText, !errorText.isEmpty {
-                    self.lastError = errorText
-                } else {
-                    self.isLowPowerModeEnabled = enabled
-                }
-            }
-        }
+        isLowPowerModeEnabled = ProcessInfo.processInfo.isLowPowerModeEnabled
     }
 
     func setLowPowerMode(_ enabled: Bool) {
@@ -141,15 +119,30 @@ final class PrivilegedHelperManager: ObservableObject {
             Task { @MainActor in
                 guard let self else { return }
                 self.isBusy = false
+
                 if success {
+                    // 先立即反映操作，避免 Toggle 視覺上彈回舊狀態。
                     self.isLowPowerModeEnabled = enabled
                     self.lastError = nil
+
+                    // macOS 的 ProcessInfo 狀態通知有極短延遲，再讀一次系統真實狀態。
+                    try? await Task.sleep(for: .milliseconds(500))
+                    self.refreshLowPowerMode()
                 } else {
                     self.lastError = errorText ?? "低耗電模式切換失敗。"
                     self.refreshLowPowerMode()
                 }
             }
         }
+    }
+
+    private func startLowPowerModeStateMonitor() {
+        lowPowerModeTimer?.cancel()
+        lowPowerModeTimer = Timer.publish(every: 1.0, on: .main, in: .common)
+            .autoconnect()
+            .sink { [weak self] _ in
+                self?.refreshLowPowerMode()
+            }
     }
 
     private func remoteProxy() -> MyNetBattPrivilegedHelperProtocol? {
@@ -186,56 +179,5 @@ final class PrivilegedHelperManager: ObservableObject {
     private func invalidateConnection() {
         connection?.invalidate()
         connection = nil
-    }
-
-    nonisolated private static func readLowPowerModeLocally() -> Bool? {
-        let batt = runCommand("/usr/bin/pmset", ["-g", "batt"])
-        let custom = runCommand("/usr/bin/pmset", ["-g", "custom"])
-        guard !custom.isEmpty else { return nil }
-
-        let sectionName: String
-        if batt.localizedCaseInsensitiveContains("AC Power") {
-            sectionName = "AC Power"
-        } else {
-            sectionName = "Battery Power"
-        }
-
-        guard let sectionRange = custom.range(of: sectionName + ":") else {
-            return parseLowPowerMode(from: custom)
-        }
-
-        let tail = String(custom[sectionRange.upperBound...])
-        let section = tail.components(separatedBy: "\n\n").first ?? tail
-        return parseLowPowerMode(from: section)
-    }
-
-    nonisolated private static func parseLowPowerMode(from text: String) -> Bool? {
-        let pattern = #"(?m)^\s*lowpowermode\s+(\d+)"#
-        guard let regex = try? NSRegularExpression(pattern: pattern),
-              let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
-              match.numberOfRanges > 1,
-              let range = Range(match.range(at: 1), in: text) else {
-            return nil
-        }
-        return text[range] == "1"
-    }
-
-    nonisolated private static func runCommand(_ path: String, _ arguments: [String]) -> String {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: path)
-        process.arguments = arguments
-
-        let output = Pipe()
-        process.standardOutput = output
-        process.standardError = FileHandle.nullDevice
-
-        do {
-            try process.run()
-            process.waitUntilExit()
-            let data = output.fileHandleForReading.readDataToEndOfFile()
-            return String(data: data, encoding: .utf8) ?? ""
-        } catch {
-            return ""
-        }
     }
 }
