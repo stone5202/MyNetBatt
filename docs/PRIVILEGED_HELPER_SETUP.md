@@ -1,10 +1,22 @@
 # MyNetBatt 第一階段：Privileged Helper + 低耗電模式控制
 
-這一階段把低耗電模式控制從 `AppleScript / osascript / sudo` 改成 macOS 13+ 建議的 `SMAppService + LaunchDaemon + NSXPCConnection` 架構。
+這一階段把低耗電模式控制從 `AppleScript / osascript / sudo` 改成 macOS 13+ 的 `SMAppService + LaunchDaemon + NSXPCConnection` 架構。
+
+## Bundle Identifier 規格
+
+這個分支現在統一使用以下識別碼：
+
+```text
+主 App:  com.stone5202.MyNetBatt
+Helper:  com.stone5202.MyNetBatt.PrivilegedHelper
+Mach Service: com.stone5202.MyNetBatt.PrivilegedHelper
+```
+
+這三個值彼此有關聯。之後如果再修改主 App Bundle Identifier，必須同步更新 XPC signing requirement、LaunchDaemon 的 `AssociatedBundleIdentifiers` 與 Helper 設定。
 
 ## 為什麼要這樣做
 
-主 App 不應該直接以管理員權限執行任意 shell 指令。MyNetBatt 現在只會向一個受簽章的 Helper 發送兩種 XPC 請求：
+主 App 不應該直接以管理員權限執行任意 shell 指令。MyNetBatt 只向受簽章的 Helper 發送兩種 XPC 請求：
 
 - 讀取低耗電模式
 - 設定低耗電模式開 / 關
@@ -35,29 +47,23 @@ Helper 以 LaunchDaemon 身分執行，並只呼叫固定路徑 `/usr/bin/pmset`
 
 # Xcode 設定步驟
 
-目前 Repository 已經放好所有需要的原始碼、plist 與 entitlements，但 **Xcode Target / Copy Files Build Phase 必須由 Xcode 建立**。不要直接手改 `project.pbxproj`，比較不容易把專案結構弄壞。
+Repository 已放好需要的 Swift、plist 與 entitlements。Helper Target 與 Copy Files Build Phase 建議由 Xcode 建立，避免直接手改複雜的 target 結構。
 
-## 1. 先確認主 App Bundle Identifier
+## 1. 確認主 App Bundle Identifier
 
-目前 Repository 的 Xcode project 使用：
+選：
 
 ```text
--23.MyNetBatt
+Project → MyNetBatt Target → Signing & Capabilities
 ```
 
-這個值同時出現在 Helper 的 XPC code-signing requirement。
-
-如果你之後把 Bundle Identifier 改成例如：
+確認 Bundle Identifier 為：
 
 ```text
 com.stone5202.MyNetBatt
 ```
 
-請同步修改：
-
-- `MyNetBatt/MyNetBatt/PrivilegedHelperProtocol.swift`
-- `MyNetBatt/PrivilegedHelper/HelperProtocol.swift`
-- `MyNetBatt/LaunchDaemons/com.stone5202.MyNetBatt.PrivilegedHelper.plist` 的 `AssociatedBundleIdentifiers`
+Repository 的 Debug / Release `PRODUCT_BUNDLE_IDENTIFIER` 都已改成這個值。
 
 ## 2. 主 App 關閉 App Sandbox
 
@@ -68,8 +74,6 @@ Project → MyNetBatt Target → Signing & Capabilities
 ```
 
 把 **App Sandbox** 移除。
-
-原因：這一階段使用的是未 sandbox 的 root LaunchDaemon；sandboxed App 搭配 unsandboxed daemon 不屬於支援組合。
 
 接著在 Build Settings 搜尋：
 
@@ -83,7 +87,7 @@ Debug / Release 都設定成：
 MyNetBatt/MyNetBatt.entitlements
 ```
 
-如果 Xcode 自動顯示相對位置不同，以專案實際檔案位置為準。
+如果 Xcode 顯示的相對路徑不同，以專案實際位置為準。
 
 ## 3. 新增 Command Line Tool Target
 
@@ -99,25 +103,19 @@ File → New → Target…
 macOS → Command Line Tool
 ```
 
-Product Name 請**完全使用**：
+Product Name：
 
 ```text
 MyNetBattPrivilegedHelper
 ```
 
-Language：
+Language：Swift。Team 與主 App 相同。
 
-```text
-Swift
-```
-
-Team：與 MyNetBatt 主 App 相同。
-
-建立完成後，把 Xcode 自動產生的預設 `main.swift` 刪掉，避免和 Repository 裡的 Helper `main.swift` 重複。
+建立後，把 Xcode 自動產生的預設 `main.swift` 刪掉，避免和 Repository 內的 Helper `main.swift` 重複。
 
 ## 4. 把 Helper 三個 Swift 檔加入 Helper Target
 
-把以下檔案加入 Xcode project，Target Membership **只勾 `MyNetBattPrivilegedHelper`**：
+Target Membership 只勾 `MyNetBattPrivilegedHelper`：
 
 ```text
 MyNetBatt/PrivilegedHelper/main.swift
@@ -125,7 +123,7 @@ MyNetBatt/PrivilegedHelper/HelperProtocol.swift
 MyNetBatt/PrivilegedHelper/HelperService.swift
 ```
 
-不要讓這三個檔案加入主 `MyNetBatt` App target。
+不要加入主 `MyNetBatt` App Target。
 
 ## 5. 設定 Helper Build Settings
 
@@ -162,68 +160,44 @@ Code Signing Entitlements
 PrivilegedHelper/MyNetBattPrivilegedHelper.entitlements
 ```
 
-另外搜尋：
+搜尋：
 
 ```text
 Create Info.plist Section in Binary
 ```
 
-設成：
-
-```text
-YES
-```
-
-這讓 command-line helper 的 signing identifier 能穩定使用 `com.stone5202.MyNetBatt.PrivilegedHelper`，與 App 端的 XPC code-signing requirement 一致。
+設成 `YES`。
 
 ## 6. 加入 Target Dependency
-
-選：
 
 ```text
 MyNetBatt Target → Build Phases → Target Dependencies
 ```
 
-按 `+` 加入：
+加入：
 
 ```text
 MyNetBattPrivilegedHelper
 ```
 
-這樣每次建置 MyNetBatt 前，Helper 都會先建置。
-
 ## 7. 把 Helper executable 複製進 App bundle
 
-在：
-
-```text
-MyNetBatt Target → Build Phases
-```
-
-按 `+`：
-
-```text
-New Copy Files Phase
-```
-
-設定：
+在主 App Target 的 Build Phases 新增 Copy Files Phase：
 
 ```text
 Destination: Wrapper
 Subpath: Contents/MacOS
 ```
 
-把：
+加入 Product：
 
 ```text
 MyNetBattPrivilegedHelper
 ```
 
-從 Products 拖進這個 Copy Files phase。
-
 **Code Sign On Copy 要勾選。**
 
-最後 build 出來後，應該存在：
+Build 後應存在：
 
 ```text
 MyNetBatt.app/Contents/MacOS/MyNetBattPrivilegedHelper
@@ -244,27 +218,21 @@ Subpath: Contents/Library/LaunchDaemons
 MyNetBatt/LaunchDaemons/com.stone5202.MyNetBatt.PrivilegedHelper.plist
 ```
 
-這一項 **Code Sign On Copy 不要勾**。
+這一項不要勾 Code Sign On Copy。
 
-最後應該存在：
+Build 後應存在：
 
 ```text
 MyNetBatt.app/Contents/Library/LaunchDaemons/com.stone5202.MyNetBatt.PrivilegedHelper.plist
 ```
 
-`SMAppService.daemon(plistName:)` 只會在這個位置尋找 LaunchDaemon plist。
-
 ## 9. Clean Build Folder
-
-設定完成後：
 
 ```text
 Product → Clean Build Folder
 ```
 
-然後重新 Run。
-
-如果你之前測試過舊 helper，建議先刪掉 Derived Data 或至少完整 Clean 一次。
+再重新 Run。若曾經測試舊 Helper，建議一併清除 Derived Data。
 
 ---
 
@@ -276,15 +244,7 @@ Product → Clean Build Folder
 MyNetBatt → 控制中心 → 電池與電源狀態
 ```
 
-右上角會看到：
-
-```text
-低耗電模式
-尚未啟用控制
-[啟用控制]
-```
-
-按 **啟用控制** 後，App 會執行：
+右上角會看到低耗電模式 Helper 狀態。按 **啟用控制** 後，App 會執行：
 
 ```swift
 SMAppService.daemon(
@@ -292,25 +252,13 @@ SMAppService.daemon(
 ).register()
 ```
 
-macOS 可能要求管理員認證，或把狀態變成 `requiresApproval`。
-
-如果畫面顯示：
-
-```text
-等待系統核准
-```
-
-請到：
+如果狀態是 `requiresApproval`，到：
 
 ```text
 系統設定 → 一般 → 登入項目與延伸功能
 ```
 
-找到 MyNetBatt 的背景項目並允許。
-
-回到 MyNetBatt 後按 **重新檢查**。
-
-當狀態變成 `enabled`，右上角就會出現真正可操作的低耗電模式 Toggle。
+允許 MyNetBatt 的背景項目，再回 App 重新檢查。
 
 ---
 
@@ -320,12 +268,12 @@ macOS 可能要求管理員認證，或把狀態變成 `requiresApproval`。
 BatteryDetailView
     ↓
 PrivilegedHelperManager
-    ↓ SMAppService 註冊
+    ↓ SMAppService
 LaunchDaemon
     ↓
 NSXPCConnection(machServiceName:, options: .privileged)
     ↓
-MyNetBattPrivilegedHelper
+com.stone5202.MyNetBatt.PrivilegedHelper
     ↓
 /usr/bin/pmset -a lowpowermode 1 / 0
 ```
@@ -337,13 +285,9 @@ pmset -g batt
 pmset -g custom
 ```
 
-來判斷目前是 AC Power 或 Battery Power，並讀取該 profile 的 `lowpowermode`。
-
 ---
 
 # XPC 安全限制
-
-這版不是開一個可以執行任意 root command 的服務。
 
 XPC protocol 只有：
 
@@ -352,27 +296,25 @@ getLowPowerMode(...)
 setLowPowerMode(_:...)
 ```
 
-Helper 只允許固定執行：
+Helper 只允許固定執行 `/usr/bin/pmset`。
 
-```text
-/usr/bin/pmset
-```
-
-而且 NSXPCConnection 雙方都有 code-signing requirement：
-
-主 App 要求 Helper 必須是：
+主 App 要求 Helper 的 signing identifier 必須是：
 
 ```text
 com.stone5202.MyNetBatt.PrivilegedHelper
 ```
 
-Helper 要求連線端必須是：
+Helper 要求連線端主 App 的 signing identifier 必須是：
 
 ```text
--23.MyNetBatt
+com.stone5202.MyNetBatt
 ```
 
-如果你修改 Bundle Identifier，務必同步修改這些 requirement。
+LaunchDaemon 的 `AssociatedBundleIdentifiers` 也已統一為：
+
+```text
+com.stone5202.MyNetBatt
+```
 
 ---
 
@@ -380,55 +322,41 @@ Helper 要求連線端必須是：
 
 ## `SMAppService` 顯示 notFound
 
-通常代表 LaunchDaemon plist 沒有被 copy 到：
+確認 plist 是否存在：
 
 ```text
-MyNetBatt.app/Contents/Library/LaunchDaemons/
+MyNetBatt.app/Contents/Library/LaunchDaemons/com.stone5202.MyNetBatt.PrivilegedHelper.plist
 ```
-
-先在 Xcode build product 上按右鍵 → Show in Finder → Show Package Contents 檢查。
 
 ## XPC connection invalid / code signing requirement failure
 
-檢查兩件事：
+確認：
 
-1. App 與 Helper 是否使用同一 Development Team 簽章。
-2. Helper 的 signing identifier 是否真的是：
+1. 主 App Bundle Identifier 是 `com.stone5202.MyNetBatt`。
+2. Helper Bundle Identifier 是 `com.stone5202.MyNetBatt.PrivilegedHelper`。
+3. App 與 Helper 使用同一 Development Team。
 
-```text
-com.stone5202.MyNetBatt.PrivilegedHelper
-```
-
-可以在 Terminal 檢查：
-
-```bash
-codesign -dv --verbose=4 /path/to/MyNetBatt.app/Contents/MacOS/MyNetBattPrivilegedHelper
-```
-
-以及：
+可用 Terminal 檢查：
 
 ```bash
 codesign -dv --verbose=4 /path/to/MyNetBatt.app
+codesign -dv --verbose=4 /path/to/MyNetBatt.app/Contents/MacOS/MyNetBattPrivilegedHelper
 ```
 
 ## App Sandbox 仍然開啟
 
-這個第一階段設計假設 App 與 Helper 都是 unsandboxed。
-
-如果 App Sandbox 還開著，先關閉再測試。
+第一階段設計假設主 App 與 Helper 都是 unsandboxed。若 App Sandbox 還開著，先關閉再測試。
 
 ---
 
 # Phase 1 完成標準
 
-以下全部成立就表示第一階段完成：
-
-- MyNetBatt 正常啟動
+- MyNetBatt signing identifier 為 `com.stone5202.MyNetBatt`
+- Helper signing identifier 為 `com.stone5202.MyNetBatt.PrivilegedHelper`
 - `SMAppService` 狀態為 enabled
-- App bundle 裡有 Helper executable
-- App bundle 裡有 LaunchDaemon plist
+- App bundle 內有 Helper executable
+- App bundle 內有 LaunchDaemon plist
 - XPC 可以讀取低耗電模式
-- 控制中心的 Toggle 可以真的修改 macOS 低耗電模式
+- Toggle 可以真正修改 macOS 低耗電模式
 - 不需要 AppleScript
 - 不需要 `sudo`
-- 不會再出現先前的 XProtect AppleScript 錯誤
