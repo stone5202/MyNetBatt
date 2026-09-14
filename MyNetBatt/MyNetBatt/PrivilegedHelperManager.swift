@@ -1,5 +1,6 @@
 import Foundation
 import ServiceManagement
+import Combine
 
 @MainActor
 final class PrivilegedHelperManager: ObservableObject {

@@ -52,6 +52,77 @@ class SystemMonitor: ObservableObject {
     @Published var batSourceType: String = "--"
     @Published var batTimeRemain: String = "--"
 
+    @Published var batteryHistory: [BatteryData] = [] {
+        didSet {
+            if let encoded = try? JSONEncoder().encode(batteryHistory) {
+                UserDefaults.standard.set(encoded, forKey: "batteryHistory")
+            }
+        }
+    }
+
+    @Published var cpuModelStr: String = "讀取中..."
+    @Published var macModelStr: String = "讀取中..."
+    @Published var gpuModelStr: String = "讀取中..."
+    @Published var ramUsageStr: String = "讀取中..."
+    @Published var ramUsagePct: Double = 0.0
+    @Published var swapUsageStr: String = "讀取中..."
+    @Published var swapUsagePct: Double = 0.0
+    @Published var diskUsageStr: String = "讀取中..."
+    @Published var diskUsedStr: String = "-- GB"
+    @Published var diskFreeStr: String = "-- GB"
+    @Published var diskTotalStr: String = "-- GB"
+    @Published var diskUsagePct: Double = 0.0
+    @Published var storageVolumes: [StorageVolumeInfo] = []
+    @Published var currentCpuUsage: Double = 0.0
+    @Published var cpuHistory: [SimpleData] = []
+    @Published var currentGpuUsage: Double = 0.0
+    @Published var gpuHistory: [SimpleData] = []
+    @Published var appNetworkUsages: [AppNetworkUsage] = []
+    @Published var appNetworkStatus: String = "建立程序流量基準中…"
+    @Published var appUsageHistory: [String: [String: UInt64]] = [:]
+    @Published var networkInterfaceName: String = "--"
+    @Published var networkLocalIP: String = "--"
+    @Published var networkGateway: String = "--"
+    @Published var networkDNS: String = "--"
+    @Published var networkPublicIP: String = "--"
+    @Published var networkDetailStatus: String = "讀取中…"
+    @Published var thunderboltDevices: [ThunderboltDeviceInfo] = []
+    @Published var thunderboltStatus: String = "讀取中…"
+
+    var lastInBytes: UInt64 = 0
+    var lastOutBytes: UInt64 = 0
+    var lastAppNetworkBytes: [String: (incoming: UInt64, outgoing: UInt64)] = [:]
+    var lastAppNetworkSampleTime: Date?
+    let appUsageHistoryDefaultsKey = "appUsageHistoryV2"
+
+    init() {
+        UserDefaults.standard.register(defaults: [
+            "showNetModule": true, "showBatModule": true, "showNetChart": true,
+            "showNetSpeed": true, "showBatIcon": true, "showBatText": true, "selectedColorIndex": 4
+        ])
+        showNetModule = UserDefaults.standard.bool(forKey: "showNetModule"); showBatModule = UserDefaults.standard.bool(forKey: "showBatModule")
+        showNetChart = UserDefaults.standard.bool(forKey: "showNetChart"); showNetSpeed = UserDefaults.standard.bool(forKey: "showNetSpeed")
+        showBatIcon = UserDefaults.standard.bool(forKey: "showBatIcon"); showBatText = UserDefaults.standard.bool(forKey: "showBatText")
+        selectedColorIndex = UserDefaults.standard.integer(forKey: "selectedColorIndex")
+
+        if let data = UserDefaults.standard.data(forKey: "batteryHistory"),
+           let decoded = try? JSONDecoder().decode([BatteryData].self, from: data) {
+            batteryHistory = decoded
+        }
+
+        Publishers.MergeMany($showNetModule.map { _ in }, $showBatModule.map { _ in }, $showNetChart.map { _ in }, $showNetSpeed.map { _ in }, $showBatIcon.map { _ in }, $showBatText.map { _ in })
+        .sink { [weak self] in self?.layoutChanged.send() }.store(in: &cancellables)
+
+        updateBatteryColor()
+        startNetworkSpeedMonitor()
+        startNetworkDetailsMonitor()
+        startDetailedBatteryMonitor()
+        startLowPowerModeMonitor()
+        startBatteryHealthMonitor()
+        startSystemInfoMonitor()
+        startThunderboltMonitor()
+    }
+
     var batteryTimeTitle: String {
         if isPluggedIn {
             return (batPct >= 100 || !isCharging) ? "狀態" : "預估充滿時間"
