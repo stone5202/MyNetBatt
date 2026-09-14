@@ -18,6 +18,7 @@ final class PrivilegedHelperManager: ObservableObject {
     @Published private(set) var isLowPowerModeEnabled = ProcessInfo.processInfo.isLowPowerModeEnabled
     @Published private(set) var isBusy = false
     @Published private(set) var lastError: String?
+    @Published private(set) var needsRepair = false
 
     private let service = SMAppService.daemon(plistName: PrivilegedHelperConstants.daemonPlistName)
     private var connection: NSXPCConnection?
@@ -61,6 +62,7 @@ final class PrivilegedHelperManager: ObservableObject {
 
     func registerHelper() {
         lastError = nil
+        needsRepair = false
         isBusy = true
         defer { isBusy = false }
 
@@ -81,6 +83,7 @@ final class PrivilegedHelperManager: ObservableObject {
 
     func unregisterHelper() {
         lastError = nil
+        needsRepair = false
         isBusy = true
         defer { isBusy = false }
 
@@ -94,14 +97,46 @@ final class PrivilegedHelperManager: ObservableObject {
         }
     }
 
-    /// UI 狀態統一直接採用 ProcessInfo，和狀態列小視窗使用同一個 macOS 狀態來源。
-    /// Helper 只負責需要 root 權限的寫入，避免 pmset profile 解析結果和目前系統狀態不同步。
+    /// 重新註冊目前這一份 App bundle 內的 Helper。
+    /// 這可修正從另一個下載目錄／舊 DerivedData 執行後，SMAppService 仍指向舊 Helper 的情況。
+    func repairHelper() {
+        lastError = nil
+        needsRepair = false
+        isBusy = true
+        invalidateConnection()
+
+        defer {
+            isBusy = false
+            refreshRegistrationState()
+            refreshLowPowerMode()
+        }
+
+        do {
+            if service.status != .notRegistered {
+                try service.unregister()
+            }
+            try service.register()
+            refreshRegistrationState()
+
+            if registrationState == .requiresApproval {
+                lastError = "Helper 已重新註冊，但 macOS 需要再次核准。請到「系統設定 → 一般 → 登入項目與延伸功能」允許 MyNetBatt 在背景執行。"
+            }
+        } catch {
+            refreshRegistrationState()
+            needsRepair = true
+            lastError = "重新安裝 Privileged Helper 失敗：\(error.localizedDescription)"
+        }
+    }
+
+    /// UI 狀態直接採用 ProcessInfo，和狀態列小視窗使用同一個 macOS 狀態來源。
+    /// Helper 只負責需要 root 權限的寫入。
     func refreshLowPowerMode() {
         isLowPowerModeEnabled = ProcessInfo.processInfo.isLowPowerModeEnabled
     }
 
     func setLowPowerMode(_ enabled: Bool) {
         lastError = nil
+        needsRepair = false
         refreshRegistrationState()
 
         guard registrationState == .enabled else {
@@ -121,11 +156,10 @@ final class PrivilegedHelperManager: ObservableObject {
                 self.isBusy = false
 
                 if success {
-                    // 先立即反映操作，避免 Toggle 視覺上彈回舊狀態。
                     self.isLowPowerModeEnabled = enabled
                     self.lastError = nil
+                    self.needsRepair = false
 
-                    // macOS 的 ProcessInfo 狀態通知有極短延遲，再讀一次系統真實狀態。
                     try? await Task.sleep(for: .milliseconds(500))
                     self.refreshLowPowerMode()
                 } else {
@@ -158,10 +192,14 @@ final class PrivilegedHelperManager: ObservableObject {
             newConnection.remoteObjectInterface = NSXPCInterface(with: MyNetBattPrivilegedHelperProtocol.self)
             newConnection.setCodeSigningRequirement(PrivilegedHelperConstants.helperSigningRequirement)
             newConnection.interruptionHandler = { [weak self] in
-                Task { @MainActor in self?.invalidateConnection() }
+                Task { @MainActor in
+                    self?.invalidateConnection()
+                }
             }
             newConnection.invalidationHandler = { [weak self] in
-                Task { @MainActor in self?.invalidateConnection() }
+                Task { @MainActor in
+                    self?.invalidateConnection()
+                }
             }
             newConnection.resume()
             self.connection = newConnection
@@ -170,8 +208,11 @@ final class PrivilegedHelperManager: ObservableObject {
 
         return connection.remoteObjectProxyWithErrorHandler { [weak self] error in
             Task { @MainActor in
-                self?.lastError = "無法連線到 Privileged Helper：\(error.localizedDescription)"
-                self?.invalidateConnection()
+                guard let self else { return }
+                self.isBusy = false
+                self.needsRepair = true
+                self.lastError = "無法連線到 Privileged Helper：\(error.localizedDescription)\n請按「修復 Helper」重新註冊目前這一份 App 內的 Helper。"
+                self.invalidateConnection()
             }
         } as? MyNetBattPrivilegedHelperProtocol
     }
