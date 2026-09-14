@@ -56,6 +56,13 @@ struct BatteryDetailView: View {
                         .foregroundStyle(.secondary)
                         .textSelection(.enabled)
                     Spacer()
+                    if helper.needsRepair {
+                        Button("修復 Helper") {
+                            helper.repairHelper()
+                        }
+                        .controlSize(.small)
+                        .disabled(helper.isBusy)
+                    }
                 }
                 .padding(10)
                 .background(Color.orange.opacity(0.08))
@@ -115,6 +122,14 @@ struct BatteryDetailView: View {
                 .toggleStyle(.switch)
                 .tint(.green)
                 .disabled(helper.isBusy)
+
+                if helper.needsRepair {
+                    Button("修復 Helper") {
+                        helper.repairHelper()
+                    }
+                    .controlSize(.small)
+                    .disabled(helper.isBusy)
+                }
 
             case .requiresApproval:
                 Button("重新檢查") {
