@@ -9,22 +9,14 @@ import Darwin
 // MARK: - 電池詳細視窗
 struct BatteryDetailView: View {
     @ObservedObject var monitor: SystemMonitor
+    @ObservedObject private var helper = PrivilegedHelperManager.shared
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
                 Text("電池與電源狀態").font(.largeTitle.bold())
                 Spacer()
-                HStack(spacing: 8) {
-                    Image(systemName: monitor.isLowPowerModeEnabled ? "leaf.fill" : "leaf")
-                        .foregroundStyle(monitor.isLowPowerModeEnabled ? Color.green : Color.secondary)
-                    Text("低耗電模式")
-                        .font(.subheadline.weight(.semibold))
-                        .lineLimit(1)
-                    Text(monitor.isLowPowerModeEnabled ? "已開啟" : "已關閉")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(monitor.isLowPowerModeEnabled ? Color.green : Color.secondary)
-                        .lineLimit(1)
-                }
+                lowPowerControl
             }
             
             HStack(spacing: 20) {
@@ -55,6 +47,21 @@ struct BatteryDetailView: View {
                 InfoBox(title: monitor.batteryPowerTitle, value: monitor.batWatts, icon: "bolt.fill", color: .yellow)
             }
             
+            if let error = helper.lastError, !error.isEmpty {
+                HStack(alignment: .top, spacing: 8) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.orange)
+                    Text(error)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .textSelection(.enabled)
+                    Spacer()
+                }
+                .padding(10)
+                .background(Color.orange.opacity(0.08))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+            }
+            
             Text("電量變化趨勢").font(.title3.bold()).foregroundColor(.secondary).padding(.top, 16)
             Chart {
                 ForEach(monitor.batteryHistory) { data in
@@ -76,5 +83,54 @@ struct BatteryDetailView: View {
             .toggleStyle(.switch).tint(.green)
         }
         .padding(24)
+        .task {
+            helper.refreshRegistrationState()
+            helper.refreshLowPowerMode()
+        }
+    }
+
+    @ViewBuilder
+    private var lowPowerControl: some View {
+        HStack(spacing: 10) {
+            Image(systemName: helper.isLowPowerModeEnabled ? "leaf.fill" : "leaf")
+                .foregroundStyle(helper.isLowPowerModeEnabled ? Color.green : Color.secondary)
+
+            VStack(alignment: .trailing, spacing: 1) {
+                Text("低耗電模式")
+                    .font(.subheadline.weight(.semibold))
+                    .lineLimit(1)
+                Text(helper.statusText)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+
+            switch helper.registrationState {
+            case .enabled:
+                Toggle("", isOn: Binding(
+                    get: { helper.isLowPowerModeEnabled },
+                    set: { helper.setLowPowerMode($0) }
+                ))
+                .labelsHidden()
+                .toggleStyle(.switch)
+                .tint(.green)
+                .disabled(helper.isBusy)
+
+            case .requiresApproval:
+                Button("重新檢查") {
+                    helper.refreshRegistrationState()
+                    helper.refreshLowPowerMode()
+                }
+                .controlSize(.small)
+
+            case .notRegistered, .notFound, .unknown:
+                Button("啟用控制") {
+                    helper.registerHelper()
+                }
+                .controlSize(.small)
+                .disabled(helper.isBusy)
+            }
+        }
+        .help("使用受簽章的 Privileged Helper 透過 pmset 控制 macOS 低耗電模式")
     }
 }
