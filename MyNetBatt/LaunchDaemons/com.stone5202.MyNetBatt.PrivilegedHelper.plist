@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.stone5202.MyNetBatt.PrivilegedHelper</string>
+
+    <key>BundleProgram</key>
+    <string>Contents/MacOS/MyNetBattPrivilegedHelper</string>
+
+    <key>MachServices</key>
+    <dict>
+        <key>com.stone5202.MyNetBatt.PrivilegedHelper</key>
+        <true/>
+    </dict>
+
+    <key>AssociatedBundleIdentifiers</key>
+    <array>
+        <string>-23.MyNetBatt</string>
+    </array>
+</dict>
+</plist>
