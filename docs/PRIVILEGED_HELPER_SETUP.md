@@ -1,55 +1,25 @@
-# MyNetBatt 第一階段：Privileged Helper + 低耗電模式控制
+# MyNetBatt Privileged Helper
 
-這一階段把低耗電模式控制從 `AppleScript / osascript / sudo` 改成 macOS 13+ 的 `SMAppService + LaunchDaemon + NSXPCConnection` 架構。
+MyNetBatt 使用獨立的 privileged helper 修改 macOS 低耗電模式。主程式不直接以 root 身分執行，日常切換也不會反覆要求管理員密碼。
 
-## Bundle Identifier
-
-```text
-主 App:      com.stone5202.MyNetBatt
-Helper:      com.stone5202.MyNetBatt.PrivilegedHelper
-Mach Service: com.stone5202.MyNetBatt.PrivilegedHelper
-```
-
-這些識別碼已同步到 Xcode project、XPC code-signing requirement 與 LaunchDaemon plist。
-
-## project.pbxproj 已經配置完成
-
-`feature/privileged-helper-low-power` 分支的 `MyNetBatt/MyNetBatt.xcodeproj/project.pbxproj` 已經直接加入以下設定，不需要再手動 File → New → Target：
-
-- `MyNetBattPrivilegedHelper` Command Line Tool Target
-- Helper Product `MyNetBattPrivilegedHelper`
-- Helper source group `PrivilegedHelper`
-- Helper Debug / Release Build Configuration
-- Helper Bundle Identifier `com.stone5202.MyNetBatt.PrivilegedHelper`
-- Helper entitlements `PrivilegedHelper/MyNetBattPrivilegedHelper.entitlements`
-- macOS-only SDK / supported platform
-- 主 App → Helper Target Dependency
-- `Embed Privileged Helper` Copy Files phase
-  - Destination: Wrapper
-  - Subpath: `Contents/MacOS`
-  - Code Sign On Copy: enabled
-- `Embed LaunchDaemon` Copy Files phase
-  - Destination: Wrapper
-  - Subpath: `Contents/Library/LaunchDaemons`
-- 主 App entitlements `MyNetBatt/MyNetBatt.entitlements`
-- 主 App `ENABLE_APP_SANDBOX = NO`
-
-Build 後預期 App bundle 結構：
+## 識別碼
 
 ```text
-MyNetBatt.app/
-└── Contents/
-    ├── MacOS/
-    │   ├── MyNetBatt
-    │   └── MyNetBattPrivilegedHelper
-    └── Library/
-        └── LaunchDaemons/
-            └── com.stone5202.MyNetBatt.PrivilegedHelper.plist
+主 App：      com.stone5202.MyNetBatt
+Helper：      com.stone5202.MyNetBatt.PrivilegedHelper
+Mach Service：com.stone5202.MyNetBatt.PrivilegedHelper
+Team ID：     MHCATJULGT
 ```
 
-## Repository 內的 Helper 檔案
+主程式和 helper 的 XPC signing requirement 會同時驗證 bundle identifier 與 Team ID。若更換開發團隊或 bundle identifier，必須同步修改：
 
-主 App：
+- `MyNetBatt/MyNetBatt/PrivilegedHelperProtocol.swift`
+- `MyNetBatt/PrivilegedHelper/HelperProtocol.swift`
+- Xcode project 的 Signing 設定
+
+## 專案結構
+
+主程式：
 
 ```text
 MyNetBatt/MyNetBatt/PrivilegedHelperProtocol.swift
@@ -66,76 +36,29 @@ MyNetBatt/PrivilegedHelper/HelperService.swift
 MyNetBatt/PrivilegedHelper/MyNetBattPrivilegedHelper.entitlements
 ```
 
-LaunchDaemon：
+Xcode project 已設定：
+
+- `MyNetBattPrivilegedHelper` Command Line Tool target
+- 主程式對 helper 的 target dependency
+- 將簽章後的 helper 複製到 `MyNetBatt.app/Contents/MacOS`
+- 主程式與 helper 的 entitlements
+- 關閉主程式 App Sandbox
+
+## 安裝與執行流程
+
+第一次按「安裝 Helper」或需要修復時，主程式會要求管理員授權，然後：
+
+1. 將 app bundle 內的 helper 安裝到 `/Library/PrivilegedHelperTools/`。
+2. 動態建立 launchd plist 並安裝到 `/Library/LaunchDaemons/`。
+3. 使用 `launchctl bootstrap system` 啟動服務。
+4. 後續透過 privileged `NSXPCConnection` 呼叫 helper。
+
+資料流：
 
 ```text
-MyNetBatt/LaunchDaemons/com.stone5202.MyNetBatt.PrivilegedHelper.plist
-```
-
-## 你仍需要在 Xcode 確認的項目
-
-因為 Development Team 屬於你的 Apple Developer 帳號資訊，Repository 沒有硬編碼 Team ID。Pull 分支後請在 Xcode 確認：
-
-1. 選 `MyNetBatt` Target → Signing & Capabilities。
-2. Team 選擇你自己的 Apple Development Team。
-3. 選 `MyNetBattPrivilegedHelper` Target → Signing & Capabilities / Build Settings。
-4. Helper 也使用同一個 Team。
-5. 確認主 App Bundle Identifier 為 `com.stone5202.MyNetBatt`。
-6. 確認 Helper Bundle Identifier 為 `com.stone5202.MyNetBatt.PrivilegedHelper`。
-
-主 App 與 Helper 必須使用相容的 Apple Development 簽章，因為 XPC 會驗證 signing identifier。
-
-## 建議第一次測試
-
-先執行：
-
-```text
-Product → Clean Build Folder
-```
-
-然後 Run MyNetBatt。
-
-進入：
-
-```text
-控制中心 → 電池與電源狀態
-```
-
-右上角低耗電模式區域會根據 Helper 狀態顯示：
-
-```text
-尚未啟用控制
-等待系統核准
-已開啟
-已關閉
-```
-
-第一次按「啟用控制」時，App 會使用：
-
-```swift
-SMAppService.daemon(
-    plistName: "com.stone5202.MyNetBatt.PrivilegedHelper.plist"
-).register()
-```
-
-若 macOS 回報 `requiresApproval`，請到：
-
-```text
-系統設定 → 一般 → 登入項目與延伸功能
-```
-
-允許 MyNetBatt 的背景項目，再回到 App 按重新檢查。
-
-## 實際資料流
-
-```text
-BatteryDetailView
+BatteryDetailView / BatteryPopoverView
     ↓
 PrivilegedHelperManager
-    ↓
-SMAppService
-    ↓
-LaunchDaemon
     ↓
 NSXPCConnection(options: .privileged)
     ↓
@@ -144,67 +67,38 @@ MyNetBattPrivilegedHelper
 /usr/bin/pmset -a lowpowermode 1 / 0
 ```
 
-讀取低耗電模式則使用：
+Repository 不需要存放 LaunchDaemon plist；程式會在安裝時依目前設定產生它。
 
-```text
-pmset -g batt
-pmset -g custom
+## 安全限制
+
+- Helper 只公開讀取與切換低耗電模式的方法，不接受任意 command、path 或 arguments。
+- 主程式與 helper 互相驗證 signing identifier 和 Team ID。
+- 管理員權限只用於安裝、修復或移除 helper。
+
+## 建置與檢查
+
+在 Xcode 確認主程式與 helper 使用同一個 Development Team，再執行：
+
+```bash
+xcodebuild \
+  -project MyNetBatt/MyNetBatt.xcodeproj \
+  -scheme MyNetBatt \
+  -configuration Debug \
+  -destination 'platform=macOS,arch=arm64' \
+  build
 ```
 
-## 安全設計
-
-Helper 不接受任意 command、path 或 arguments。XPC protocol 只暴露：
-
-```swift
-getLowPowerMode(...)
-setLowPowerMode(_:...)
-```
-
-主 App 要求 Helper signing identifier：
-
-```text
-com.stone5202.MyNetBatt.PrivilegedHelper
-```
-
-Helper 要求主 App signing identifier：
-
-```text
-com.stone5202.MyNetBatt
-```
-
-LaunchDaemon `AssociatedBundleIdentifiers`：
-
-```text
-com.stone5202.MyNetBatt
-```
-
-## 如果 Build 失敗
-
-先檢查：
-
-- Xcode 左側 TARGETS 是否同時看到 `MyNetBatt` 與 `MyNetBattPrivilegedHelper`
-- 主 App Build Phases 是否有 `MyNetBattPrivilegedHelper` Target Dependency
-- 主 App Build Phases 是否有 `Embed Privileged Helper`
-- 主 App Build Phases 是否有 `Embed LaunchDaemon`
-- App Sandbox 是否為關閉狀態
-- App 與 Helper 是否選擇同一個 Development Team
-
-可用 Terminal 檢查簽章：
+可用以下指令檢查簽章：
 
 ```bash
 codesign -dv --verbose=4 /path/to/MyNetBatt.app
 codesign -dv --verbose=4 /path/to/MyNetBatt.app/Contents/MacOS/MyNetBattPrivilegedHelper
 ```
 
-## Phase 1 完成標準
+建置後，app bundle 應包含：
 
-- Xcode 內有兩個 Target
-- App Bundle Identifier = `com.stone5202.MyNetBatt`
-- Helper Bundle Identifier = `com.stone5202.MyNetBatt.PrivilegedHelper`
-- App bundle 內有 Helper executable
-- App bundle 內有 LaunchDaemon plist
-- `SMAppService` 狀態為 enabled
-- XPC 可以讀取低耗電模式
-- Toggle 可以真正修改 macOS 低耗電模式
-- 不需要 AppleScript
-- 不需要 `sudo`
+```text
+MyNetBatt.app/Contents/MacOS/MyNetBattPrivilegedHelper
+```
+
+LaunchDaemon plist 只會出現在完成安裝的系統路徑，不應被打包進 app bundle。
