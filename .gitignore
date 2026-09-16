@@ -1,0 +1,14 @@
+# macOS metadata
+.DS_Store
+
+# Xcode per-user state
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+*.xccheckout
+*.moved-aside
+
+# Local build output
+DerivedData/
+build/
+.build/

@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		A10000000000000000000001 /* MyNetBattPrivilegedHelper in Embed Privileged Helper */ = {isa = PBXBuildFile; fileRef = A10000000000000000000011 /* MyNetBattPrivilegedHelper */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		A10000000000000000000002 /* com.stone5202.MyNetBatt.PrivilegedHelper.plist in Embed LaunchDaemon */ = {isa = PBXBuildFile; fileRef = A10000000000000000000012 /* com.stone5202.MyNetBatt.PrivilegedHelper.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -33,23 +32,11 @@
 			name = "Embed Privileged Helper";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		A10000000000000000000041 /* Embed LaunchDaemon */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = Contents/Library/LaunchDaemons;
-			dstSubfolderSpec = 1;
-			files = (
-				A10000000000000000000002 /* com.stone5202.MyNetBatt.PrivilegedHelper.plist in Embed LaunchDaemon */,
-			);
-			name = "Embed LaunchDaemon";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		4BCFC5E430539F750045F91E /* MyNetBatt.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MyNetBatt.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A10000000000000000000011 /* MyNetBattPrivilegedHelper */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = MyNetBattPrivilegedHelper; sourceTree = BUILT_PRODUCTS_DIR; };
-		A10000000000000000000012 /* com.stone5202.MyNetBatt.PrivilegedHelper.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = com.stone5202.MyNetBatt.PrivilegedHelper.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -88,7 +75,6 @@
 			children = (
 				4BCFC5E630539F750045F91E /* MyNetBatt */,
 				A10000000000000000000013 /* PrivilegedHelper */,
-				A10000000000000000000014 /* LaunchDaemons */,
 				4BCFC5E530539F750045F91E /* Products */,
 			);
 			sourceTree = "<group>";
@@ -102,14 +88,6 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		A10000000000000000000014 /* LaunchDaemons */ = {
-			isa = PBXGroup;
-			children = (
-				A10000000000000000000012 /* com.stone5202.MyNetBatt.PrivilegedHelper.plist */,
-			);
-			path = LaunchDaemons;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -121,7 +99,6 @@
 				4BCFC5E130539F750045F91E /* Frameworks */,
 				4BCFC5E230539F750045F91E /* Resources */,
 				A10000000000000000000040 /* Embed Privileged Helper */,
-				A10000000000000000000041 /* Embed LaunchDaemon */,
 			);
 			buildRules = (
 			);
