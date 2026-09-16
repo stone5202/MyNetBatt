@@ -19,7 +19,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
-        
+
         setupPopovers()
         setupStatusBar()
         setupSettingsWindow()
@@ -30,8 +30,25 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             .store(in: &cancellables)
         
         NotificationCenter.default.addObserver(self, selector: #selector(openSettingsWindow), name: NSNotification.Name("OpenSettings"), object: nil)
+
+        let workspaceCenter = NSWorkspace.shared.notificationCenter
+        workspaceCenter.addObserver(
+            self,
+            selector: #selector(systemDidWake),
+            name: NSWorkspace.didWakeNotification,
+            object: nil
+        )
         
         updateStatusBarWidths()
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        let workspaceCenter = NSWorkspace.shared.notificationCenter
+        workspaceCenter.removeObserver(self)
+    }
+
+    @objc private func systemDidWake() {
+        monitor.handleSystemWake()
     }
     
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
