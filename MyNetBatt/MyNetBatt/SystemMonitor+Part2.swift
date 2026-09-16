@@ -89,42 +89,16 @@ extension SystemMonitor {
     func setLowPowerMode(_ enabled: Bool) {
         guard !isChangingLowPowerMode else { return }
         isChangingLowPowerMode = true
-
-        let value = enabled ? "1" : "0"
-        let command = "/usr/bin/pmset -a lowpowermode \(value)"
-        let escapedCommand = command
-            .replacingOccurrences(of: "\\", with: "\\\\")
-            .replacingOccurrences(of: "\"", with: "\\\"")
-        let source = "do shell script \"\(escapedCommand)\" with administrator privileges"
-
-        var errorInfo: NSDictionary?
-        if let script = NSAppleScript(source: source) {
-            _ = script.executeAndReturnError(&errorInfo)
-        }
-
-        if errorInfo != nil {
-            isChangingLowPowerMode = false
-            refreshLowPowerModeState()
-            return
-        }
+        PrivilegedHelperManager.shared.setLowPowerMode(enabled)
 
         Task {
-            try? await Task.sleep(nanoseconds: 500_000_000)
-            let custom = self.runCommand("/usr/bin/pmset", ["-g", "custom"])
-            var verified: Bool? = nil
-
-            for sectionName in ["Battery Power", "AC Power"] {
-                if let range = custom.range(of: sectionName + ":") {
-                    let tail = String(custom[range.upperBound...])
-                    let section = tail.components(separatedBy: "\n\n").first ?? tail
-                    if let v = self.extract(pattern: #"(?m)^\s*lowpowermode\s+(\d+)"#, from: section) {
-                        verified = (v == "1")
-                        if verified == enabled { break }
-                    }
+            for _ in 0..<30 {
+                if !PrivilegedHelperManager.shared.isBusy {
+                    break
                 }
+                try? await Task.sleep(for: .milliseconds(100))
             }
-
-            self.isLowPowerModeEnabled = verified ?? ProcessInfo.processInfo.isLowPowerModeEnabled
+            self.isLowPowerModeEnabled = PrivilegedHelperManager.shared.isLowPowerModeEnabled
             self.isChangingLowPowerMode = false
         }
     }

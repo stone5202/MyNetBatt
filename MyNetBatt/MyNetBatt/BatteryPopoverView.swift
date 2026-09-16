@@ -10,6 +10,7 @@ import Darwin
 
 struct BatteryPopoverView: View {
     @ObservedObject var monitor: SystemMonitor
+    @ObservedObject private var helper = PrivilegedHelperManager.shared
     let colorOptions: [Color] = [.primary, .red, .orange, .yellow, .green]
     
     var body: some View {
@@ -197,26 +198,35 @@ struct BatteryPopoverView: View {
                 .buttonStyle(.plain)
                 .frame(maxWidth: .infinity, minHeight: 70, maxHeight: 70)
 
-                WidgetCard {
-                    HStack(spacing: 10) {
-                        Image(systemName: monitor.isLowPowerModeEnabled ? "leaf.fill" : "leaf")
-                            .foregroundStyle(monitor.isLowPowerModeEnabled ? Color.green : Color.secondary)
-                            .font(.title2)
-                            .frame(width: 28)
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text(monitor.isLowPowerModeEnabled ? "已開啟" : "已關閉")
-                                .font(.title3.bold())
-                                .lineLimit(1)
-                            Text("低耗電模式")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                                .lineLimit(1)
+                Button {
+                    helper.setLowPowerMode(!helper.isLowPowerModeEnabled)
+                } label: {
+                    WidgetCard {
+                        HStack(spacing: 10) {
+                            Image(systemName: helper.isLowPowerModeEnabled ? "leaf.fill" : "leaf")
+                                .foregroundStyle(helper.isLowPowerModeEnabled ? Color.green : Color.secondary)
+                                .font(.title2)
+                                .frame(width: 28)
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(helper.isLowPowerModeEnabled ? "已開啟" : "已關閉")
+                                    .font(.title3.bold())
+                                    .lineLimit(1)
+                                Text(helper.isBusy ? "正在切換…" : "低耗電模式")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.72)
+                            }
+                            Spacer(minLength: 0)
                         }
-                        Spacer(minLength: 0)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+                        .contentShape(Rectangle())
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
                 }
+                .buttonStyle(.plain)
                 .frame(maxWidth: .infinity, minHeight: 70, maxHeight: 70)
+                .disabled(helper.isBusy)
+                .help("切換 macOS 低耗電模式")
             }
 
             // 第五排

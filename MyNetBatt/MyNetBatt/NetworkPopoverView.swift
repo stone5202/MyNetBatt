@@ -49,6 +49,8 @@ struct NetworkPopoverView: View {
                     Spacer()
                 }
 
+                CompactAppUsageList(monitor: monitor)
+
                 WidgetCard {
                     Text("Macintosh HD").font(.caption).foregroundStyle(.blue).bold()
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
@@ -58,6 +60,21 @@ struct NetworkPopoverView: View {
                     Text("\(monitor.diskFreeStr) 可用（共 \(monitor.diskTotalStr)）").font(.caption).foregroundStyle(.secondary)
                     ProgressView(value: monitor.diskUsagePct, total: 100).tint(.cyan)
                 }
+
+                WidgetCard {
+                    Text("狀態列顯示")
+                        .font(.caption)
+                        .foregroundStyle(.blue)
+                        .bold()
+                    HStack(spacing: 18) {
+                        Toggle("流量圖表", isOn: $monitor.showNetChart)
+                        Toggle("即時速度", isOn: $monitor.showNetSpeed)
+                    }
+                    .toggleStyle(.switch)
+                    .controlSize(.mini)
+                    .tint(.cyan)
+                }
+                .fixedSize(horizontal: false, vertical: true)
 
                 Divider()
                 HStack {
@@ -69,6 +86,50 @@ struct NetworkPopoverView: View {
                 }
             }.padding(16)
         }.background(Color(NSColor.windowBackgroundColor))
+    }
+}
+
+private struct CompactAppUsageList: View {
+    @ObservedObject var monitor: SystemMonitor
+
+    private var items: [AppDataUsageItem] {
+        Array(monitor.appDataUsageItems(days: 1).prefix(5))
+    }
+
+    var body: some View {
+        WidgetCard {
+            HStack {
+                Label("今日 App 用量", systemImage: "app.badge")
+                    .font(.subheadline.bold())
+                Spacer()
+                Text(monitor.formatBytesForUI(monitor.appDataUsageTotal(days: 1)))
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(.secondary)
+            }
+
+            if items.isEmpty {
+                HStack(spacing: 8) {
+                    ProgressView().controlSize(.small)
+                    Text(monitor.appNetworkStatus)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, minHeight: 34, alignment: .leading)
+            } else {
+                ForEach(items) { item in
+                    HStack(spacing: 9) {
+                        AppIconView(pid: item.pid, name: item.name, size: 26)
+                        Text(item.name)
+                            .font(.caption)
+                            .lineLimit(1)
+                        Spacer(minLength: 8)
+                        Text(monitor.formatBytesForUI(item.bytes))
+                            .font(.caption.monospacedDigit())
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+        }
     }
 }
 

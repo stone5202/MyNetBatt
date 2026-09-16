@@ -7,5 +7,5 @@ import Foundation
 
 enum PrivilegedHelperConstants {
     static let machServiceName = "com.stone5202.MyNetBatt.PrivilegedHelper"
-    static let mainAppSigningRequirement = "anchor apple generic and identifier \"com.stone5202.MyNetBatt\""
+    static let mainAppSigningRequirement = "anchor apple generic and identifier \"com.stone5202.MyNetBatt\" and certificate leaf[subject.OU] = \"MHCATJULGT\""
 }

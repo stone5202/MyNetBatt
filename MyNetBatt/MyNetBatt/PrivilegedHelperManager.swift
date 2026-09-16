@@ -1,5 +1,4 @@
 import Foundation
-import ServiceManagement
 import Combine
 
 @MainActor
@@ -20,9 +19,12 @@ final class PrivilegedHelperManager: ObservableObject {
     @Published private(set) var lastError: String?
     @Published private(set) var needsRepair = false
 
-    private let service = SMAppService.daemon(plistName: PrivilegedHelperConstants.daemonPlistName)
+    private let installedHelperPath = "/Library/PrivilegedHelperTools/\(PrivilegedHelperConstants.machServiceName)"
+    private let installedPlistPath = "/Library/LaunchDaemons/\(PrivilegedHelperConstants.daemonPlistName)"
     private var connection: NSXPCConnection?
     private var lowPowerModeTimer: AnyCancellable?
+    private var pendingLowPowerMode: Bool?
+    private var pendingRequestID: UUID?
 
     private init() {
         refreshRegistrationState()
@@ -37,7 +39,7 @@ final class PrivilegedHelperManager: ObservableObject {
         case .requiresApproval:
             return "等待系統核准"
         case .notRegistered:
-            return "尚未啟用控制"
+            return "尚未啟用 Helper"
         case .notFound:
             return "找不到 Helper"
         case .unknown:
@@ -46,39 +48,13 @@ final class PrivilegedHelperManager: ObservableObject {
     }
 
     func refreshRegistrationState() {
-        switch service.status {
-        case .notRegistered:
-            registrationState = .notRegistered
-        case .enabled:
-            registrationState = .enabled
-        case .requiresApproval:
-            registrationState = .requiresApproval
-        case .notFound:
-            registrationState = .notFound
-        @unknown default:
-            registrationState = .unknown
-        }
+        let files = FileManager.default
+        registrationState = files.fileExists(atPath: installedHelperPath)
+            && files.fileExists(atPath: installedPlistPath) ? .enabled : .notRegistered
     }
 
     func registerHelper() {
-        lastError = nil
-        needsRepair = false
-        isBusy = true
-        defer { isBusy = false }
-
-        do {
-            try service.register()
-            refreshRegistrationState()
-
-            if registrationState == .enabled {
-                refreshLowPowerMode()
-            } else if registrationState == .requiresApproval {
-                lastError = "Helper 已註冊，但 macOS 尚未核准。請到「系統設定 → 一般 → 登入項目與延伸功能」允許 MyNetBatt 在背景執行。"
-            }
-        } catch {
-            refreshRegistrationState()
-            lastError = "註冊 Privileged Helper 失敗：\(error.localizedDescription)"
-        }
+        installStandaloneHelper()
     }
 
     func unregisterHelper() {
@@ -88,44 +64,93 @@ final class PrivilegedHelperManager: ObservableObject {
         defer { isBusy = false }
 
         invalidateConnection()
-        do {
-            try service.unregister()
-            refreshRegistrationState()
-        } catch {
-            refreshRegistrationState()
-            lastError = "移除 Privileged Helper 失敗：\(error.localizedDescription)"
+        let command = "/bin/launchctl bootout system/\(PrivilegedHelperConstants.machServiceName) >/dev/null 2>&1 || true; "
+            + "/bin/rm -f \(shellQuote(installedHelperPath)) \(shellQuote(installedPlistPath))"
+        if let error = runWithAdministratorPrivileges(command) {
+            lastError = "移除 Privileged Helper 失敗：\(error)"
         }
+        refreshRegistrationState()
     }
 
-    /// 重新註冊目前這一份 App bundle 內的 Helper。
-    /// 這可修正從另一個下載目錄／舊 DerivedData 執行後，SMAppService 仍指向舊 Helper 的情況。
+    /// 覆寫安裝目前 App bundle 內的 Helper；只會在安裝／更新時要求一次管理員密碼。
     func repairHelper() {
+        invalidateConnection()
+        installStandaloneHelper()
+    }
+
+    private func installStandaloneHelper() {
         lastError = nil
         needsRepair = false
         isBusy = true
-        invalidateConnection()
+        defer { isBusy = false }
 
-        defer {
-            isBusy = false
-            refreshRegistrationState()
-            refreshLowPowerMode()
+        let bundledHelper = Bundle.main.bundleURL
+            .appendingPathComponent("Contents/MacOS/MyNetBattPrivilegedHelper")
+        guard FileManager.default.isExecutableFile(atPath: bundledHelper.path) else {
+            registrationState = .notFound
+            needsRepair = true
+            lastError = "App 內找不到 MyNetBattPrivilegedHelper，請重新建置 App。"
+            return
         }
 
         do {
-            if service.status != .notRegistered {
-                try service.unregister()
-            }
-            try service.register()
-            refreshRegistrationState()
+            let plist: [String: Any] = [
+                "Label": PrivilegedHelperConstants.machServiceName,
+                "ProgramArguments": [installedHelperPath],
+                "MachServices": [PrivilegedHelperConstants.machServiceName: true],
+                "ProcessType": "Interactive"
+            ]
+            let plistData = try PropertyListSerialization.data(
+                fromPropertyList: plist,
+                format: .xml,
+                options: 0
+            )
+            let temporaryPlist = FileManager.default.temporaryDirectory
+                .appendingPathComponent("\(PrivilegedHelperConstants.machServiceName)-\(UUID().uuidString).plist")
+            try plistData.write(to: temporaryPlist, options: .atomic)
+            defer { try? FileManager.default.removeItem(at: temporaryPlist) }
 
-            if registrationState == .requiresApproval {
-                lastError = "Helper 已重新註冊，但 macOS 需要再次核准。請到「系統設定 → 一般 → 登入項目與延伸功能」允許 MyNetBatt 在背景執行。"
+            let label = PrivilegedHelperConstants.machServiceName
+            let command = [
+                "/bin/launchctl bootout system/\(label) >/dev/null 2>&1 || true",
+                "/usr/bin/install -d -o root -g wheel -m 755 /Library/PrivilegedHelperTools",
+                "/usr/bin/install -o root -g wheel -m 755 \(shellQuote(bundledHelper.path)) \(shellQuote(installedHelperPath))",
+                "/usr/bin/install -o root -g wheel -m 644 \(shellQuote(temporaryPlist.path)) \(shellQuote(installedPlistPath))",
+                "/bin/launchctl bootstrap system \(shellQuote(installedPlistPath))"
+            ].joined(separator: "; ")
+
+            if let error = runWithAdministratorPrivileges(command) {
+                throw NSError(
+                    domain: "MyNetBatt.HelperInstaller",
+                    code: 1,
+                    userInfo: [NSLocalizedDescriptionKey: error]
+                )
             }
+            refreshRegistrationState()
+            lastError = nil
+            needsRepair = false
+            refreshLowPowerMode()
         } catch {
             refreshRegistrationState()
             needsRepair = true
-            lastError = "重新安裝 Privileged Helper 失敗：\(error.localizedDescription)"
+            lastError = "安裝 Privileged Helper 失敗：\(error.localizedDescription)"
         }
+    }
+
+    private func runWithAdministratorPrivileges(_ command: String) -> String? {
+        let escaped = command
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "\"", with: "\\\"")
+        var errorInfo: NSDictionary?
+        NSAppleScript(source: "do shell script \"\(escaped)\" with administrator privileges")?
+            .executeAndReturnError(&errorInfo)
+        guard let errorInfo else { return nil }
+        return (errorInfo[NSAppleScript.errorMessage] as? String)
+            ?? "管理員授權已取消或安裝失敗。"
+    }
+
+    private func shellQuote(_ value: String) -> String {
+        "'" + value.replacingOccurrences(of: "'", with: "'\\''") + "'"
     }
 
     /// UI 狀態直接採用 ProcessInfo，和狀態列小視窗使用同一個 macOS 狀態來源。
@@ -140,20 +165,27 @@ final class PrivilegedHelperManager: ObservableObject {
         refreshRegistrationState()
 
         guard registrationState == .enabled else {
-            registerHelper()
-            refreshRegistrationState()
-            guard registrationState == .enabled else { return }
-            setLowPowerMode(enabled)
+            needsRepair = registrationState == .notFound
+            lastError = registrationState == .notFound
+                ? "App 內找不到 Helper，請重新建置 App。"
+                : "請先安裝 Helper；只需輸入一次管理員密碼，之後切換低耗電模式不需再授權。"
+            refreshLowPowerMode()
             return
         }
 
         guard let proxy = remoteProxy() else { return }
         isBusy = true
+        pendingLowPowerMode = enabled
+        let requestID = UUID()
+        pendingRequestID = requestID
 
         proxy.setLowPowerMode(enabled) { [weak self] success, errorText in
             Task { @MainActor in
                 guard let self else { return }
+                guard self.pendingRequestID == requestID else { return }
                 self.isBusy = false
+                self.pendingLowPowerMode = nil
+                self.pendingRequestID = nil
 
                 if success {
                     self.isLowPowerModeEnabled = enabled
@@ -163,10 +195,23 @@ final class PrivilegedHelperManager: ObservableObject {
                     try? await Task.sleep(for: .milliseconds(500))
                     self.refreshLowPowerMode()
                 } else {
-                    self.lastError = errorText ?? "低耗電模式切換失敗。"
+                    self.needsRepair = true
+                    self.lastError = errorText ?? "低耗電模式切換失敗。請修復 Helper 後再試一次。"
                     self.refreshLowPowerMode()
                 }
             }
+        }
+
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(2))
+            guard let self, self.pendingRequestID == requestID else { return }
+            self.pendingRequestID = nil
+            self.pendingLowPowerMode = nil
+            self.invalidateConnection()
+            self.isBusy = false
+            self.needsRepair = true
+            self.lastError = "Privileged Helper 沒有回應。請修復 Helper 後再試一次。"
+            self.refreshLowPowerMode()
         }
     }
 
@@ -211,8 +256,13 @@ final class PrivilegedHelperManager: ObservableObject {
                 guard let self else { return }
                 self.isBusy = false
                 self.needsRepair = true
-                self.lastError = "無法連線到 Privileged Helper：\(error.localizedDescription)\n請按「修復 Helper」重新註冊目前這一份 App 內的 Helper。"
+                let requestedMode = self.pendingLowPowerMode
+                self.pendingLowPowerMode = nil
+                self.pendingRequestID = nil
                 self.invalidateConnection()
+                let action = requestedMode == nil ? "" : "低耗電模式尚未切換。"
+                self.lastError = "無法連線到 Privileged Helper：\(error.localizedDescription)\n\(action)請按一次「修復 Helper」重新註冊目前 App 內的 Helper。"
+                self.refreshLowPowerMode()
             }
         } as? MyNetBattPrivilegedHelperProtocol
     }

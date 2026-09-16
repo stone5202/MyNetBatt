@@ -94,6 +94,7 @@ class SystemMonitor: ObservableObject {
     var lastAppNetworkBytes: [String: (incoming: UInt64, outgoing: UInt64)] = [:]
     var lastAppNetworkSampleTime: Date?
     let appUsageHistoryDefaultsKey = "appUsageHistoryV2"
+    private var wakeRefreshTask: Task<Void, Never>?
 
     init() {
         UserDefaults.standard.register(defaults: [
@@ -109,12 +110,17 @@ class SystemMonitor: ObservableObject {
            let decoded = try? JSONDecoder().decode([BatteryData].self, from: data) {
             batteryHistory = decoded
         }
+        if let data = UserDefaults.standard.data(forKey: appUsageHistoryDefaultsKey),
+           let decoded = try? JSONDecoder().decode([String: [String: UInt64]].self, from: data) {
+            appUsageHistory = decoded
+        }
 
         Publishers.MergeMany($showNetModule.map { _ in }, $showBatModule.map { _ in }, $showNetChart.map { _ in }, $showNetSpeed.map { _ in }, $showBatIcon.map { _ in }, $showBatText.map { _ in })
         .sink { [weak self] in self?.layoutChanged.send() }.store(in: &cancellables)
 
         updateBatteryColor()
         startNetworkSpeedMonitor()
+        startPerAppNetworkMonitor()
         startNetworkDetailsMonitor()
         startDetailedBatteryMonitor()
         startLowPowerModeMonitor()
@@ -141,6 +147,34 @@ class SystemMonitor: ObservableObject {
             return String(format: "%.1f°F", fahrenheit)
         }
         return String(format: "%.1f°C", batTempDouble)
+    }
+
+    /// 網卡、路由及部分 IOKit 資料會在睡眠期間失效；喚醒後清掉舊基準並分段重抓。
+    func handleSystemWake() {
+        lastInBytes = 0
+        lastOutBytes = 0
+        lastAppNetworkBytes.removeAll()
+        lastAppNetworkSampleTime = nil
+        upSpeedStr = "0 B/s"
+        downSpeedStr = "0 B/s"
+
+        wakeRefreshTask?.cancel()
+        wakeRefreshTask = Task { @MainActor [weak self] in
+            guard let self else { return }
+            for delay in [0, 2, 8] {
+                if delay > 0 {
+                    try? await Task.sleep(for: .seconds(delay))
+                }
+                guard !Task.isCancelled else { return }
+                self.fetchNetworkTraffic()
+                self.fetchNetworkDetails()
+                self.fetchDynamicBatteryInfo()
+                self.fetchSystemInfo()
+                self.refreshLowPowerModeState()
+            }
+            self.fetchBatteryHealthInfo()
+            self.fetchThunderboltDevices()
+        }
     }
 
 }

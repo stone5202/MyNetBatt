@@ -9,6 +9,7 @@ import Darwin
 // MARK: - 網路詳細視窗
 struct NetworkDetailView: View {
     @ObservedObject var monitor: SystemMonitor
+    @State private var usageDays = 1
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
@@ -21,6 +22,7 @@ struct NetworkDetailView: View {
                     NetworkSpeedCard(title: "下載", symbol: "arrow.down", value: monitor.downSpeedStr, total: monitor.totalDownStr, history: monitor.trafficHistory, upload: false, color: .green)
                 }
 
+                AppDataUsagePanel(monitor: monitor, usageDays: $usageDays, maxRows: 50)
 
                 Divider()
                 HStack(spacing: 20) {
@@ -121,9 +123,12 @@ struct AppDataUsagePanel: View {
     @ObservedObject var monitor: SystemMonitor
     @Binding var usageDays: Int
     let maxRows: Int
-    var items: [AppDataUsageItem] { Array(monitor.appDataUsageItems(days: usageDays).prefix(maxRows)) }
+    @State private var showsAllApps = false
+    private let collapsedCount = 5
+    var allItems: [AppDataUsageItem] { Array(monitor.appDataUsageItems(days: usageDays).prefix(maxRows)) }
+    var items: [AppDataUsageItem] { showsAllApps ? allItems : Array(allItems.prefix(collapsedCount)) }
     var total: UInt64 { monitor.appDataUsageTotal(days: usageDays) }
-    var maxBytes: UInt64 { max(items.first?.bytes ?? 1, 1) }
+    var maxBytes: UInt64 { max(allItems.first?.bytes ?? 1, 1) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -133,6 +138,9 @@ struct AppDataUsagePanel: View {
                 Picker("期間", selection: $usageDays) { Text("日").tag(1); Text("週").tag(7) }
                     .pickerStyle(.segmented).frame(width: 180)
             }
+            Text(monitor.appNetworkStatus)
+                .font(.caption)
+                .foregroundStyle(.secondary)
             VStack(alignment: .leading, spacing: 2) {
                 Text(usageDays == 1 ? "今日總共" : "近 7 日總共").font(.caption).foregroundStyle(.blue).bold()
                 Text(monitor.formatBytesForUI(total)).font(.system(size: 34, weight: .bold, design: .rounded))
@@ -141,7 +149,7 @@ struct AppDataUsagePanel: View {
                 Text("尚未累積到 App 網路用量；程式執行後會自動記錄。")
                     .foregroundStyle(.secondary).frame(maxWidth: .infinity, minHeight: 80, alignment: .center)
             } else {
-                Text("\(items.count) 個 App / 程序").font(.headline)
+                Text("\(allItems.count) 個 App / 程序").font(.headline)
                 VStack(spacing: 0) {
                     ForEach(items) { item in
                         HStack(spacing: 12) {
@@ -158,25 +166,101 @@ struct AppDataUsagePanel: View {
                                     }
                                 }.frame(height: 6)
                             }
-                        }.padding(.vertical, 9)
+                        }
+                        .padding(.leading, 12)
+                        .padding(.vertical, 9)
                         Divider()
+                    }
+
+                    if allItems.count > collapsedCount {
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                showsAllApps.toggle()
+                            }
+                        } label: {
+                            Label(
+                                showsAllApps ? "收合" : "顯示更多（\(allItems.count - collapsedCount)）",
+                                systemImage: showsAllApps ? "chevron.up" : "chevron.down"
+                            )
+                            .font(.subheadline.weight(.semibold))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 9)
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(.blue)
                     }
                 }
             }
-        }.padding(16).background(Color.secondary.opacity(0.08)).cornerRadius(14)
+        }
+        .padding(16)
+        .background(Color.secondary.opacity(0.08))
+        .cornerRadius(14)
+        .onChange(of: usageDays) { _, _ in showsAllApps = false }
     }
 }
 
 struct AppIconView: View {
-    let pid: Int?; let name: String
+    let pid: Int?
+    let name: String
+    var size: CGFloat = 38
+
     var icon: NSImage? {
-        guard let pid else { return nil }
-        return NSRunningApplication(processIdentifier: pid_t(pid))?.icon
+        let workspace = NSWorkspace.shared
+
+        if let pid,
+           let app = NSRunningApplication(processIdentifier: pid_t(pid)) {
+            if let icon = app.icon { return icon }
+            if let url = app.bundleURL ?? app.executableURL {
+                return workspace.icon(forFile: url.path)
+            }
+        }
+
+        let normalizedName = name
+            .replacingOccurrences(of: #"\s+Helper$"#, with: "", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+
+        if let app = workspace.runningApplications.first(where: { candidate in
+            let localizedName = candidate.localizedName?.lowercased()
+            let executableName = candidate.executableURL?.deletingPathExtension().lastPathComponent.lowercased()
+            let bundleID = candidate.bundleIdentifier?.lowercased()
+            return localizedName == normalizedName
+                || executableName == normalizedName
+                || bundleID == normalizedName
+                || bundleID?.hasSuffix(".\(normalizedName)") == true
+        }) {
+            if let icon = app.icon { return icon }
+            if let url = app.bundleURL ?? app.executableURL {
+                return workspace.icon(forFile: url.path)
+            }
+        }
+
+        if name.contains("."),
+           let appURL = workspace.urlForApplication(withBundleIdentifier: name) {
+            return workspace.icon(forFile: appURL.path)
+        }
+
+        return nil
     }
+
     var body: some View {
         Group {
-            if let icon { Image(nsImage: icon).resizable().scaledToFit() }
-            else { Image(systemName: "app.fill").resizable().scaledToFit().padding(7).foregroundStyle(.secondary) }
-        }.frame(width: 38, height: 38).background(Color.secondary.opacity(0.08)).cornerRadius(9)
+            if let icon {
+                Image(nsImage: icon)
+                    .resizable()
+                    .interpolation(.high)
+                    .scaledToFit()
+                    .padding(size * 0.06)
+            } else {
+                Image(systemName: "gearshape.fill")
+                    .resizable()
+                    .scaledToFit()
+                    .padding(size * 0.22)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .frame(width: size, height: size)
+        .background(Color.secondary.opacity(0.08))
+        .cornerRadius(size * 0.24)
     }
 }

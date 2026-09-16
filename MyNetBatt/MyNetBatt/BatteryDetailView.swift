@@ -112,35 +112,24 @@ struct BatteryDetailView: View {
                     .lineLimit(1)
             }
 
-            switch helper.registrationState {
-            case .enabled:
-                Toggle("", isOn: Binding(
-                    get: { helper.isLowPowerModeEnabled },
-                    set: { helper.setLowPowerMode($0) }
-                ))
-                .labelsHidden()
-                .toggleStyle(.switch)
-                .tint(.green)
-                .disabled(helper.isBusy)
+            Toggle("", isOn: Binding(
+                get: { helper.isLowPowerModeEnabled },
+                set: { helper.setLowPowerMode($0) }
+            ))
+            .labelsHidden()
+            .toggleStyle(.switch)
+            .tint(.green)
+            .disabled(helper.isBusy)
 
-                if helper.needsRepair {
-                    Button("修復 Helper") {
-                        helper.repairHelper()
-                    }
-                    .controlSize(.small)
-                    .disabled(helper.isBusy)
-                }
-
-            case .requiresApproval:
-                Button("重新檢查") {
-                    helper.refreshRegistrationState()
-                    helper.refreshLowPowerMode()
+            if helper.registrationState == .notRegistered {
+                Button("安裝 Helper") {
+                    helper.registerHelper()
                 }
                 .controlSize(.small)
-
-            case .notRegistered, .notFound, .unknown:
-                Button("啟用控制") {
-                    helper.registerHelper()
+                .disabled(helper.isBusy)
+            } else if helper.registrationState == .notFound || helper.needsRepair {
+                Button("修復 Helper") {
+                    helper.repairHelper()
                 }
                 .controlSize(.small)
                 .disabled(helper.isBusy)
