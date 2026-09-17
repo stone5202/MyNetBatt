@@ -8,6 +8,16 @@ MyNetBatt 是一款原生 macOS 選單列系統監控工具，將電池、網路
 
 > 目前版本：3.0 · 介面語言：繁體中文
 
+## 開發狀態
+
+MyNetBatt 目前持續開發與維護中，專案完整原始碼以 MIT License 公開，歡迎社群回報問題、提出功能建議或提交 pull request。
+
+- 原生 Swift / SwiftUI macOS 應用程式
+- Apple Silicon 為主要開發與測試平台
+- 提供可自行建置的 Xcode project
+- 包含具簽章驗證與最小權限設計的 Privileged Helper
+- 監控資料主要於本機處理與儲存，不包含分析 SDK、廣告 SDK 或使用者追蹤服務
+
 ## 功能
 
 - 選單列顯示電池圖示、電量百分比、即時網路速度與流量圖表
@@ -84,6 +94,19 @@ MyNetBatt/
 docs/
 └── PRIVILEGED_HELPER_SETUP.md
 ```
+
+## Roadmap
+
+目前規劃持續改善下列項目：
+
+- 擴充系統與硬體監控資訊，並改善不同 Apple Silicon 機型的相容性
+- 強化網路流量與每個 App／程序的統計與歷史資料呈現
+- 增加自動化測試與建置驗證，提高版本更新的可靠性
+- 持續檢視 Privileged Helper 的安全邊界、簽章驗證與最小權限設計
+- 改善文件、除錯資訊與 issue / pull request 開發流程
+- 評估以 AI 輔助程式碼分析、測試、文件與維護工作的開源開發流程
+
+Roadmap 會依 macOS 更新、使用者回饋與實際開發進度調整。若有功能建議，歡迎透過 GitHub issue 討論。
 
 ## 參與開發
 
