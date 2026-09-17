@@ -104,7 +104,8 @@ MyNetBatt/
 ├── PrivilegedHelper/          # 低耗電模式 XPC helper
 └── MyNetBatt.xcodeproj/       # Xcode project
 docs/
-└── PRIVILEGED_HELPER_SETUP.md
+├── PRIVILEGED_HELPER_SETUP.md
+└── screenshots/               # README application screenshots
 ```
 
 ## Roadmap
