@@ -108,7 +108,9 @@ class SystemMonitor: ObservableObject {
 
         if let data = UserDefaults.standard.data(forKey: "batteryHistory"),
            let decoded = try? JSONDecoder().decode([BatteryData].self, from: data) {
-            batteryHistory = decoded
+            // Older builds stored transient read failures as 0%. Remove those
+            // impossible samples when loading so they no longer distort charts.
+            batteryHistory = decoded.filter { (1...100).contains($0.level) }
         }
         if let data = UserDefaults.standard.data(forKey: appUsageHistoryDefaultsKey),
            let decoded = try? JSONDecoder().decode([String: [String: UInt64]].self, from: data) {
