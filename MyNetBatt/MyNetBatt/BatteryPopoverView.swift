@@ -72,12 +72,7 @@ struct BatteryPopoverView: View {
                         Divider()
 
                         HStack {
-                            VStack(alignment: .leading, spacing: 1) {
-                                Text("低電量提醒").font(.caption)
-                                Text("未接電源時顯示紅色")
-                                    .font(.caption2)
-                                    .foregroundStyle(.secondary)
-                            }
+                            Text("低電量提醒").font(.caption)
                             Spacer(minLength: 8)
                             Stepper(
                                 value: $monitor.lowBatteryThreshold,
