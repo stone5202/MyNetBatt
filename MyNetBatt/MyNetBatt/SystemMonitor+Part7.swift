@@ -9,62 +9,30 @@ import Darwin
 extension SystemMonitor {
     func fetchDynamicBatteryInfo() {
         Task.detached {
-            let ioData = self.runCommandData("/usr/sbin/ioreg", ["-raw0", "-c", "AppleSmartBattery"])
-            let ioText = self.runCommand("/usr/sbin/ioreg", ["-r", "-n", "AppleSmartBattery", "-l", "-w0"])
-
-            let plistRoot: Any? = {
-                guard !ioData.isEmpty else { return nil }
-                return try? PropertyListSerialization.propertyList(from: ioData, options: [], format: nil)
-            }()
-
-            func values(forKey wantedKey: String, in object: Any) -> [Any] {
-                var result: [Any] = []
-                if let dict = object as? [String: Any] {
-                    for (key, value) in dict {
-                        if key.caseInsensitiveCompare(wantedKey) == .orderedSame {
-                            result.append(value)
-                        }
-                        result.append(contentsOf: values(forKey: wantedKey, in: value))
-                    }
-                } else if let array = object as? [Any] {
-                    for value in array {
-                        result.append(contentsOf: values(forKey: wantedKey, in: value))
-                    }
-                }
-                return result
-            }
-
-            func int64Value(_ value: Any) -> Int64? {
-                if let n = value as? NSNumber { return n.int64Value }
-                if let n = value as? Int { return Int64(n) }
-                if let n = value as? Int64 { return n }
-                if let n = value as? UInt64 { return Int64(bitPattern: n) }
-                if let s = value as? String { return Int64(s.trimmingCharacters(in: .whitespacesAndNewlines)) }
-                return nil
-            }
+            let ioText = self.runCommand("/usr/sbin/ioreg", ["-r", "-c", "AppleSmartBattery", "-l", "-w0"])
 
             func number(_ keys: [String]) -> Int64? {
-                guard let root = plistRoot else { return nil }
                 for key in keys {
-                    for value in values(forKey: key, in: root) {
-                        if let n = int64Value(value) { return n }
+                    let escapedKey = NSRegularExpression.escapedPattern(for: key)
+                    if let value = self.extract(
+                        pattern: "\\\"\(escapedKey)\\\"\\s*=\\s*(-?[0-9]+)",
+                        from: ioText
+                    ) {
+                        if let signed = Int64(value) { return signed }
+                        // ioreg prints negative amperage as its UInt64 bit pattern.
+                        if let unsigned = UInt64(value) { return Int64(bitPattern: unsigned) }
                     }
                 }
                 return nil
             }
 
-            func boolValue(_ key: String) -> Bool {
-                guard let root = plistRoot else { return false }
-                for value in values(forKey: key, in: root) {
-                    if let b = value as? Bool { return b }
-                    if let n = value as? NSNumber { return n.boolValue }
-                    if let s = value as? String {
-                        let normalized = s.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-                        if ["yes", "true", "1"].contains(normalized) { return true }
-                        if ["no", "false", "0"].contains(normalized) { return false }
-                    }
-                }
-                return false
+            func boolValue(_ key: String) -> Bool? {
+                let escapedKey = NSRegularExpression.escapedPattern(for: key)
+                guard let value = self.extract(
+                    pattern: "\\\"\(escapedKey)\\\"\\s*=\\s*(Yes|No|true|false|1|0)",
+                    from: ioText
+                )?.lowercased() else { return nil }
+                return ["yes", "true", "1"].contains(value)
             }
 
             func validMinutes(_ value: Int64?) -> Int? {
@@ -82,16 +50,24 @@ extension SystemMonitor {
             let pmOutput = self.runCommand("/usr/bin/pmset", ["-g", "batt"])
 
             let tempCharging = boolValue("IsCharging")
+                ?? pmOutput.localizedCaseInsensitiveContains("; charging;")
             let tempPlugged = boolValue("ExternalConnected")
-            let tempPct: Int = {
-                if let state = number(["CurrentCapacity"]), state >= 0, state <= 100 {
+                ?? pmOutput.localizedCaseInsensitiveContains("AC Power")
+            let tempPct: Int? = {
+                if let state = number(["CurrentCapacity"]), state > 0, state <= 100 {
                     return Int(state)
                 }
-                if let val = self.extract(pattern: "(\\d+)%", from: pmOutput) {
-                    return Int(val) ?? 0
+                if let value = self.extract(pattern: "(\\d+)%", from: pmOutput),
+                   let percentage = Int(value), percentage > 0, percentage <= 100 {
+                    return percentage
                 }
-                return 0
+                return nil
             }()
+
+            // ioreg and pmset can both be temporarily unavailable while macOS is
+            // waking. A missing sample is not a real 0% battery reading, so leave
+            // the last good UI value and history untouched until the next poll.
+            guard let tempPct else { return }
 
             let batType = tempPlugged ? "變壓器 (AC)" : "電池供電"
 
