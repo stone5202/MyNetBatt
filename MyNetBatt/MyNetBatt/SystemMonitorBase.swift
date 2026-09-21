@@ -22,6 +22,10 @@ class SystemMonitor: ObservableObject {
         didSet { UserDefaults.standard.set(selectedColorIndex, forKey: "selectedColorIndex"); updateBatteryColor() }
     }
 
+    @Published var lowBatteryThreshold: Int = 20 {
+        didSet { UserDefaults.standard.set(lowBatteryThreshold, forKey: "lowBatteryThreshold") }
+    }
+
     @Published var isAutoStartEnabled: Bool = SMAppService.mainApp.status == .enabled {
         didSet { do { if isAutoStartEnabled { if SMAppService.mainApp.status != .enabled { try SMAppService.mainApp.register() } } else { if SMAppService.mainApp.status == .enabled { try SMAppService.mainApp.unregister() } } } catch { print("Auto Start Error: \(error)") } }
     }
@@ -99,12 +103,14 @@ class SystemMonitor: ObservableObject {
     init() {
         UserDefaults.standard.register(defaults: [
             "showNetModule": true, "showBatModule": true, "showNetChart": true,
-            "showNetSpeed": true, "showBatIcon": true, "showBatText": true, "selectedColorIndex": 4
+            "showNetSpeed": true, "showBatIcon": true, "showBatText": true,
+            "selectedColorIndex": 4, "lowBatteryThreshold": 20
         ])
         showNetModule = UserDefaults.standard.bool(forKey: "showNetModule"); showBatModule = UserDefaults.standard.bool(forKey: "showBatModule")
         showNetChart = UserDefaults.standard.bool(forKey: "showNetChart"); showNetSpeed = UserDefaults.standard.bool(forKey: "showNetSpeed")
         showBatIcon = UserDefaults.standard.bool(forKey: "showBatIcon"); showBatText = UserDefaults.standard.bool(forKey: "showBatText")
         selectedColorIndex = UserDefaults.standard.integer(forKey: "selectedColorIndex")
+        lowBatteryThreshold = UserDefaults.standard.integer(forKey: "lowBatteryThreshold")
 
         if let data = UserDefaults.standard.data(forKey: "batteryHistory"),
            let decoded = try? JSONDecoder().decode([BatteryData].self, from: data) {
@@ -140,6 +146,14 @@ class SystemMonitor: ObservableObject {
 
     var batteryPowerTitle: String {
         isPluggedIn ? "充電功率" : "輸出功率"
+    }
+
+    var isLowBatteryWarning: Bool {
+        batPct > 0 && batPct <= lowBatteryThreshold && !isPluggedIn
+    }
+
+    var displayedBatteryColor: Color {
+        isLowBatteryWarning ? .red : batteryColor
     }
 
     var batTempDisplay: String {
