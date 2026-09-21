@@ -73,7 +73,6 @@ extension SystemMonitor {
 
             let rawCurrentCapacity = number(["AppleRawCurrentCapacity"]).map(Double.init) ?? 0
             let rawMaxCapacity = number(["AppleRawMaxCapacity"]).map(Double.init) ?? 0
-            let designCapacity = number(["DesignCapacity"]).map(Double.init) ?? 0
 
             let voltageMv = number(["AppleRawBatteryVoltage", "Voltage"]).map(Double.init) ?? 0
             var currentMa = number(["InstantAmperage"]) ?? 0
@@ -154,12 +153,6 @@ extension SystemMonitor {
                 cycle = String(c)
             }
 
-            var healthPctStr: String?
-            if designCapacity > 0 && rawMaxCapacity > 0 {
-                let health = min(100.0, max(0.0, (rawMaxCapacity / designCapacity) * 100.0))
-                healthPctStr = String(format: "%.0f%%", health)
-            }
-
             var tIcon = "battery.100"
             if tempCharging {
                 tIcon = "battery.100.bolt"
@@ -182,7 +175,6 @@ extension SystemMonitor {
             let fWatts = wattsStr
             let fPct = tempPct
             let fCycle = cycle
-            let fHealth = healthPctStr
             let fType = batType
             let fTime = timeRemain
             let fTempD = foundTempDouble
@@ -199,7 +191,6 @@ extension SystemMonitor {
                 self.batTempDouble = fTempD
                 self.batWatts = fWatts
                 if let fCycle, !fCycle.isEmpty { self.batCycle = fCycle }
-                if let fHealth, !fHealth.isEmpty { self.batHealth = fHealth }
                 self.batteryIcon = fIcon
                 self.isCharging = isChg
                 self.isPluggedIn = isPlugged

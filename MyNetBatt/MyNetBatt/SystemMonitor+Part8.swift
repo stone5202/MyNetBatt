@@ -9,6 +9,9 @@ import Darwin
 extension SystemMonitor {
     func fetchBatteryHealthInfo() {
         Task.detached {
+            // Keep macOS Maximum Capacity as the single source of truth.
+            // AppleRawMaxCapacity is a fluctuating gauge value and can differ
+            // by several percentage points from the health shown by macOS.
             let output = self.runCommand("/usr/sbin/system_profiler", ["SPPowerDataType"])
             var cycle: String?
             var health: String?
