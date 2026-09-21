@@ -20,7 +20,12 @@ struct BatteryDetailView: View {
             }
             
             HStack(spacing: 20) {
-                if monitor.isCharging {
+                if monitor.isLowBatteryWarning {
+                    Image(systemName: monitor.batteryIcon)
+                        .resizable().scaledToFit().frame(height: 50)
+                        .symbolRenderingMode(.monochrome)
+                        .foregroundStyle(.red)
+                } else if monitor.isCharging {
                     Image(systemName: monitor.batteryIcon)
                         .resizable().scaledToFit().frame(height: 50)
                         .symbolRenderingMode(.palette)
@@ -32,7 +37,9 @@ struct BatteryDetailView: View {
                         .foregroundStyle(monitor.batteryColor, .primary)
                 }
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("\(monitor.batPct)%").font(.system(size: 40, weight: .bold).monospacedDigit())
+                    Text("\(monitor.batPct)%")
+                        .font(.system(size: 40, weight: .bold).monospacedDigit())
+                        .foregroundStyle(monitor.isLowBatteryWarning ? Color.red : Color.primary)
                     Text(monitor.batteryPowerSource).font(.title3).foregroundColor(.secondary)
                 }
             }
@@ -73,7 +80,7 @@ struct BatteryDetailView: View {
             Chart {
                 ForEach(monitor.batteryHistory) { data in
                     LineMark(x: .value("時間", data.time), y: .value("電量", data.level))
-                        .foregroundStyle(monitor.batteryColor)
+                        .foregroundStyle(monitor.displayedBatteryColor)
                         .interpolationMethod(.monotone)
                 }
             }

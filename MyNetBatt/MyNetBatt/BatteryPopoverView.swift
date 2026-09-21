@@ -24,6 +24,7 @@ struct BatteryPopoverView: View {
                             Text("\(monitor.batPct)")
                                 .font(.system(size: 52, weight: .bold, design: .rounded))
                                 .lineLimit(1).minimumScaleFactor(0.5)
+                                .foregroundStyle(monitor.isLowBatteryWarning ? Color.red : Color.primary)
                             Text(" %")
                                 .font(.system(size: 24, weight: .bold, design: .rounded))
                                 .foregroundColor(.secondary)
@@ -32,7 +33,7 @@ struct BatteryPopoverView: View {
                         
                         Spacer()
                         ProgressView(value: Double(monitor.batPct), total: 100.0)
-                            .tint(monitor.batteryColor)
+                            .tint(monitor.displayedBatteryColor)
                             .scaleEffect(x: 1, y: 1.5, anchor: .center)
                             .padding(.bottom, 8)
                     }
@@ -66,6 +67,29 @@ struct BatteryPopoverView: View {
                                     )
                                     .onTapGesture { monitor.selectedColorIndex = index }
                             }
+                        }
+
+                        Divider()
+
+                        HStack {
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text("低電量提醒").font(.caption)
+                                Text("未接電源時顯示紅色")
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer(minLength: 8)
+                            Stepper(
+                                value: $monitor.lowBatteryThreshold,
+                                in: 5...50,
+                                step: 5
+                            ) {
+                                Text("\(monitor.lowBatteryThreshold)%")
+                                    .monospacedDigit()
+                                    .frame(minWidth: 34, alignment: .trailing)
+                            }
+                            .fixedSize()
+                            .controlSize(.small)
                         }
                     }
                 }

@@ -32,10 +32,18 @@ struct BatteryBarView: View {
     var body: some View {
         HStack(spacing: 2) {
             if monitor.showBatText {
-                Text("\(monitor.batPct)%").font(.system(size: 12, weight: .medium).monospacedDigit())
+                Text("\(monitor.batPct)%")
+                    .font(.system(size: 12, weight: .medium).monospacedDigit())
+                    .foregroundStyle(monitor.isLowBatteryWarning ? Color.red : Color.primary)
             }
             if monitor.showBatIcon {
-                if monitor.isCharging {
+                if monitor.isLowBatteryWarning {
+                    // Monochrome colors every layer, including the outline of
+                    // battery.0 when the symbol has no visible fill remaining.
+                    Image(systemName: monitor.batteryIcon)
+                        .symbolRenderingMode(.monochrome)
+                        .foregroundStyle(.red)
+                } else if monitor.isCharging {
                     Image(systemName: monitor.batteryIcon)
                         .symbolRenderingMode(.palette)
                         .foregroundStyle(.primary, .primary, monitor.batteryColor)
