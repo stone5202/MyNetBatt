@@ -16,10 +16,7 @@ struct BatteryDetailView: View {
             HStack {
                 Text("電池與電源狀態").font(.largeTitle.bold())
                 Spacer()
-                VStack(alignment: .trailing, spacing: 8) {
-                    lowPowerControl
-                    lowBatteryWarningControl
-                }
+                lowPowerControl
             }
             
             HStack(spacing: 20) {
@@ -45,6 +42,8 @@ struct BatteryDetailView: View {
                         .foregroundStyle(monitor.isLowBatteryWarning ? Color.red : Color.primary)
                     Text(monitor.batteryPowerSource).font(.title3).foregroundColor(.secondary)
                 }
+                Spacer()
+                lowBatteryWarningControl
             }
             .padding(.bottom, 10)
             
@@ -149,20 +148,26 @@ struct BatteryDetailView: View {
     }
 
     private var lowBatteryWarningControl: some View {
-        HStack(spacing: 8) {
-            Text("低電量提醒")
-                .font(.subheadline.weight(.semibold))
-            Stepper(
-                value: $monitor.lowBatteryThreshold,
-                in: 5...50,
-                step: 5
-            ) {
+        Stepper(
+            value: $monitor.lowBatteryThreshold,
+            in: 5...50,
+            step: 5
+        ) {
+            HStack(spacing: 10) {
+                Image(systemName: "battery.25")
+                    .font(.title2)
+                    .foregroundStyle(.red)
+                Text("低電量提醒")
+                    .font(.headline)
                 Text("\(monitor.lowBatteryThreshold)%")
+                    .font(.title3.bold())
                     .monospacedDigit()
-                    .frame(minWidth: 34, alignment: .trailing)
+                    .frame(minWidth: 42, alignment: .trailing)
             }
-            .fixedSize()
-            .controlSize(.small)
         }
+        .fixedSize()
+        .controlSize(.regular)
+        .padding(.horizontal, 14)
+        .frame(height: 50)
     }
 }
