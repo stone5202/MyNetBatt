@@ -16,7 +16,10 @@ struct BatteryDetailView: View {
             HStack {
                 Text("電池與電源狀態").font(.largeTitle.bold())
                 Spacer()
-                lowPowerControl
+                VStack(alignment: .trailing, spacing: 8) {
+                    lowPowerControl
+                    lowBatteryWarningControl
+                }
             }
             
             HStack(spacing: 20) {
@@ -143,5 +146,23 @@ struct BatteryDetailView: View {
             }
         }
         .help("使用受簽章的 Privileged Helper 透過 pmset 控制 macOS 低耗電模式")
+    }
+
+    private var lowBatteryWarningControl: some View {
+        HStack(spacing: 8) {
+            Text("低電量提醒")
+                .font(.subheadline.weight(.semibold))
+            Stepper(
+                value: $monitor.lowBatteryThreshold,
+                in: 5...50,
+                step: 5
+            ) {
+                Text("\(monitor.lowBatteryThreshold)%")
+                    .monospacedDigit()
+                    .frame(minWidth: 34, alignment: .trailing)
+            }
+            .fixedSize()
+            .controlSize(.small)
+        }
     }
 }
