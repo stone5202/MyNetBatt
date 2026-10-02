@@ -8,7 +8,7 @@ import Darwin
 
 // MARK: - 電池詳細視窗
 struct BatteryDetailView: View {
-    @ObservedObject var monitor: SystemMonitor
+    @Bindable var monitor: SystemMonitor
     @ObservedObject private var helper = PrivilegedHelperManager.shared
 
     var body: some View {

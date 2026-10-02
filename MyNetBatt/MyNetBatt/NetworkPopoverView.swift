@@ -8,7 +8,7 @@ import Darwin
 
 // MARK: - 網路子視窗 (Popover)
 struct NetworkPopoverView: View {
-    @ObservedObject var monitor: SystemMonitor
+    @Bindable var monitor: SystemMonitor
     @State private var showDetails = false
 
     var body: some View {
@@ -90,7 +90,7 @@ struct NetworkPopoverView: View {
 }
 
 private struct CompactAppUsageList: View {
-    @ObservedObject var monitor: SystemMonitor
+    @Bindable var monitor: SystemMonitor
 
     private var items: [AppDataUsageItem] {
         Array(monitor.appDataUsageItems(days: 1).prefix(5))
@@ -153,7 +153,7 @@ struct NetworkLiveRow: View {
 }
 
 struct NetworkDetailsPopover: View {
-    @ObservedObject var monitor: SystemMonitor
+    @Bindable var monitor: SystemMonitor
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Button { monitor.refreshNetworkDetails() } label: { Label("刷新", systemImage: "arrow.clockwise") }.buttonStyle(.plain)

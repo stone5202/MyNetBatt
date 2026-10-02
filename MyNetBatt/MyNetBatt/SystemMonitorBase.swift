@@ -6,28 +6,32 @@ import Charts
 import ServiceManagement
 import Darwin
 
+/// 使用 Observation：每個畫面只在它實際讀取的屬性改變時才重算，
+/// 不會因為任何一個取樣結果更新就讓所有畫面（包括狀態列）一起重繪。
 @MainActor
-class SystemMonitor: ObservableObject {
-    let layoutChanged = PassthroughSubject<Void, Never>()
-    var cancellables = Set<AnyCancellable>()
+@Observable
+final class SystemMonitor {
+    @ObservationIgnored let layoutChanged = PassthroughSubject<Void, Never>()
+    @ObservationIgnored var cancellables = Set<AnyCancellable>()
 
-    @Published var showNetModule: Bool { didSet { UserDefaults.standard.set(showNetModule, forKey: "showNetModule") } }
-    @Published var showBatModule: Bool { didSet { UserDefaults.standard.set(showBatModule, forKey: "showBatModule") } }
-    @Published var showNetChart: Bool { didSet { UserDefaults.standard.set(showNetChart, forKey: "showNetChart") } }
-    @Published var showNetSpeed: Bool { didSet { UserDefaults.standard.set(showNetSpeed, forKey: "showNetSpeed") } }
-    @Published var showBatIcon: Bool { didSet { UserDefaults.standard.set(showBatIcon, forKey: "showBatIcon") } }
-    @Published var showBatText: Bool { didSet { UserDefaults.standard.set(showBatText, forKey: "showBatText") } }
+    var showNetModule: Bool { didSet { UserDefaults.standard.set(showNetModule, forKey: "showNetModule"); layoutChanged.send() } }
+    var showBatModule: Bool { didSet { UserDefaults.standard.set(showBatModule, forKey: "showBatModule"); layoutChanged.send() } }
+    var showNetChart: Bool { didSet { UserDefaults.standard.set(showNetChart, forKey: "showNetChart"); layoutChanged.send() } }
+    var showNetSpeed: Bool { didSet { UserDefaults.standard.set(showNetSpeed, forKey: "showNetSpeed"); layoutChanged.send() } }
+    var showBatIcon: Bool { didSet { UserDefaults.standard.set(showBatIcon, forKey: "showBatIcon"); layoutChanged.send() } }
+    var showBatText: Bool { didSet { UserDefaults.standard.set(showBatText, forKey: "showBatText"); layoutChanged.send() } }
     
-    @Published var selectedColorIndex: Int {
+    var selectedColorIndex: Int {
         didSet { UserDefaults.standard.set(selectedColorIndex, forKey: "selectedColorIndex"); updateBatteryColor() }
     }
 
-    @Published var lowBatteryThreshold: Int = 20 {
+    var lowBatteryThreshold: Int = 20 {
         didSet { UserDefaults.standard.set(lowBatteryThreshold, forKey: "lowBatteryThreshold") }
     }
 
-    @Published var isAutoStartEnabled: Bool = SMAppService.mainApp.status == .enabled {
+    var isAutoStartEnabled: Bool = SMAppService.mainApp.status == .enabled {
         didSet {
+            guard !isRevertingAutoStart else { return }
             do {
                 if isAutoStartEnabled {
                     if SMAppService.mainApp.status != .enabled { try SMAppService.mainApp.register() }
@@ -36,73 +40,76 @@ class SystemMonitor: ObservableObject {
                 }
             } catch {
                 print("Auto Start Error: \(error)")
-                // 註冊／取消失敗時讓開關回到系統實際狀態（在 didSet 內賦值不會再次觸發 didSet）。
+                // 註冊／取消失敗時讓開關回到系統實際狀態；以旗標避免還原時再次觸發註冊。
+                isRevertingAutoStart = true
                 isAutoStartEnabled = SMAppService.mainApp.status == .enabled
+                isRevertingAutoStart = false
             }
         }
     }
+    @ObservationIgnored private var isRevertingAutoStart = false
 
-    @Published var upSpeedStr: String = "0 B/s"
-    @Published var downSpeedStr: String = "0 B/s"
-    @Published var totalUpStr: String = "0 MB"
-    @Published var totalDownStr: String = "0 MB"
-    @Published var trafficHistory: [TrafficData] = []
+    var upSpeedStr: String = "0 B/s"
+    var downSpeedStr: String = "0 B/s"
+    var totalUpStr: String = "0 MB"
+    var totalDownStr: String = "0 MB"
+    var trafficHistory: [TrafficData] = []
     
-    @Published var batteryStatus: String = "--"
-    @Published var batPct: Int = 0
-    @Published var isCharging: Bool = false
-    @Published var isPluggedIn: Bool = false
-    @Published var tempDisplayInFahrenheit: Bool = UserDefaults.standard.bool(forKey: "tempDisplayInFahrenheit") {
+    var batteryStatus: String = "--"
+    var batPct: Int = 0
+    var isCharging: Bool = false
+    var isPluggedIn: Bool = false
+    var tempDisplayInFahrenheit: Bool = UserDefaults.standard.bool(forKey: "tempDisplayInFahrenheit") {
         didSet { UserDefaults.standard.set(tempDisplayInFahrenheit, forKey: "tempDisplayInFahrenheit") }
     }
-    @Published var batteryIcon: String = "battery.100"
-    @Published var batteryColor: Color = .green
-    @Published var batteryPowerSource: String = "讀取中..."
-    @Published var batHealth: String = "--"
-    @Published var batCycle: String = "--"
-    @Published var batTemp: String = "--"
-    @Published var batTempDouble: Double = 0.0
-    @Published var batWatts: String = "--"
-    @Published var batSourceType: String = "--"
-    @Published var batTimeRemain: String = "--"
+    var batteryIcon: String = "battery.100"
+    var batteryColor: Color = .green
+    var batteryPowerSource: String = "讀取中..."
+    var batHealth: String = "--"
+    var batCycle: String = "--"
+    var batTemp: String = "--"
+    var batTempDouble: Double = 0.0
+    var batWatts: String = "--"
+    var batSourceType: String = "--"
+    var batTimeRemain: String = "--"
 
     /// 每分鐘新增一筆、最多 2880 筆；寫入由 saveBatteryHistory() 節流，不在每次變動時整包編碼。
-    @Published var batteryHistory: [BatteryData] = []
+    var batteryHistory: [BatteryData] = []
 
-    @Published var cpuModelStr: String = "讀取中..."
-    @Published var macModelStr: String = "讀取中..."
-    @Published var gpuModelStr: String = "讀取中..."
-    @Published var ramUsageStr: String = "讀取中..."
-    @Published var ramUsagePct: Double = 0.0
-    @Published var swapUsageStr: String = "讀取中..."
-    @Published var swapUsagePct: Double = 0.0
-    @Published var diskUsageStr: String = "讀取中..."
-    @Published var diskUsedStr: String = "-- GB"
-    @Published var diskFreeStr: String = "-- GB"
-    @Published var diskTotalStr: String = "-- GB"
-    @Published var diskUsagePct: Double = 0.0
-    @Published var storageVolumes: [StorageVolumeInfo] = []
-    @Published var currentCpuUsage: Double = 0.0
-    @Published var cpuHistory: [SimpleData] = []
-    @Published var currentGpuUsage: Double = 0.0
-    @Published var gpuHistory: [SimpleData] = []
-    @Published var appNetworkUsages: [AppNetworkUsage] = []
-    @Published var appNetworkStatus: String = "建立程序流量基準中…"
-    @Published var appUsageHistory: [String: [String: UInt64]] = [:]
-    @Published var networkInterfaceName: String = "--"
-    @Published var networkLocalIP: String = "--"
-    @Published var networkGateway: String = "--"
-    @Published var networkDNS: String = "--"
-    @Published var networkPublicIP: String = "--"
-    @Published var networkDetailStatus: String = "讀取中…"
-    @Published var thunderboltDevices: [ThunderboltDeviceInfo] = []
-    @Published var thunderboltStatus: String = "讀取中…"
+    var cpuModelStr: String = "讀取中..."
+    var macModelStr: String = "讀取中..."
+    var gpuModelStr: String = "讀取中..."
+    var ramUsageStr: String = "讀取中..."
+    var ramUsagePct: Double = 0.0
+    var swapUsageStr: String = "讀取中..."
+    var swapUsagePct: Double = 0.0
+    var diskUsageStr: String = "讀取中..."
+    var diskUsedStr: String = "-- GB"
+    var diskFreeStr: String = "-- GB"
+    var diskTotalStr: String = "-- GB"
+    var diskUsagePct: Double = 0.0
+    var storageVolumes: [StorageVolumeInfo] = []
+    var currentCpuUsage: Double = 0.0
+    var cpuHistory: [SimpleData] = []
+    var currentGpuUsage: Double = 0.0
+    var gpuHistory: [SimpleData] = []
+    var appNetworkUsages: [AppNetworkUsage] = []
+    var appNetworkStatus: String = "建立程序流量基準中…"
+    var appUsageHistory: [String: [String: UInt64]] = [:]
+    var networkInterfaceName: String = "--"
+    var networkLocalIP: String = "--"
+    var networkGateway: String = "--"
+    var networkDNS: String = "--"
+    var networkPublicIP: String = "--"
+    var networkDetailStatus: String = "讀取中…"
+    var thunderboltDevices: [ThunderboltDeviceInfo] = []
+    var thunderboltStatus: String = "讀取中…"
 
-    var lastInBytes: UInt64 = 0
-    var lastOutBytes: UInt64 = 0
-    var lastAppNetworkBytes: [String: (incoming: UInt64, outgoing: UInt64)] = [:]
-    var lastAppNetworkSampleTime: Date?
-    let appUsageHistoryDefaultsKey = "appUsageHistoryV2"
+    @ObservationIgnored var lastInBytes: UInt64 = 0
+    @ObservationIgnored var lastOutBytes: UInt64 = 0
+    @ObservationIgnored var lastAppNetworkBytes: [String: (incoming: UInt64, outgoing: UInt64)] = [:]
+    @ObservationIgnored var lastAppNetworkSampleTime: Date?
+    @ObservationIgnored let appUsageHistoryDefaultsKey = "appUsageHistoryV2"
 
     /// 每日用量紀錄的 key 固定使用西曆與 POSIX locale，避免使用者切換曆法（如民國曆）後
     /// 舊 key 解析錯誤，導致 14 天清理誤刪或永遠保留紀錄。
@@ -114,19 +121,19 @@ class SystemMonitor: ObservableObject {
         formatter.dateFormat = "yyyy-MM-dd"
         return formatter
     }()
-    private var wakeRefreshTask: Task<Void, Never>?
+    @ObservationIgnored private var wakeRefreshTask: Task<Void, Never>?
     /// 正在執行中的背景取樣；同一種取樣尚未完成時不再疊加新的一輪。
-    var inFlightFetches = Set<String>()
-    var lastAppUsageSave: Date?
+    @ObservationIgnored var inFlightFetches = Set<String>()
+    @ObservationIgnored var lastAppUsageSave: Date?
     /// 目前正在顯示各 App 用量的畫面（網路小視窗、監控中心網路頁）；有任何一個時加快 nettop 取樣。
-    var perAppUsageViewers = Set<String>()
-    var lastPublicIPCheck: Date?
-    var lastPublicIPNetworkKey = ""
-    var deviceChangeObserver: DeviceChangeObserver?
-    var deviceRefreshTask: Task<Void, Never>?
-    var networkPathMonitor: NWPathMonitor?
-    var networkRefreshTask: Task<Void, Never>?
-    var lastBatteryHistorySave: Date?
+    @ObservationIgnored var perAppUsageViewers = Set<String>()
+    @ObservationIgnored var lastPublicIPCheck: Date?
+    @ObservationIgnored var lastPublicIPNetworkKey = ""
+    @ObservationIgnored var deviceChangeObserver: DeviceChangeObserver?
+    @ObservationIgnored var deviceRefreshTask: Task<Void, Never>?
+    @ObservationIgnored var networkPathMonitor: NWPathMonitor?
+    @ObservationIgnored var networkRefreshTask: Task<Void, Never>?
+    @ObservationIgnored var lastBatteryHistorySave: Date?
 
     init() {
         UserDefaults.standard.register(defaults: [
@@ -151,8 +158,6 @@ class SystemMonitor: ObservableObject {
             appUsageHistory = decoded
         }
 
-        Publishers.MergeMany($showNetModule.map { _ in }, $showBatModule.map { _ in }, $showNetChart.map { _ in }, $showNetSpeed.map { _ in }, $showBatIcon.map { _ in }, $showBatText.map { _ in })
-        .sink { [weak self] in self?.layoutChanged.send() }.store(in: &cancellables)
 
         updateBatteryColor()
         startNetworkSpeedMonitor()
@@ -221,4 +226,10 @@ class SystemMonitor: ObservableObject {
         }
     }
 
+
+    /// 只在值真的改變時才寫入。Observation 對每次賦值都會通知讀取該屬性的畫面，
+    /// 取樣結果常常和上一輪相同（例如電量維持 100%），直接賦值會讓狀態列無謂重繪。
+    func assignIfChanged<T: Equatable>(_ keyPath: ReferenceWritableKeyPath<SystemMonitor, T>, _ value: T) {
+        if self[keyPath: keyPath] != value { self[keyPath: keyPath] = value }
+    }
 }

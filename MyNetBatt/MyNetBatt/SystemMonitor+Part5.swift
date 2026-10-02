@@ -116,12 +116,12 @@ extension SystemMonitor {
             let fPublicIP = publicIP
             let isConnected = localIP != "--"
             await MainActor.run {
-                self.networkInterfaceName = fInterface
-                self.networkGateway = fGateway
-                self.networkLocalIP = fLocalIP
-                self.networkDNS = fDNS
-                self.networkPublicIP = fPublicIP
-                self.networkDetailStatus = isConnected ? "已連線" : "未連線"
+                self.assignIfChanged(\.networkInterfaceName, fInterface)
+                self.assignIfChanged(\.networkGateway, fGateway)
+                self.assignIfChanged(\.networkLocalIP, fLocalIP)
+                self.assignIfChanged(\.networkDNS, fDNS)
+                self.assignIfChanged(\.networkPublicIP, fPublicIP)
+                self.assignIfChanged(\.networkDetailStatus, isConnected ? "已連線" : "未連線")
             }
         }
     }

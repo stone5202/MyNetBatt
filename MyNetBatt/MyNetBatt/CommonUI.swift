@@ -8,7 +8,7 @@ import Darwin
 
 // MARK: - 共用 UI 元件
 struct BatteryTemperaturePopoverContent: View {
-    @ObservedObject var monitor: SystemMonitor
+    @Bindable var monitor: SystemMonitor
 
     var body: some View {
         Button {
@@ -39,7 +39,7 @@ struct BatteryTemperaturePopoverContent: View {
 }
 
 struct BatteryTemperatureGaugeView: View {
-    @ObservedObject var monitor: SystemMonitor
+    @Bindable var monitor: SystemMonitor
     var compact: Bool = false
 
     private var celsius: Double? { monitor.batTempDouble > 0 ? monitor.batTempDouble : nil }

@@ -9,7 +9,7 @@ import Darwin
 // MARK: - 電池子視窗 (Popover)
 
 struct BatteryPopoverView: View {
-    @ObservedObject var monitor: SystemMonitor
+    @Bindable var monitor: SystemMonitor
     @ObservedObject private var helper = PrivilegedHelperManager.shared
     let colorOptions: [Color] = [.primary, .red, .orange, .yellow, .green]
     

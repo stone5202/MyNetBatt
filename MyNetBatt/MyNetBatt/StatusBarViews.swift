@@ -8,7 +8,7 @@ import Darwin
 
 // MARK: - 狀態列視圖
 struct NetworkBarView: View {
-    @ObservedObject var monitor: SystemMonitor
+    @Bindable var monitor: SystemMonitor
     var body: some View {
         HStack(spacing: 4) {
             if monitor.showNetChart { 
@@ -28,7 +28,7 @@ struct NetworkBarView: View {
 }
 
 struct BatteryBarView: View {
-    @ObservedObject var monitor: SystemMonitor
+    @Bindable var monitor: SystemMonitor
     var body: some View {
         HStack(spacing: 2) {
             if monitor.showBatText {

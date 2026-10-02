@@ -166,18 +166,18 @@ extension SystemMonitor {
             let isPlugged = tempPlugged
 
             await MainActor.run {
-                self.batteryStatus = fStatus
-                self.batPct = fPct
-                self.batteryPowerSource = fSource
-                self.batSourceType = fType
-                self.batTimeRemain = fTime
-                self.batTemp = fTemp
-                self.batTempDouble = fTempD
-                self.batWatts = fWatts
+                self.assignIfChanged(\.batteryStatus, fStatus)
+                self.assignIfChanged(\.batPct, fPct)
+                self.assignIfChanged(\.batteryPowerSource, fSource)
+                self.assignIfChanged(\.batSourceType, fType)
+                self.assignIfChanged(\.batTimeRemain, fTime)
+                self.assignIfChanged(\.batTemp, fTemp)
+                self.assignIfChanged(\.batTempDouble, fTempD)
+                self.assignIfChanged(\.batWatts, fWatts)
                 if let fCycle, !fCycle.isEmpty { self.batCycle = fCycle }
-                self.batteryIcon = fIcon
-                self.isCharging = isChg
-                self.isPluggedIn = isPlugged
+                self.assignIfChanged(\.batteryIcon, fIcon)
+                self.assignIfChanged(\.isCharging, isChg)
+                self.assignIfChanged(\.isPluggedIn, isPlugged)
 
                 let now = Date()
                 if let last = self.batteryHistory.last {

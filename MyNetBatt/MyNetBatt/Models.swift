@@ -30,7 +30,7 @@ struct AppDataUsageItem: Identifiable {
     let pid: Int?
 }
 
-struct ThunderboltDeviceInfo: Identifiable {
+struct ThunderboltDeviceInfo: Identifiable, Equatable {
     let id: String
     let name: String
     let vendor: String
@@ -39,7 +39,7 @@ struct ThunderboltDeviceInfo: Identifiable {
     let connection: String
 }
 
-struct StorageVolumeInfo: Identifiable {
+struct StorageVolumeInfo: Identifiable, Equatable {
     let id: String
     let name: String
     let mountPath: String

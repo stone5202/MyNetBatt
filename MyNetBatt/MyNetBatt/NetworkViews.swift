@@ -8,7 +8,7 @@ import Darwin
 
 // MARK: - 網路詳細視窗
 struct NetworkDetailView: View {
-    @ObservedObject var monitor: SystemMonitor
+    @Bindable var monitor: SystemMonitor
     @State private var usageDays = 1
     var body: some View {
         ScrollView {
@@ -41,7 +41,7 @@ struct NetworkDetailView: View {
 }
 
 struct NetworkConnectionInfoCard: View {
-    @ObservedObject var monitor: SystemMonitor
+    @Bindable var monitor: SystemMonitor
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
@@ -122,7 +122,7 @@ struct NetworkSpeedCard: View {
 }
 
 struct AppDataUsagePanel: View {
-    @ObservedObject var monitor: SystemMonitor
+    @Bindable var monitor: SystemMonitor
     @Binding var usageDays: Int
     let maxRows: Int
     @State private var showsAllApps = false

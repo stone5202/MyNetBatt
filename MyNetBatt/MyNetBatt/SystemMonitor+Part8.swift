@@ -53,10 +53,10 @@ extension SystemMonitor {
         let inDiff = currentIn >= lastInBytes ? currentIn - lastInBytes : 0
         let outDiff = currentOut >= lastOutBytes ? currentOut - lastOutBytes : 0
         lastInBytes = currentIn; lastOutBytes = currentOut
-        self.upSpeedStr = formatSpeed(outDiff)
-        self.downSpeedStr = formatSpeed(inDiff)
-        self.totalDownStr = formatBytes(currentIn)
-        self.totalUpStr = formatBytes(currentOut)
+        self.assignIfChanged(\.upSpeedStr, formatSpeed(outDiff))
+        self.assignIfChanged(\.downSpeedStr, formatSpeed(inDiff))
+        self.assignIfChanged(\.totalDownStr, formatBytes(currentIn))
+        self.assignIfChanged(\.totalUpStr, formatBytes(currentOut))
         self.trafficHistory.append(TrafficData(time: Date(), downloadSpeed: Double(inDiff), uploadSpeed: Double(outDiff)))
         if trafficHistory.count > 30 { trafficHistory.removeFirst() }
     }
