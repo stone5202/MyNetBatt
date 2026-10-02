@@ -4,6 +4,18 @@
 
 This document summarizes the major changes in each MyNetBatt release. Versions before 3.0 were uploaded by replacing earlier copies, so their original per-version Git history can no longer be fully recovered. Changes from 1.0 through 2.x are therefore consolidated from the source code that can still be verified, without attributing uncertain details to individual releases.
 
+## [3.4] - 2026-10-02
+
+### Performance and power usage
+
+- Cut background CPU usage by about another 70% (90-second average on a fresh launch with no windows open: 4.22% to 1.24%).
+- The network and battery popovers now build their views when opened and release them when closed, so charts no longer re-render in the background.
+- Adopted Swift Observation: each view re-renders only when the data it uses changes, so the menu bar no longer redraws for unrelated updates, and unchanged samples no longer trigger redraws.
+- CPU usage is now calculated from the previous sample instead of waiting 150 ms each time, and reflects the full 2-second interval.
+- Disk capacity is refreshed every 30 seconds and immediately when a disk is mounted or ejected.
+- Network details are refreshed when the network changes instead of running several system commands every 30 seconds.
+- The 48-hour battery history is saved at most every 10 minutes and when the app quits.
+
 ## [3.3.1] - 2026-10-02
 
 ### Fixes and improvements
@@ -108,6 +120,7 @@ MyNetBatt established its core monitoring experience in version 1.0. Later 1.x a
 - Added essential battery information and trends, network interface and traffic data, and system information including CPU, memory, swap, and storage usage.
 - Added visibility controls for individual monitoring modules, persistent preferences, and launch-at-login support.
 
+[3.4]: https://github.com/stone5202/MyNetBatt/releases/tag/v3.4
 [3.3.1]: https://github.com/stone5202/MyNetBatt/releases/tag/v3.3.1
 [3.3]: https://github.com/stone5202/MyNetBatt/releases/tag/v3.3
 [3.2]: https://github.com/stone5202/MyNetBatt/releases/tag/v3.2
