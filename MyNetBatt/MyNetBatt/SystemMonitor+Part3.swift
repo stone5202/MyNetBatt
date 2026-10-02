@@ -42,6 +42,57 @@ extension SystemMonitor {
             let swapStr = "\(formatStorageBytes(swapUsedBytes)) / \(formatStorageBytes(swapTotalBytes))"
             let sPct = swapTotalBytes > 0 ? max(0, min(100, (swapUsedBytes / swapTotalBytes) * 100)) : 0
 
+            // 只有 Mach API 取樣失敗時才退回 top（top -l 2 本身就要 1 秒以上）。
+            var cUsage = 0.0
+            if let sampled = self.sampleSystemCPUUsage() {
+                cUsage = sampled
+            } else {
+                let topOut = self.runCommand("/usr/bin/top", ["-l", "2", "-n", "0"])
+                for line in topOut.components(separatedBy: .newlines).reversed() where line.contains("CPU usage:") {
+                    if let idleStr = self.extract(pattern: "([0-9.]+)%\\s*idle", from: line),
+                       let idle = Double(idleStr) {
+                        cUsage = max(0, min(100, 100.0 - idle))
+                        break
+                    }
+                }
+            }
+
+            let gpuUsage = SystemReaders.gpuUtilization() ?? 0.0
+
+            let fCpu = cpuModel
+            let fMac = macModel
+            let fGpu = gpuModel
+            let fRam = ramStr
+            let fSwap = swapStr
+            let fCpuUsage = cUsage
+            let fGpuUsage = gpuUsage
+            let fRamPct = rPct
+            let fSwapPct = sPct
+
+            await MainActor.run {
+                self.cpuModelStr = fCpu
+                self.macModelStr = fMac
+                self.gpuModelStr = fGpu
+                self.ramUsageStr = fRam
+                self.ramUsagePct = fRamPct
+                self.swapUsageStr = fSwap
+                self.swapUsagePct = fSwapPct
+                self.currentCpuUsage = fCpuUsage
+                self.currentGpuUsage = fGpuUsage
+
+                self.cpuHistory.append(SimpleData(time: Date(), value: fCpuUsage))
+                if self.cpuHistory.count > 60 { self.cpuHistory.removeFirst() }
+
+                self.gpuHistory.append(SimpleData(time: Date(), value: fGpuUsage))
+                if self.gpuHistory.count > 60 { self.gpuHistory.removeFirst() }
+            }
+        }
+    }
+
+
+    /// 磁碟容量與外接磁碟清單變化很慢：每 30 秒更新一次，掛載／卸除磁碟時由 AppDelegate 立即觸發。
+    func fetchStorageInfo() {
+        runExclusive("storage") {
             var dUsedStr = "-- GB"
             var dFreeStr = "-- GB"
             var dTotalStr = "-- GB"
@@ -93,32 +144,6 @@ extension SystemMonitor {
                 return lhs.name.localizedCaseInsensitiveCompare(rhs.name) == .orderedAscending
             }
 
-            // 只有 Mach API 取樣失敗時才退回 top（top -l 2 本身就要 1 秒以上）。
-            var cUsage = 0.0
-            if let sampled = self.sampleSystemCPUUsage() {
-                cUsage = sampled
-            } else {
-                let topOut = self.runCommand("/usr/bin/top", ["-l", "2", "-n", "0"])
-                for line in topOut.components(separatedBy: .newlines).reversed() where line.contains("CPU usage:") {
-                    if let idleStr = self.extract(pattern: "([0-9.]+)%\\s*idle", from: line),
-                       let idle = Double(idleStr) {
-                        cUsage = max(0, min(100, 100.0 - idle))
-                        break
-                    }
-                }
-            }
-
-            let gpuUsage = SystemReaders.gpuUtilization() ?? 0.0
-
-            let fCpu = cpuModel
-            let fMac = macModel
-            let fGpu = gpuModel
-            let fRam = ramStr
-            let fSwap = swapStr
-            let fCpuUsage = cUsage
-            let fGpuUsage = gpuUsage
-            let fRamPct = rPct
-            let fSwapPct = sPct
             let fDiskUsed = dUsedStr
             let fDiskFree = dFreeStr
             let fDiskTotal = dTotalStr
@@ -127,29 +152,13 @@ extension SystemMonitor {
             let fDiskSummary = String(format: "%.1f%% 已使用", dPct)
 
             await MainActor.run {
-                self.cpuModelStr = fCpu
-                self.macModelStr = fMac
-                self.gpuModelStr = fGpu
-                self.ramUsageStr = fRam
-                self.ramUsagePct = fRamPct
-                self.swapUsageStr = fSwap
-                self.swapUsagePct = fSwapPct
                 self.diskUsageStr = fDiskSummary
                 self.diskUsedStr = fDiskUsed
                 self.diskFreeStr = fDiskFree
                 self.diskTotalStr = fDiskTotal
                 self.diskUsagePct = fDiskPct
                 self.storageVolumes = fVolumes
-                self.currentCpuUsage = fCpuUsage
-                self.currentGpuUsage = fGpuUsage
-
-                self.cpuHistory.append(SimpleData(time: Date(), value: fCpuUsage))
-                if self.cpuHistory.count > 60 { self.cpuHistory.removeFirst() }
-
-                self.gpuHistory.append(SimpleData(time: Date(), value: fGpuUsage))
-                if self.gpuHistory.count > 60 { self.gpuHistory.removeFirst() }
             }
         }
     }
-
 }

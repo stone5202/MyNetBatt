@@ -48,6 +48,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             name: NSWorkspace.didWakeNotification,
             object: nil
         )
+        // 掛載、卸除或重新命名磁碟時立即更新儲存空間清單。
+        for name in [NSWorkspace.didMountNotification, NSWorkspace.didUnmountNotification, NSWorkspace.didRenameVolumeNotification] {
+            workspaceCenter.addObserver(self, selector: #selector(volumesDidChange), name: name, object: nil)
+        }
         
         updateStatusBarWidths()
     }
@@ -67,8 +71,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // 重複的實例沒有最新資料，不要覆寫正在執行那一份的紀錄。
         guard !isDuplicateInstance else { return }
         monitor.saveAppUsageHistory(force: true)
+        monitor.saveBatteryHistory(force: true)
         let workspaceCenter = NSWorkspace.shared.notificationCenter
         workspaceCenter.removeObserver(self)
+    }
+
+    @objc private func volumesDidChange() {
+        monitor.fetchStorageInfo()
     }
 
     @objc private func systemDidWake() {
@@ -90,19 +99,31 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         netPopover = NSPopover()
         netPopover.behavior = .transient
         netPopover.contentSize = NSSize(width: 380, height: 540)
-        netPopover.contentViewController = NSHostingController(rootView: NetworkPopoverView(monitor: monitor))
         // 網路小視窗打開期間加快各 App 用量取樣。
         NotificationCenter.default.publisher(for: NSPopover.willShowNotification, object: netPopover)
             .sink { [weak self] _ in self?.monitor.setPerAppUsageVisible(true, source: "popover") }
             .store(in: &cancellables)
         NotificationCenter.default.publisher(for: NSPopover.didCloseNotification, object: netPopover)
-            .sink { [weak self] _ in self?.monitor.setPerAppUsageVisible(false, source: "popover") }
+            .sink { [weak self] _ in
+                self?.monitor.setPerAppUsageVisible(false, source: "popover")
+                self?.netPopover.contentViewController = nil
+            }
             .store(in: &cancellables)
 
         batPopover = NSPopover()
         batPopover.behavior = .transient
         batPopover.contentSize = NSSize(width: 360, height: 550)
-        batPopover.contentViewController = NSHostingController(rootView: BatteryPopoverView(monitor: monitor))
+        NotificationCenter.default.publisher(for: NSPopover.didCloseNotification, object: batPopover)
+            .sink { [weak self] _ in self?.batPopover.contentViewController = nil }
+            .store(in: &cancellables)
+    }
+
+    /// 小視窗的 SwiftUI 畫面只在顯示時存在：關閉後仍保留的話，會隨每次資料更新在背景重算
+    /// （電池小視窗含 2880 根長條的 48 小時圖），因此每次打開才建立、關閉後釋放。
+    private func show(_ popover: NSPopover, from item: NSStatusItem, content: () -> NSViewController) {
+        guard let button = item.button else { return }
+        if popover.contentViewController == nil { popover.contentViewController = content() }
+        popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
     }
     
     private func setupStatusBar() {
@@ -176,11 +197,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc func toggleNetPopover(_ sender: AnyObject?) {
         if netPopover.isShown { netPopover.performClose(sender) }
-        else { if let btn = netItem.button { netPopover.show(relativeTo: btn.bounds, of: btn, preferredEdge: .minY) } }
+        else { show(netPopover, from: netItem) { NSHostingController(rootView: NetworkPopoverView(monitor: monitor)) } }
     }
 
     @objc func toggleBatPopover(_ sender: AnyObject?) {
         if batPopover.isShown { batPopover.performClose(sender) }
-        else { if let btn = batItem.button { batPopover.show(relativeTo: btn.bounds, of: btn, preferredEdge: .minY) } }
+        else { show(batPopover, from: batItem) { NSHostingController(rootView: BatteryPopoverView(monitor: monitor)) } }
     }
 }

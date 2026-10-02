@@ -77,10 +77,14 @@ extension SystemMonitor {
         return info.pointee
     }
 
+    /// 與上一輪取樣的 CPU tick 相減，取得兩次取樣之間（約 2 秒）的平均使用率，不必睡眠等待；
+    /// 只有第一次沒有上一輪資料時，才短暫等待 150 毫秒取得基準。
     nonisolated func sampleSystemCPUUsage() -> Double? {
-        guard let first = hostCPULoadInfo() else { return nil }
-        usleep(150_000)
         guard let second = hostCPULoadInfo() else { return nil }
+        guard let first = CPUTickHistory.shared.exchange(second) else {
+            usleep(150_000)
+            return sampleSystemCPUUsage()
+        }
 
         let user = Double(second.cpu_ticks.0 &- first.cpu_ticks.0)
         let system = Double(second.cpu_ticks.1 &- first.cpu_ticks.1)
@@ -101,4 +105,20 @@ extension SystemMonitor {
     }
 
     // Per-App 網路用量由 startPerAppNetworkMonitor()（Part2）以 nettop 取樣：網路頁面打開時每 2 秒，關著時每 60 秒。
+}
+
+/// 保存上一輪的 CPU tick；取樣在背景執行緒進行，因此以 lock 保護。
+nonisolated final class CPUTickHistory: @unchecked Sendable {
+    static let shared = CPUTickHistory()
+    private let lock = NSLock()
+    private var previous: host_cpu_load_info?
+
+    /// 存入這一輪的值並取回上一輪的值。
+    func exchange(_ current: host_cpu_load_info) -> host_cpu_load_info? {
+        lock.lock()
+        defer { lock.unlock() }
+        let last = previous
+        previous = current
+        return last
+    }
 }

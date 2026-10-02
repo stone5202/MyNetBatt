@@ -188,8 +188,19 @@ extension SystemMonitor {
                     self.batteryHistory.append(BatteryData(time: now, level: fPct))
                 }
                 if self.batteryHistory.count > 2880 { self.batteryHistory.removeFirst() }
+                self.saveBatteryHistory()
             }
         }
     }
     
+
+    /// 48 小時電量紀錄最多 2880 筆，最多每 10 分鐘寫入一次；App 結束時由 AppDelegate 強制寫入。
+    func saveBatteryHistory(force: Bool = false) {
+        let now = Date()
+        if !force, let last = lastBatteryHistorySave, now.timeIntervalSince(last) < 600 { return }
+        lastBatteryHistorySave = now
+        if let encoded = try? JSONEncoder().encode(batteryHistory) {
+            UserDefaults.standard.set(encoded, forKey: "batteryHistory")
+        }
+    }
 }
