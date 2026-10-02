@@ -8,7 +8,7 @@ import Darwin
 
 // MARK: - 主視窗：側邊欄控制中心
 struct MainWindowView: View {
-    @ObservedObject var monitor: SystemMonitor
+    @Bindable var monitor: SystemMonitor
     @State private var selectedTab: String? = "battery"
     
     var body: some View {

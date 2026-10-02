@@ -8,7 +8,7 @@ import Darwin
 
 // MARK: - 系統效能視窗
 struct SystemDetailView: View {
-    @ObservedObject var monitor: SystemMonitor
+    @Bindable var monitor: SystemMonitor
 
     var body: some View {
         ScrollView {
@@ -195,7 +195,7 @@ struct SystemCard: View {
 }
 
 struct StorageVolumesCard: View {
-    @ObservedObject var monitor: SystemMonitor
+    @Bindable var monitor: SystemMonitor
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {

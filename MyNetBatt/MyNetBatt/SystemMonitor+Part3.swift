@@ -70,15 +70,15 @@ extension SystemMonitor {
             let fSwapPct = sPct
 
             await MainActor.run {
-                self.cpuModelStr = fCpu
-                self.macModelStr = fMac
-                self.gpuModelStr = fGpu
-                self.ramUsageStr = fRam
-                self.ramUsagePct = fRamPct
-                self.swapUsageStr = fSwap
-                self.swapUsagePct = fSwapPct
-                self.currentCpuUsage = fCpuUsage
-                self.currentGpuUsage = fGpuUsage
+                self.assignIfChanged(\.cpuModelStr, fCpu)
+                self.assignIfChanged(\.macModelStr, fMac)
+                self.assignIfChanged(\.gpuModelStr, fGpu)
+                self.assignIfChanged(\.ramUsageStr, fRam)
+                self.assignIfChanged(\.ramUsagePct, fRamPct)
+                self.assignIfChanged(\.swapUsageStr, fSwap)
+                self.assignIfChanged(\.swapUsagePct, fSwapPct)
+                self.assignIfChanged(\.currentCpuUsage, fCpuUsage)
+                self.assignIfChanged(\.currentGpuUsage, fGpuUsage)
 
                 self.cpuHistory.append(SimpleData(time: Date(), value: fCpuUsage))
                 if self.cpuHistory.count > 60 { self.cpuHistory.removeFirst() }
@@ -152,12 +152,12 @@ extension SystemMonitor {
             let fDiskSummary = String(format: "%.1f%% 已使用", dPct)
 
             await MainActor.run {
-                self.diskUsageStr = fDiskSummary
-                self.diskUsedStr = fDiskUsed
-                self.diskFreeStr = fDiskFree
-                self.diskTotalStr = fDiskTotal
-                self.diskUsagePct = fDiskPct
-                self.storageVolumes = fVolumes
+                self.assignIfChanged(\.diskUsageStr, fDiskSummary)
+                self.assignIfChanged(\.diskUsedStr, fDiskUsed)
+                self.assignIfChanged(\.diskFreeStr, fDiskFree)
+                self.assignIfChanged(\.diskTotalStr, fDiskTotal)
+                self.assignIfChanged(\.diskUsagePct, fDiskPct)
+                self.assignIfChanged(\.storageVolumes, fVolumes)
             }
         }
     }

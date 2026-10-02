@@ -69,10 +69,10 @@ extension SystemMonitor {
             let snapshot = unique
 
             await MainActor.run {
-                self.thunderboltDevices = snapshot
-                self.thunderboltStatus = snapshot.isEmpty
+                self.assignIfChanged(\.thunderboltDevices, snapshot)
+                self.assignIfChanged(\.thunderboltStatus, snapshot.isEmpty
                     ? "沒有外接 Thunderbolt / USB-C 設備"
-                    : "目前偵測到 \(snapshot.count) 個外接設備"
+                    : "目前偵測到 \(snapshot.count) 個外接設備")
             }
         }
     }

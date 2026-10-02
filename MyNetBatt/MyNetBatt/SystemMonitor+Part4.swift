@@ -118,12 +118,12 @@ extension SystemMonitor {
                 self.saveAppUsageHistory()
 
                 if outputIsEmpty {
-                    self.appNetworkStatus = "無法取得 nettop 資料"
+                    self.assignIfChanged(\.appNetworkStatus, "無法取得 nettop 資料")
                 } else if !hadPreviousSample {
-                    self.appNetworkStatus = "建立程序流量基準中…"
+                    self.assignIfChanged(\.appNetworkStatus, "建立程序流量基準中…")
                 } else {
                     let active = self.appNetworkUsages.filter(\.isActive).count
-                    self.appNetworkStatus = "偵測到 \(self.appNetworkUsages.count) 個有網路流量的程序 · \(active) 個目前活躍"
+                    self.assignIfChanged(\.appNetworkStatus, "偵測到 \(self.appNetworkUsages.count) 個有網路流量的程序 · \(active) 個目前活躍")
                 }
             }
         }
