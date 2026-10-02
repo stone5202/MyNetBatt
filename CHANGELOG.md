@@ -4,6 +4,14 @@
 
 本文件整理 MyNetBatt 的主要版本變更。3.0 以前的版本曾以覆蓋方式上傳，原始逐版 Git 紀錄已無法完整還原，因此 1.0～2.x 依目前仍可驗證的程式內容合併記錄，避免為個別小版本編造不確定的差異。
 
+## [3.3.1] - 2026-10-02
+
+### 修正與調整
+
+- 接上電源時電池圖示一律顯示閃電；電量已充滿或 macOS 暫停充電時，閃電不再消失。
+- 各 App 網路用量改為只在網路小視窗或網路頁面開啟時每 2 秒取樣，關閉時每 60 秒取樣一次，進一步降低耗電；今日／近 7 日統計仍會持續累計。
+- 防止 MyNetBatt 重複執行：已有另一個 MyNetBatt 在執行時，新開啟的會自動結束，不再於選單列出現兩組圖示。
+
 ## [3.3] - 2026-10-02
 
 ### Privileged Helper 與安全性
@@ -100,6 +108,7 @@ MyNetBatt 從 1.0 開始建立核心監控體驗，後續 1.x 與 2.x 的小幅�
 - 提供基本電池資訊與趨勢圖、網路介面與流量資訊，以及 CPU、記憶體、Swap、儲存空間等系統資訊。
 - 加入各監控模組的顯示開關、偏好保存與登入時自動啟動。
 
+[3.3.1]: https://github.com/stone5202/MyNetBatt/releases/tag/v3.3.1
 [3.3]: https://github.com/stone5202/MyNetBatt/releases/tag/v3.3
 [3.2]: https://github.com/stone5202/MyNetBatt/releases/tag/v3.2
 [3.1]: https://github.com/stone5202/MyNetBatt/releases/tag/v3.1

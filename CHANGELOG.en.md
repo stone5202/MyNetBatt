@@ -4,6 +4,14 @@
 
 This document summarizes the major changes in each MyNetBatt release. Versions before 3.0 were uploaded by replacing earlier copies, so their original per-version Git history can no longer be fully recovered. Changes from 1.0 through 2.x are therefore consolidated from the source code that can still be verified, without attributing uncertain details to individual releases.
 
+## [3.3.1] - 2026-10-02
+
+### Fixes and improvements
+
+- The battery icon now always shows a bolt while external power is connected; it no longer disappears when the battery is full or macOS pauses charging.
+- Per-app network usage is now sampled every 2 seconds only while the network popover or network page is open, and every 60 seconds otherwise, further reducing power usage. Daily and weekly totals continue to accumulate.
+- Prevented duplicate instances: if MyNetBatt is already running, a newly launched copy quits automatically instead of adding a second set of menu bar items.
+
 ## [3.3] - 2026-10-02
 
 ### Privileged Helper and security
@@ -100,6 +108,7 @@ MyNetBatt established its core monitoring experience in version 1.0. Later 1.x a
 - Added essential battery information and trends, network interface and traffic data, and system information including CPU, memory, swap, and storage usage.
 - Added visibility controls for individual monitoring modules, persistent preferences, and launch-at-login support.
 
+[3.3.1]: https://github.com/stone5202/MyNetBatt/releases/tag/v3.3.1
 [3.3]: https://github.com/stone5202/MyNetBatt/releases/tag/v3.3
 [3.2]: https://github.com/stone5202/MyNetBatt/releases/tag/v3.2
 [3.1]: https://github.com/stone5202/MyNetBatt/releases/tag/v3.1
