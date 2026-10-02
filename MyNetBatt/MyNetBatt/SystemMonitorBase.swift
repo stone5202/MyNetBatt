@@ -120,6 +120,13 @@ class SystemMonitor: ObservableObject {
         return formatter
     }()
     private var wakeRefreshTask: Task<Void, Never>?
+    /// 正在執行中的背景取樣；同一種取樣尚未完成時不再疊加新的一輪。
+    var inFlightFetches = Set<String>()
+    var lastAppUsageSave: Date?
+    var lastPublicIPCheck: Date?
+    var lastPublicIPNetworkKey = ""
+    var deviceChangeObserver: DeviceChangeObserver?
+    var deviceRefreshTask: Task<Void, Never>?
 
     init() {
         UserDefaults.standard.register(defaults: [
@@ -155,6 +162,7 @@ class SystemMonitor: ObservableObject {
         startBatteryHealthMonitor()
         startSystemInfoMonitor()
         startThunderboltMonitor()
+        deviceChangeObserver = DeviceChangeObserver { [weak self] in self?.scheduleDeviceRefresh() }
     }
 
     var batteryTimeTitle: String {

@@ -8,7 +8,7 @@ import Darwin
 
 extension SystemMonitor {
     func fetchBatteryHealthInfo() {
-        Task.detached {
+        runExclusive("batteryHealth") {
             // Keep macOS Maximum Capacity as the single source of truth.
             // AppleRawMaxCapacity is a fluctuating gauge value and can differ
             // by several percentage points from the health shown by macOS.
@@ -39,36 +39,11 @@ extension SystemMonitor {
     }
 
     func fetchNetworkTraffic() {
-        Task.detached {
-            let output = self.runCommand("/usr/sbin/netstat", ["-ib"])
-            var seenInterfaces = Set<String>()
-            var totalIn: UInt64 = 0
-            var totalOut: UInt64 = 0
-
-            for line in output.components(separatedBy: .newlines) {
-                let cols = line
-                    .components(separatedBy: .whitespaces)
-                    .filter { !$0.isEmpty }
-
-                guard cols.count >= 10 else { continue }
-                let interfaceName = cols[0]
-
-                guard interfaceName.hasPrefix("en"),
-                      !seenInterfaces.contains(interfaceName),
-                      let iBytes = UInt64(cols[6]),
-                      let oBytes = UInt64(cols[9]) else {
-                    continue
-                }
-
-                seenInterfaces.insert(interfaceName)
-                totalIn += iBytes
-                totalOut += oBytes
-            }
-
-            let fIn = totalIn
-            let fOut = totalOut
+        runExclusive("networkTraffic") {
+            // 以 IFMIB 直接讀 en* 介面的累計流量，取代每秒 spawn 一次 netstat -ib。
+            guard let counts = SystemReaders.interfaceByteCounts(namePrefix: "en") else { return }
             await MainActor.run {
-                self.calculateSpeed(currentIn: fIn, currentOut: fOut)
+                self.calculateSpeed(currentIn: counts.input, currentOut: counts.output)
             }
         }
     }

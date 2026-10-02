@@ -8,58 +8,20 @@ import Darwin
 
 extension SystemMonitor {
     func fetchSystemInfo() {
-        Task.detached {
-            var cpuModel = self.runCommand("/usr/sbin/sysctl", ["-n", "machdep.cpu.brand_string"])
-                .trimmingCharacters(in: .whitespacesAndNewlines)
+        runExclusive("systemInfo") {
+            var cpuModel = SystemReaders.cpuBrand
             if cpuModel.isEmpty { cpuModel = "Apple Silicon Processor" }
 
-            let macModel = self.runCommand("/usr/sbin/sysctl", ["-n", "hw.model"])
-                .trimmingCharacters(in: .whitespacesAndNewlines)
+            let macModel = SystemReaders.hardwareModel
 
             let gpuModel = cpuModel.contains("Apple")
                 ? "\(cpuModel) GPU"
                 : "內建顯示晶片"
 
             let totalRamGb = Double(ProcessInfo.processInfo.physicalMemory) / 1_073_741_824.0
-            let vmStatOut = self.runCommand("/usr/bin/vm_stat", [])
-            var pageSize: Double = 4096
-            var activePages = 0.0
-            var wiredPages = 0.0
-            var compressedPages = 0.0
-
-            if let pageSizeString = self.extract(pattern: "page size of\\s+(\\d+)\\s+bytes", from: vmStatOut),
-               let detectedPageSize = Double(pageSizeString) {
-                pageSize = detectedPageSize
-            }
-
-            for line in vmStatOut.components(separatedBy: .newlines) {
-                let parts = line.components(separatedBy: ":")
-                guard parts.count == 2 else { continue }
-                let key = parts[0].trimmingCharacters(in: .whitespaces)
-                let valueString = parts[1]
-                    .trimmingCharacters(in: .whitespaces)
-                    .replacingOccurrences(of: ".", with: "")
-                let value = Double(valueString) ?? 0
-
-                if key == "Pages active" { activePages = value }
-                else if key == "Pages wired down" { wiredPages = value }
-                else if key == "Pages occupied by compressor" { compressedPages = value }
-            }
-
-            let usedRamGb = ((activePages + wiredPages + compressedPages) * pageSize) / 1_073_741_824.0
+            let usedRamGb = (SystemReaders.memoryUsedBytes() ?? 0) / 1_073_741_824.0
             let ramStr = String(format: "%.1f GB / %.1f GB", usedRamGb, totalRamGb)
             let rPct = totalRamGb > 0 ? max(0, min(100, (usedRamGb / totalRamGb) * 100.0)) : 0
-
-            func bytesFromSwapValue(_ value: String, unit: String) -> Double {
-                guard let number = Double(value) else { return 0 }
-                switch unit.uppercased() {
-                case "K": return number * 1024
-                case "M": return number * 1024 * 1024
-                case "G": return number * 1024 * 1024 * 1024
-                case "T": return number * 1024 * 1024 * 1024 * 1024
-                default: return number
-                }
-            }
 
             func formatStorageBytes(_ bytes: Double) -> String {
                 if bytes >= 1024 * 1024 * 1024 {
@@ -73,27 +35,9 @@ extension SystemMonitor {
                 }
             }
 
-            let swapOut = self.runCommand("/usr/sbin/sysctl", ["vm.swapusage"])
-            var swapUsedBytes = 0.0
-            var swapTotalBytes = 0.0
-
-            if let usedValue = self.extract(pattern: "used\\s*=\\s*([0-9.]+)([KMGT]?)", from: swapOut) {
-                if let regex = try? NSRegularExpression(pattern: "used\\s*=\\s*([0-9.]+)([KMGT]?)", options: .caseInsensitive),
-                   let match = regex.firstMatch(in: swapOut, range: NSRange(swapOut.startIndex..., in: swapOut)),
-                   let vRange = Range(match.range(at: 1), in: swapOut),
-                   let uRange = Range(match.range(at: 2), in: swapOut) {
-                    swapUsedBytes = bytesFromSwapValue(String(swapOut[vRange]), unit: String(swapOut[uRange]))
-                } else {
-                    swapUsedBytes = Double(usedValue) ?? 0
-                }
-            }
-
-            if let regex = try? NSRegularExpression(pattern: "total\\s*=\\s*([0-9.]+)([KMGT]?)", options: .caseInsensitive),
-               let match = regex.firstMatch(in: swapOut, range: NSRange(swapOut.startIndex..., in: swapOut)),
-               let vRange = Range(match.range(at: 1), in: swapOut),
-               let uRange = Range(match.range(at: 2), in: swapOut) {
-                swapTotalBytes = bytesFromSwapValue(String(swapOut[vRange]), unit: String(swapOut[uRange]))
-            }
+            let swap = SystemReaders.swapUsage()
+            let swapUsedBytes = swap?.usedBytes ?? 0
+            let swapTotalBytes = swap?.totalBytes ?? 0
 
             let swapStr = "\(formatStorageBytes(swapUsedBytes)) / \(formatStorageBytes(swapTotalBytes))"
             let sPct = swapTotalBytes > 0 ? max(0, min(100, (swapUsedBytes / swapTotalBytes) * 100)) : 0
@@ -149,8 +93,11 @@ extension SystemMonitor {
                 return lhs.name.localizedCaseInsensitiveCompare(rhs.name) == .orderedAscending
             }
 
-            var cUsage = self.sampleSystemCPUUsage() ?? 0.0
-            if cUsage <= 0.0001 {
+            // 只有 Mach API 取樣失敗時才退回 top（top -l 2 本身就要 1 秒以上）。
+            var cUsage = 0.0
+            if let sampled = self.sampleSystemCPUUsage() {
+                cUsage = sampled
+            } else {
                 let topOut = self.runCommand("/usr/bin/top", ["-l", "2", "-n", "0"])
                 for line in topOut.components(separatedBy: .newlines).reversed() where line.contains("CPU usage:") {
                     if let idleStr = self.extract(pattern: "([0-9.]+)%\\s*idle", from: line),
@@ -161,49 +108,7 @@ extension SystemMonitor {
                 }
             }
 
-            func gpuUsageFromIOReg(className: String) -> Double? {
-                let data = self.runCommandData("/usr/sbin/ioreg", ["-a", "-r", "-c", className])
-                guard !data.isEmpty,
-                      let root = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil) else {
-                    return nil
-                }
-
-                func search(_ object: Any) -> Double? {
-                    if let dict = object as? [String: Any] {
-                        let directKeys = ["Device Utilization %", "Device Utilization % at cur p-state"]
-                        for key in directKeys {
-                            if let n = dict[key] as? NSNumber {
-                                let v = n.doubleValue
-                                if v >= 0 && v <= 100 { return v }
-                            }
-                        }
-
-                        if let n = dict["GPU Core Utilization"] as? NSNumber {
-                            let raw = n.doubleValue
-                            if raw >= 0 {
-                                if raw <= 100 { return raw }
-                                let pct = raw / 4_294_967_295.0 * 100.0
-                                if pct >= 0 && pct <= 100 { return pct }
-                            }
-                        }
-
-                        for value in dict.values {
-                            if let found = search(value) { return found }
-                        }
-                    } else if let array = object as? [Any] {
-                        for value in array {
-                            if let found = search(value) { return found }
-                        }
-                    }
-                    return nil
-                }
-
-                return search(root)
-            }
-
-            let gpuUsage = gpuUsageFromIOReg(className: "AGXAccelerator")
-                ?? gpuUsageFromIOReg(className: "IOAccelerator")
-                ?? 0.0
+            let gpuUsage = SystemReaders.gpuUtilization() ?? 0.0
 
             let fCpu = cpuModel
             let fMac = macModel

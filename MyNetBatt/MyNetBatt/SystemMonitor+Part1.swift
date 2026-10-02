@@ -16,6 +16,15 @@ extension SystemMonitor {
         if selectedColorIndex >= 0 && selectedColorIndex < colors.count { batteryColor = colors[selectedColorIndex] }
     }
     
+    /// 在背景執行取樣；同一個 key 的上一輪還沒完成時直接略過，避免慢的取樣越疊越多。
+    func runExclusive(_ key: String, _ work: @escaping @Sendable () async -> Void) {
+        guard inFlightFetches.insert(key).inserted else { return }
+        Task.detached {
+            await work()
+            await MainActor.run { _ = self.inFlightFetches.remove(key) }
+        }
+    }
+
     nonisolated func runCommand(_ path: String, _ args: [String]) -> String {
         let task = Process(); task.executableURL = URL(fileURLWithPath: path); task.arguments = args
         var env = ProcessInfo.processInfo.environment
@@ -52,9 +61,6 @@ extension SystemMonitor {
         return String(text[range])
     }
 
-    // mach_host_self() 每次呼叫都會增加一個 port right 參照，只取一次重複使用以免長期洩漏。
-    nonisolated static let hostPort: mach_port_t = mach_host_self()
-
     // 直接向 Mach kernel 取得整台 Mac 的 CPU tick，避免 top/ps 文字格式或語系變動。
     nonisolated func hostCPULoadInfo() -> host_cpu_load_info? {
         var count = mach_msg_type_number_t(
@@ -64,7 +70,7 @@ extension SystemMonitor {
         defer { info.deallocate() }
 
         let result = info.withMemoryRebound(to: integer_t.self, capacity: Int(count)) { ptr in
-            host_statistics(Self.hostPort, HOST_CPU_LOAD_INFO, ptr, &count)
+            host_statistics(SystemReaders.hostPort, HOST_CPU_LOAD_INFO, ptr, &count)
         }
 
         guard result == KERN_SUCCESS else { return nil }
