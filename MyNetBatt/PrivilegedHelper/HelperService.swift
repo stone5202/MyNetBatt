@@ -73,10 +73,11 @@ final class HelperService: NSObject, MyNetBattPrivilegedHelperProtocol {
 
         do {
             try process.run()
-            process.waitUntilExit()
 
+            // 先讀完 pipe 再等待結束；若先 waitUntilExit()，輸出超過 pipe buffer 時子程序會卡住。
             let stdoutData = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
             let stderrData = stderrPipe.fileHandleForReading.readDataToEndOfFile()
+            process.waitUntilExit()
             return (
                 process.terminationStatus,
                 String(data: stdoutData, encoding: .utf8) ?? "",

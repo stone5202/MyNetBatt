@@ -27,7 +27,19 @@ class SystemMonitor: ObservableObject {
     }
 
     @Published var isAutoStartEnabled: Bool = SMAppService.mainApp.status == .enabled {
-        didSet { do { if isAutoStartEnabled { if SMAppService.mainApp.status != .enabled { try SMAppService.mainApp.register() } } else { if SMAppService.mainApp.status == .enabled { try SMAppService.mainApp.unregister() } } } catch { print("Auto Start Error: \(error)") } }
+        didSet {
+            do {
+                if isAutoStartEnabled {
+                    if SMAppService.mainApp.status != .enabled { try SMAppService.mainApp.register() }
+                } else {
+                    if SMAppService.mainApp.status == .enabled { try SMAppService.mainApp.unregister() }
+                }
+            } catch {
+                print("Auto Start Error: \(error)")
+                // 註冊／取消失敗時讓開關回到系統實際狀態（在 didSet 內賦值不會再次觸發 didSet）。
+                isAutoStartEnabled = SMAppService.mainApp.status == .enabled
+            }
+        }
     }
 
     @Published var upSpeedStr: String = "0 B/s"
@@ -40,8 +52,6 @@ class SystemMonitor: ObservableObject {
     @Published var batPct: Int = 0
     @Published var isCharging: Bool = false
     @Published var isPluggedIn: Bool = false
-    @Published var isLowPowerModeEnabled: Bool = ProcessInfo.processInfo.isLowPowerModeEnabled
-    @Published var isChangingLowPowerMode: Bool = false
     @Published var tempDisplayInFahrenheit: Bool = UserDefaults.standard.bool(forKey: "tempDisplayInFahrenheit") {
         didSet { UserDefaults.standard.set(tempDisplayInFahrenheit, forKey: "tempDisplayInFahrenheit") }
     }
@@ -98,6 +108,17 @@ class SystemMonitor: ObservableObject {
     var lastAppNetworkBytes: [String: (incoming: UInt64, outgoing: UInt64)] = [:]
     var lastAppNetworkSampleTime: Date?
     let appUsageHistoryDefaultsKey = "appUsageHistoryV2"
+
+    /// 每日用量紀錄的 key 固定使用西曆與 POSIX locale，避免使用者切換曆法（如民國曆）後
+    /// 舊 key 解析錯誤，導致 14 天清理誤刪或永遠保留紀錄。
+    static let dayKeyFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = .current
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter
+    }()
     private var wakeRefreshTask: Task<Void, Never>?
 
     init() {
@@ -131,7 +152,6 @@ class SystemMonitor: ObservableObject {
         startPerAppNetworkMonitor()
         startNetworkDetailsMonitor()
         startDetailedBatteryMonitor()
-        startLowPowerModeMonitor()
         startBatteryHealthMonitor()
         startSystemInfoMonitor()
         startThunderboltMonitor()
@@ -186,7 +206,6 @@ class SystemMonitor: ObservableObject {
                 self.fetchNetworkDetails()
                 self.fetchDynamicBatteryInfo()
                 self.fetchSystemInfo()
-                self.refreshLowPowerModeState()
             }
             self.fetchBatteryHealthInfo()
             self.fetchThunderboltDevices()

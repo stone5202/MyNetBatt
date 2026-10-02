@@ -31,8 +31,7 @@ extension SystemMonitor {
 
     func appDataUsageItems(days: Int) -> [AppDataUsageItem] {
         let calendar = Calendar.current
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
+        let formatter = Self.dayKeyFormatter
         var totals: [String: UInt64] = [:]
         for offset in 0..<max(1, days) {
             guard let date = calendar.date(byAdding: .day, value: -offset, to: Date()) else { continue }
@@ -54,53 +53,6 @@ extension SystemMonitor {
 
     func appDataUsageTotal(days: Int) -> UInt64 {
         appDataUsageItems(days: days).reduce(0) { $0 + $1.bytes }
-    }
-
-    func startLowPowerModeMonitor() {
-        Task {
-            while !Task.isCancelled {
-                refreshLowPowerModeState()
-                try? await Task.sleep(nanoseconds: 3_000_000_000)
-            }
-        }
-    }
-
-    func refreshLowPowerModeState() {
-        Task.detached {
-            let batt = self.runCommand("/usr/bin/pmset", ["-g", "batt"])
-            let custom = self.runCommand("/usr/bin/pmset", ["-g", "custom"])
-            let onAC = batt.localizedCaseInsensitiveContains("AC Power")
-            let sectionName = onAC ? "AC Power" : "Battery Power"
-            var enabled: Bool? = nil
-            if let range = custom.range(of: sectionName + ":") {
-                let tail = String(custom[range.upperBound...])
-                let section = tail.components(separatedBy: "\n\n").first ?? tail
-                if let value = self.extract(pattern: #"(?m)^\s*lowpowermode\s+(\d+)"#, from: section) { enabled = (value == "1") }
-            }
-            let actual = enabled ?? ProcessInfo.processInfo.isLowPowerModeEnabled
-            await MainActor.run { self.isLowPowerModeEnabled = actual }
-        }
-    }
-
-    func toggleLowPowerMode() {
-        setLowPowerMode(!isLowPowerModeEnabled)
-    }
-
-    func setLowPowerMode(_ enabled: Bool) {
-        guard !isChangingLowPowerMode else { return }
-        isChangingLowPowerMode = true
-        PrivilegedHelperManager.shared.setLowPowerMode(enabled)
-
-        Task {
-            for _ in 0..<30 {
-                if !PrivilegedHelperManager.shared.isBusy {
-                    break
-                }
-                try? await Task.sleep(for: .milliseconds(100))
-            }
-            self.isLowPowerModeEnabled = PrivilegedHelperManager.shared.isLowPowerModeEnabled
-            self.isChangingLowPowerMode = false
-        }
     }
 
     func startDetailedBatteryMonitor() {
