@@ -4,6 +4,25 @@
 
 This document summarizes the major changes in each MyNetBatt release. Versions before 3.0 were uploaded by replacing earlier copies, so their original per-version Git history can no longer be fully recovered. Changes from 1.0 through 2.x are therefore consolidated from the source code that can still be verified, without attributing uncertain details to individual releases.
 
+## [3.2] - 2026-10-02
+
+### Performance and power usage
+
+- Greatly reduced MyNetBatt's own power usage: background CPU usage dropped from about 24% to about 4%, and memory from about 82 MB to about 31 MB.
+- The main window is now created when opened and released when closed, so the 48-hour battery chart no longer re-renders in the background.
+- CPU model, memory, swap, GPU, battery, and network counters are now read directly through system APIs, cutting spawned helper processes from about 400 to about 45 per minute.
+- Thunderbolt/USB devices now refresh when a device is connected or disconnected instead of being fully rescanned every 10 seconds.
+- The public IP is now refreshed only when the network changes or on manual refresh; battery health is refreshed every 10 minutes.
+- Slow sampling rounds no longer overlap, and per-app network usage history is written less often.
+
+### Fixes and improvements
+
+- Battery health now consistently uses the Maximum Capacity reported by macOS, matching System Settings.
+- Per-app network usage history now always uses Gregorian date keys, so switching the system calendar no longer deletes or strands old records.
+- A slow helper start on the first Low Power Mode toggle is no longer reported as "not responding".
+- The Launch at Login switch now reverts to the actual state when registration fails.
+- Fixed a command execution pattern in the Privileged Helper that could hang, and a system resource leak during long-running sessions.
+
 ## [3.1] - 2026-09-21
 
 ### Added
@@ -60,6 +79,7 @@ MyNetBatt established its core monitoring experience in version 1.0. Later 1.x a
 - Added essential battery information and trends, network interface and traffic data, and system information including CPU, memory, swap, and storage usage.
 - Added visibility controls for individual monitoring modules, persistent preferences, and launch-at-login support.
 
+[3.2]: https://github.com/stone5202/MyNetBatt/releases/tag/v3.2
 [3.1]: https://github.com/stone5202/MyNetBatt/releases/tag/v3.1
 [3.0]: https://github.com/stone5202/MyNetBatt/releases/tag/v3.0
 [1.0–2.x]: https://github.com/stone5202/MyNetBatt/releases/tag/v1.0
