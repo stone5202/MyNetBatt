@@ -66,13 +66,8 @@ class SystemMonitor: ObservableObject {
     @Published var batSourceType: String = "--"
     @Published var batTimeRemain: String = "--"
 
-    @Published var batteryHistory: [BatteryData] = [] {
-        didSet {
-            if let encoded = try? JSONEncoder().encode(batteryHistory) {
-                UserDefaults.standard.set(encoded, forKey: "batteryHistory")
-            }
-        }
-    }
+    /// 每分鐘新增一筆、最多 2880 筆；寫入由 saveBatteryHistory() 節流，不在每次變動時整包編碼。
+    @Published var batteryHistory: [BatteryData] = []
 
     @Published var cpuModelStr: String = "讀取中..."
     @Published var macModelStr: String = "讀取中..."
@@ -129,6 +124,9 @@ class SystemMonitor: ObservableObject {
     var lastPublicIPNetworkKey = ""
     var deviceChangeObserver: DeviceChangeObserver?
     var deviceRefreshTask: Task<Void, Never>?
+    var networkPathMonitor: NWPathMonitor?
+    var networkRefreshTask: Task<Void, Never>?
+    var lastBatteryHistorySave: Date?
 
     init() {
         UserDefaults.standard.register(defaults: [
@@ -163,6 +161,7 @@ class SystemMonitor: ObservableObject {
         startDetailedBatteryMonitor()
         startBatteryHealthMonitor()
         startSystemInfoMonitor()
+        startStorageMonitor()
         startThunderboltMonitor()
         deviceChangeObserver = DeviceChangeObserver { [weak self] in self?.scheduleDeviceRefresh() }
     }

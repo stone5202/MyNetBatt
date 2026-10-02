@@ -37,10 +37,39 @@ extension SystemMonitor {
         }
     }
 
+    /// 網路資訊（介面、IP、閘道、DNS）需要執行 route、ifconfig、scutil 等指令：
+    /// 改由 NWPathMonitor 在網路環境變動時觸發，另每 5 分鐘保底更新一次。
     func startNetworkDetailsMonitor() {
+        let monitor = NWPathMonitor()
+        // SystemMonitor 與 App 同生命週期，以 unowned 參照即可。
+        monitor.pathUpdateHandler = { [unowned self] _ in
+            Task { @MainActor in self.scheduleNetworkDetailsRefresh() }
+        }
+        monitor.start(queue: DispatchQueue(label: "com.stone5202.MyNetBatt.path-monitor"))
+        networkPathMonitor = monitor
+
         Task {
             while !Task.isCancelled {
                 fetchNetworkDetails()
+                try? await Task.sleep(nanoseconds: 300_000_000_000)
+            }
+        }
+    }
+
+    /// 切換 Wi-Fi 等情況會連續觸發多次路徑變更，等網路穩定後再查詢一次。
+    func scheduleNetworkDetailsRefresh() {
+        networkRefreshTask?.cancel()
+        networkRefreshTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(1.5))
+            guard !Task.isCancelled else { return }
+            self?.fetchNetworkDetails()
+        }
+    }
+
+    func startStorageMonitor() {
+        Task {
+            while !Task.isCancelled {
+                fetchStorageInfo()
                 try? await Task.sleep(nanoseconds: 30_000_000_000)
             }
         }
