@@ -1,7 +1,33 @@
 import Foundation
 
 final class HelperService: NSObject, MyNetBattPrivilegedHelperProtocol {
+    /// 閒置一段時間後自行結束；launchd 會在下一次連線時按需重新啟動。
+    /// 這樣 App 更新後，舊版 Helper 不會一直留在記憶體裡。
+    private static let idleTimeout: TimeInterval = 60
+    private var idleExitWorkItem: DispatchWorkItem?
+
+    func scheduleIdleExit() {
+        DispatchQueue.main.async {
+            self.idleExitWorkItem?.cancel()
+            let workItem = DispatchWorkItem { exit(0) }
+            self.idleExitWorkItem = workItem
+            DispatchQueue.main.asyncAfter(deadline: .now() + Self.idleTimeout, execute: workItem)
+        }
+    }
+
+    func getVersion(withReply reply: @escaping (String) -> Void) {
+        reply(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "unknown")
+        scheduleIdleExit()
+    }
+
+    func exitForUpdate(withReply reply: @escaping () -> Void) {
+        reply()
+        // 稍等一下讓回覆送出後再結束。
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { exit(0) }
+    }
+
     func getLowPowerMode(withReply reply: @escaping (Bool, String?) -> Void) {
+        defer { scheduleIdleExit() }
         guard let enabled = Self.readLowPowerMode() else {
             reply(false, "無法讀取目前低耗電模式狀態。")
             return
@@ -10,6 +36,7 @@ final class HelperService: NSObject, MyNetBattPrivilegedHelperProtocol {
     }
 
     func setLowPowerMode(_ enabled: Bool, withReply reply: @escaping (Bool, String?) -> Void) {
+        defer { scheduleIdleExit() }
         let value = enabled ? "1" : "0"
         let result = Self.runCommand("/usr/bin/pmset", ["-a", "lowpowermode", value])
 

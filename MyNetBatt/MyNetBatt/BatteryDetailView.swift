@@ -132,12 +132,24 @@ struct BatteryDetailView: View {
             .tint(.green)
             .disabled(helper.isBusy)
 
-            if helper.registrationState == .notRegistered {
-                Button("安裝 Helper") {
+            if helper.hasLegacyInstall {
+                Button("更新 Helper") {
                     helper.registerHelper()
                 }
                 .controlSize(.small)
                 .disabled(helper.isBusy)
+                .help("移除舊版安裝方式並改由系統管理 Helper（需輸入一次管理員密碼）")
+            } else if helper.registrationState == .notRegistered {
+                Button("啟用 Helper") {
+                    helper.registerHelper()
+                }
+                .controlSize(.small)
+                .disabled(helper.isBusy)
+            } else if helper.registrationState == .requiresApproval {
+                Button("開啟系統設定") {
+                    helper.openApprovalSettings()
+                }
+                .controlSize(.small)
             } else if helper.registrationState == .notFound || helper.needsRepair {
                 Button("修復 Helper") {
                     helper.repairHelper()

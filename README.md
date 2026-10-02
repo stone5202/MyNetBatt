@@ -91,7 +91,9 @@ xcodebuild \
 
 ## Privileged Helper
 
-macOS 的低耗電模式需要管理員權限。MyNetBatt 第一次安裝或修復 helper 時會顯示系統管理員授權視窗，之後切換低耗電模式不需要重複輸入密碼。
+macOS 的低耗電模式需要管理員權限。MyNetBatt 透過 `SMAppService` 由 macOS 管理內附在 App 中的 helper：第一次啟用時，請在「系統設定 › 一般 › 登入項目與延伸功能」允許 MyNetBatt，之後切換低耗電模式不需要輸入密碼。Helper 會隨 App 一起更新，不會在系統中留下額外檔案。
+
+從 3.2 以前的版本升級時，App 會提示「更新 Helper」，需要輸入一次管理員密碼移除舊的安裝方式。
 
 Helper 只公開讀取及切換低耗電模式的方法，不接受任意 shell command、路徑或參數。主程式與 helper 會互相驗證 signing identifier 與 Team ID。完整設計請參閱 [Privileged Helper 文件](docs/PRIVILEGED_HELPER_SETUP.md)。
 

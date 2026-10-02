@@ -1,6 +1,6 @@
 # MyNetBatt Privileged Helper
 
-MyNetBatt 使用獨立的 privileged helper 修改 macOS 低耗電模式。主程式不直接以 root 身分執行，日常切換也不會反覆要求管理員密碼。
+MyNetBatt 使用獨立的 privileged helper 修改 macOS 低耗電模式。Helper 以 `SMAppService.daemon` 註冊，由 launchd 直接執行 App bundle 內的執行檔；主程式不以 root 身分執行，日常切換也不需要管理員密碼。
 
 ## 識別碼
 
@@ -36,22 +36,37 @@ MyNetBatt/PrivilegedHelper/HelperService.swift
 MyNetBatt/PrivilegedHelper/MyNetBattPrivilegedHelper.entitlements
 ```
 
+LaunchDaemon plist：
+
+```text
+MyNetBatt/LaunchDaemons/com.stone5202.MyNetBatt.PrivilegedHelper.plist
+```
+
 Xcode project 已設定：
 
 - `MyNetBattPrivilegedHelper` Command Line Tool target
 - 主程式對 helper 的 target dependency
 - 將簽章後的 helper 複製到 `MyNetBatt.app/Contents/MacOS`
+- 將 LaunchDaemon plist 複製到 `MyNetBatt.app/Contents/Library/LaunchDaemons`
+- 主程式與 helper 皆啟用 Hardened Runtime
 - 主程式與 helper 的 entitlements
 - 關閉主程式 App Sandbox
 
 ## 安裝與執行流程
 
-第一次按「安裝 Helper」或需要修復時，主程式會要求管理員授權，然後：
+1. 使用者按「啟用 Helper」，主程式呼叫 `SMAppService.daemon(plistName:).register()`。
+2. macOS 將背景項目設為「等待核准」，主程式開啟「系統設定 › 一般 › 登入項目與延伸功能」。
+3. 使用者允許後，launchd 會在第一次連線時按需啟動 `Contents/MacOS/MyNetBattPrivilegedHelper`。
+4. 主程式透過 privileged `NSXPCConnection` 呼叫 helper。
+5. Helper 閒置 60 秒後自行結束，下一次請求時再由 launchd 啟動。
 
-1. 將 app bundle 內的 helper 安裝到 `/Library/PrivilegedHelperTools/`。
-2. 動態建立 launchd plist 並安裝到 `/Library/LaunchDaemons/`。
-3. 使用 `launchctl bootstrap system` 啟動服務。
-4. 後續透過 privileged `NSXPCConnection` 呼叫 helper。
+### 版本檢查
+
+Helper 的 `getVersion` 會回傳 `CFBundleVersion`（`CURRENT_PROJECT_VERSION`）。主程式每次建立連線後，會先和 App 內附的 helper 版本比對；如果 App 更新後仍有舊版 helper 在執行，主程式會呼叫 `exitForUpdate` 讓它結束，launchd 隨後會啟動新版。**每次發布新版時都要遞增 `CURRENT_PROJECT_VERSION`。**
+
+### 從舊版升級
+
+3.2 以前的版本以 AppleScript 將 helper 複製到 `/Library/PrivilegedHelperTools/`，並將 plist 安裝到 `/Library/LaunchDaemons/`。新版偵測到這些檔案時會顯示「更新 Helper」，按下後在背景要求一次管理員授權，執行 `launchctl bootout` 並刪除舊檔案，再改用 `SMAppService` 註冊。
 
 資料流：
 
@@ -67,13 +82,13 @@ MyNetBattPrivilegedHelper
 /usr/bin/pmset -a lowpowermode 1 / 0
 ```
 
-Repository 不需要存放 LaunchDaemon plist；程式會在安裝時依目前設定產生它。
 
 ## 安全限制
 
 - Helper 只公開讀取與切換低耗電模式的方法，不接受任意 command、path 或 arguments。
 - 主程式與 helper 互相驗證 signing identifier 和 Team ID。
-- 管理員權限只用於安裝、修復或移除 helper。
+- Helper 由 launchd 直接從已簽章的 App bundle 執行，不會複製到其他位置，因此不會執行到未經驗證的副本。
+- 管理員密碼只在移除舊版安裝時使用一次；啟用新版只需在系統設定中核准。
 
 ## 建置與檢查
 
@@ -99,6 +114,11 @@ codesign -dv --verbose=4 /path/to/MyNetBatt.app/Contents/MacOS/MyNetBattPrivileg
 
 ```text
 MyNetBatt.app/Contents/MacOS/MyNetBattPrivilegedHelper
+MyNetBatt.app/Contents/Library/LaunchDaemons/com.stone5202.MyNetBatt.PrivilegedHelper.plist
 ```
 
-LaunchDaemon plist 只會出現在完成安裝的系統路徑，不應被打包進 app bundle。
+可用以下指令確認 launchd 已載入 helper：
+
+```bash
+launchctl print system/com.stone5202.MyNetBatt.PrivilegedHelper
+```
