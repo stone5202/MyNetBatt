@@ -47,9 +47,13 @@ extension SystemMonitor {
 
     nonisolated func extract(pattern: String, from text: String) -> String? {
         guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
-              let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)), match.numberOfRanges > 1 else { return nil }
-        return String(text[Range(match.range(at: 1), in: text)!])
+              let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)), match.numberOfRanges > 1,
+              let range = Range(match.range(at: 1), in: text) else { return nil }
+        return String(text[range])
     }
+
+    // mach_host_self() 每次呼叫都會增加一個 port right 參照，只取一次重複使用以免長期洩漏。
+    nonisolated static let hostPort: mach_port_t = mach_host_self()
 
     // 直接向 Mach kernel 取得整台 Mac 的 CPU tick，避免 top/ps 文字格式或語系變動。
     nonisolated func hostCPULoadInfo() -> host_cpu_load_info? {
@@ -60,7 +64,7 @@ extension SystemMonitor {
         defer { info.deallocate() }
 
         let result = info.withMemoryRebound(to: integer_t.self, capacity: Int(count)) { ptr in
-            host_statistics(mach_host_self(), HOST_CPU_LOAD_INFO, ptr, &count)
+            host_statistics(Self.hostPort, HOST_CPU_LOAD_INFO, ptr, &count)
         }
 
         guard result == KERN_SUCCESS else { return nil }
@@ -90,5 +94,5 @@ extension SystemMonitor {
         }
     }
 
-    // Per-App 網路用量目前停用：避免 nettop 在受限環境中持續重試。
+    // Per-App 網路用量由 startPerAppNetworkMonitor()（Part2）以 nettop 每 2 秒取樣。
 }

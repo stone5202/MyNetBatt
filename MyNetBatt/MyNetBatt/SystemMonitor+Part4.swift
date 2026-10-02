@@ -74,9 +74,7 @@ extension SystemMonitor {
                     if hadPreviousSample {
                         let delta = inDiff + outDiff
                         if delta > 0 {
-                            let formatter = DateFormatter()
-                            formatter.dateFormat = "yyyy-MM-dd"
-                            let dayKey = formatter.string(from: now)
+                            let dayKey = Self.dayKeyFormatter.string(from: now)
                             var dayUsage = self.appUsageHistory[dayKey] ?? [:]
                             dayUsage[sample.name, default: 0] += delta
                             self.appUsageHistory[dayKey] = dayUsage
@@ -101,8 +99,7 @@ extension SystemMonitor {
                     .filter { $0.totalDownload > 0 || $0.totalUpload > 0 }
                     .sorted { ($0.downloadSpeed + $0.uploadSpeed) > ($1.downloadSpeed + $1.uploadSpeed) }
 
-                let formatter = DateFormatter()
-                formatter.dateFormat = "yyyy-MM-dd"
+                let formatter = Self.dayKeyFormatter
                 let cutoff = Calendar.current.date(byAdding: .day, value: -14, to: now) ?? now
                 self.appUsageHistory = self.appUsageHistory.filter { key, _ in
                     guard let d = formatter.date(from: key) else { return false }

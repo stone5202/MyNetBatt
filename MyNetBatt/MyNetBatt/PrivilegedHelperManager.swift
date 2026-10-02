@@ -202,12 +202,11 @@ final class PrivilegedHelperManager: ObservableObject {
             }
         }
 
+        // 首次連線需由 launchd 按需啟動 Helper，再執行數次 pmset，因此保留較寬裕的時間。
+        // 逾時只提示，不清掉 pendingRequestID 也不中斷連線，晚到的成功回覆仍會被採用並清除錯誤。
         Task { @MainActor [weak self] in
-            try? await Task.sleep(for: .seconds(2))
+            try? await Task.sleep(for: .seconds(10))
             guard let self, self.pendingRequestID == requestID else { return }
-            self.pendingRequestID = nil
-            self.pendingLowPowerMode = nil
-            self.invalidateConnection()
             self.isBusy = false
             self.needsRepair = true
             self.lastError = "Privileged Helper 沒有回應。請修復 Helper 後再試一次。"
