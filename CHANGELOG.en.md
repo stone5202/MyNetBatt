@@ -4,6 +4,27 @@
 
 This document summarizes the major changes in each MyNetBatt release. Versions before 3.0 were uploaded by replacing earlier copies, so their original per-version Git history can no longer be fully recovered. Changes from 1.0 through 2.x are therefore consolidated from the source code that can still be verified, without attributing uncertain details to individual releases.
 
+## [3.3] - 2026-10-02
+
+### Privileged Helper and security
+
+- The Low Power Mode helper is now managed by macOS ServiceManagement (`SMAppService`). The helper ships inside the app and updates with it; it is no longer copied to `/Library`, and the AppleScript installation flow is gone.
+- When enabling it for the first time, allow MyNetBatt in System Settings › General › Login Items & Extensions. After that, changing Low Power Mode does not require a password.
+- Hardened Runtime is now enabled for the main app, matching the helper's code signing design and meeting notarization requirements.
+- Added a helper version check: if an older helper is still running after an app update, it is replaced automatically. The helper exits after 60 seconds of inactivity.
+
+### Fixes and improvements
+
+- If the helper cannot be started, the app now registers it again and retries automatically, showing progress while it works.
+- Administrator authorization for removing the old helper now runs in the background, so the interface no longer freezes while waiting for the password.
+- Low Power Mode state now follows system notifications instead of polling every second.
+- Helper registration, repair, and toggle results are written to the unified log for easier troubleshooting.
+- Removed iOS/visionOS settings left over from the Xcode template; the app and helper now both require macOS 26.5.
+
+### Upgrade notes
+
+- When upgrading from 3.2 or earlier, click "Update Helper" on the Battery page and enter an administrator password once to remove the old installation, then allow MyNetBatt in System Settings.
+
 ## [3.2] - 2026-10-02
 
 ### Performance and power usage
@@ -79,6 +100,7 @@ MyNetBatt established its core monitoring experience in version 1.0. Later 1.x a
 - Added essential battery information and trends, network interface and traffic data, and system information including CPU, memory, swap, and storage usage.
 - Added visibility controls for individual monitoring modules, persistent preferences, and launch-at-login support.
 
+[3.3]: https://github.com/stone5202/MyNetBatt/releases/tag/v3.3
 [3.2]: https://github.com/stone5202/MyNetBatt/releases/tag/v3.2
 [3.1]: https://github.com/stone5202/MyNetBatt/releases/tag/v3.1
 [3.0]: https://github.com/stone5202/MyNetBatt/releases/tag/v3.0

@@ -4,6 +4,27 @@
 
 本文件整理 MyNetBatt 的主要版本變更。3.0 以前的版本曾以覆蓋方式上傳，原始逐版 Git 紀錄已無法完整還原，因此 1.0～2.x 依目前仍可驗證的程式內容合併記錄，避免為個別小版本編造不確定的差異。
 
+## [3.3] - 2026-10-02
+
+### Privileged Helper 與安全性
+
+- 低耗電模式 Helper 改由 macOS 的 ServiceManagement（`SMAppService`）管理：Helper 內附在 App 中並隨 App 一起更新，不再複製到 `/Library`，也不再需要 AppleScript 安裝流程。
+- 第一次啟用時，在「系統設定 › 一般 › 登入項目與延伸功能」允許 MyNetBatt 即可，之後切換低耗電模式不需輸入密碼。
+- 主程式啟用 Hardened Runtime，與 Helper 的簽章驗證設計一致，也符合公證要求。
+- 加入 Helper 版本檢查；App 更新後若仍有舊版 Helper 在執行，會自動換成新版。Helper 閒置 60 秒後自動結束。
+
+### 修正與調整
+
+- Helper 無法啟動時，App 會自動重新註冊並再試一次；處理中會顯示進度。
+- 移除舊版 Helper 的管理員授權改在背景執行，等待輸入密碼時不再卡住畫面。
+- 低耗電模式狀態改為接收系統通知，不再每秒輪詢。
+- Helper 的註冊、修復與切換結果會寫入系統日誌，方便排查問題。
+- 移除 Xcode 範本殘留的 iOS／visionOS 設定，App 與 Helper 的最低系統版本統一為 macOS 26.5。
+
+### 升級注意
+
+- 從 3.2 或更早版本升級時，請在電池頁按「更新 Helper」並輸入一次管理員密碼以移除舊版安裝，再於系統設定允許 MyNetBatt。
+
 ## [3.2] - 2026-10-02
 
 ### 效能與耗電
@@ -79,6 +100,7 @@ MyNetBatt 從 1.0 開始建立核心監控體驗，後續 1.x 與 2.x 的小幅�
 - 提供基本電池資訊與趨勢圖、網路介面與流量資訊，以及 CPU、記憶體、Swap、儲存空間等系統資訊。
 - 加入各監控模組的顯示開關、偏好保存與登入時自動啟動。
 
+[3.3]: https://github.com/stone5202/MyNetBatt/releases/tag/v3.3
 [3.2]: https://github.com/stone5202/MyNetBatt/releases/tag/v3.2
 [3.1]: https://github.com/stone5202/MyNetBatt/releases/tag/v3.1
 [3.0]: https://github.com/stone5202/MyNetBatt/releases/tag/v3.0
