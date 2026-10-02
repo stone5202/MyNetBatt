@@ -3,12 +3,12 @@
 <plist version="1.0">
 <dict>
 	<key>Label</key>
-	<string>com.stone5202.MyNetBatt.PrivilegedHelper</string>
+	<string>com.stone5202.MyNetBatt.LowPowerHelper</string>
 	<key>BundleProgram</key>
 	<string>Contents/MacOS/com.stone5202.MyNetBatt.PrivilegedHelper</string>
 	<key>MachServices</key>
 	<dict>
-		<key>com.stone5202.MyNetBatt.PrivilegedHelper</key>
+		<key>com.stone5202.MyNetBatt.LowPowerHelper</key>
 		<true/>
 	</dict>
 	<key>AssociatedBundleIdentifiers</key>

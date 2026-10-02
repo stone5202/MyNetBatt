@@ -44,8 +44,8 @@ final class PrivilegedHelperManager: ObservableObject {
     @Published private(set) var hasLegacyInstall = false
 
     private let daemon = SMAppService.daemon(plistName: PrivilegedHelperConstants.daemonPlistName)
-    private let legacyHelperPath = "/Library/PrivilegedHelperTools/\(PrivilegedHelperConstants.machServiceName)"
-    private let legacyPlistPath = "/Library/LaunchDaemons/\(PrivilegedHelperConstants.daemonPlistName)"
+    private let legacyHelperPath = "/Library/PrivilegedHelperTools/\(PrivilegedHelperConstants.legacyLabel)"
+    private let legacyPlistPath = "/Library/LaunchDaemons/\(PrivilegedHelperConstants.legacyLabel).plist"
     private var connection: NSXPCConnection?
     private var powerStateObserver: AnyCancellable?
     private var verifiedHelperVersion = false
@@ -116,6 +116,17 @@ final class PrivilegedHelperManager: ObservableObject {
                 needsRepair = true
                 lastError = "移除舊版 Privileged Helper 失敗：\(error)"
                 return
+            }
+        }
+
+        // 開發期間曾以舊 label 註冊過 SMAppService；盡量取消，避免系統設定裡留下失效的背景項目。
+        let staleDaemon = SMAppService.daemon(plistName: "\(PrivilegedHelperConstants.legacyLabel).plist")
+        if staleDaemon.status != .notRegistered && staleDaemon.status != .notFound {
+            do {
+                try await staleDaemon.unregister()
+                helperLog.notice("Unregistered stale daemon with legacy label")
+            } catch {
+                helperLog.error("Stale daemon unregister failed: \(error.localizedDescription, privacy: .public)")
             }
         }
 
@@ -352,7 +363,7 @@ final class PrivilegedHelperManager: ObservableObject {
 
     /// 移除 3.2 以前以 AppleScript 安裝的 launchd daemon。在背景執行 osascript，等待密碼時不會卡住 UI。
     private func removeLegacyInstall() async -> String? {
-        let label = PrivilegedHelperConstants.machServiceName
+        let label = PrivilegedHelperConstants.legacyLabel
         let command = "/bin/launchctl bootout system/\(label) >/dev/null 2>&1 || true; "
             + "/bin/rm -f \(shellQuote(legacyHelperPath)) \(shellQuote(legacyPlistPath))"
         let script = "do shell script \"\(appleScriptEscape(command))\" with administrator privileges"
