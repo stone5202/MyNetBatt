@@ -1,6 +1,10 @@
 import Foundation
 import Combine
 import ServiceManagement
+import os
+
+/// 可用 `log show --predicate 'subsystem == "com.stone5202.MyNetBatt"'` 查看 Helper 註冊與連線狀況。
+private let helperLog = Logger(subsystem: "com.stone5202.MyNetBatt", category: "PrivilegedHelper")
 
 @MainActor
 final class PrivilegedHelperManager: ObservableObject {
@@ -96,35 +100,58 @@ final class PrivilegedHelperManager: ObservableObject {
         Task {
             defer {
                 isBusy = false
-                refreshRegistrationState()
                 refreshLowPowerMode()
             }
+            await performRegistration()
+        }
+    }
 
-            if hasLegacyInstall {
-                if let error = await removeLegacyInstall() {
-                    needsRepair = true
-                    lastError = "移除舊版 Privileged Helper 失敗：\(error)"
-                    return
-                }
-            }
+    private func performRegistration() async {
+        defer { refreshRegistrationState() }
 
-            do {
-                try daemon.register()
-            } catch {
-                refreshRegistrationState()
-                if registrationState != .requiresApproval {
-                    needsRepair = true
-                    lastError = "註冊 Privileged Helper 失敗：\(error.localizedDescription)"
-                    return
-                }
-            }
-
-            refreshRegistrationState()
-            if registrationState == .requiresApproval {
-                lastError = "請在「系統設定 › 一般 › 登入項目與延伸功能」允許 MyNetBatt 在背景執行，之後切換低耗電模式不需輸入密碼。"
-                SMAppService.openSystemSettingsLoginItems()
+        if hasLegacyInstall {
+            helperLog.notice("Removing legacy helper install")
+            if let error = await removeLegacyInstall() {
+                helperLog.error("Legacy removal failed: \(error, privacy: .public)")
+                needsRepair = true
+                lastError = "移除舊版 Privileged Helper 失敗：\(error)"
+                return
             }
         }
+
+        do {
+            try daemon.register()
+            helperLog.notice("Registered helper, status \(self.daemon.status.rawValue, privacy: .public)")
+        } catch {
+            helperLog.error("Register failed: \(error.localizedDescription, privacy: .public)")
+            refreshRegistrationState()
+            if registrationState != .requiresApproval {
+                needsRepair = true
+                lastError = "註冊 Privileged Helper 失敗：\(error.localizedDescription)"
+                return
+            }
+        }
+
+        refreshRegistrationState()
+        if registrationState == .requiresApproval {
+            lastError = "請在「系統設定 › 一般 › 登入項目與延伸功能」允許 MyNetBatt 在背景執行，之後切換低耗電模式不需輸入密碼。"
+            SMAppService.openSystemSettingsLoginItems()
+        }
+    }
+
+    /// 先取消再重新註冊，讓 launchd 依目前 App bundle 內的 plist 與 Helper 重建工作
+    /// （launchd 會保留首次註冊時產生的 launch constraint，只換 App 不會更新）。
+    private func reregister() async {
+        invalidateConnection()
+        if daemon.status != .notRegistered {
+            do {
+                try await daemon.unregister()
+                helperLog.notice("Unregistered helper for re-registration")
+            } catch {
+                helperLog.error("Unregister failed: \(error.localizedDescription, privacy: .public)")
+            }
+        }
+        await performRegistration()
     }
 
     func unregisterHelper() {
@@ -158,14 +185,16 @@ final class PrivilegedHelperManager: ObservableObject {
             return
         }
 
+        lastError = nil
+        needsRepair = false
         isBusy = true
-        invalidateConnection()
+        helperLog.notice("Repair requested, status \(self.daemon.status.rawValue, privacy: .public)")
         Task {
-            if daemon.status == .enabled {
-                try? await daemon.unregister()
+            defer {
+                isBusy = false
+                refreshLowPowerMode()
             }
-            isBusy = false
-            registerHelper()
+            await reregister()
         }
     }
 
@@ -211,10 +240,19 @@ final class PrivilegedHelperManager: ObservableObject {
                 refreshLowPowerMode()
             }
             do {
-                try await ensureCurrentHelperVersion()
+                do {
+                    try await ensureCurrentHelperVersion()
+                } catch {
+                    // Helper 已註冊卻無法啟動（例如 launchd 保留了過期的註冊資料）：自動重新註冊後再試一次。
+                    helperLog.error("Helper unreachable, re-registering: \(error.localizedDescription, privacy: .public)")
+                    await reregister()
+                    guard registrationState == .enabled else { return }
+                    try await ensureCurrentHelperVersion()
+                }
                 let (success, errorText) = try await send { proxy, done in
                     proxy.setLowPowerMode(enabled) { done(($0, $1)) }
                 }
+                helperLog.notice("setLowPowerMode(\(enabled, privacy: .public)) -> \(success, privacy: .public)")
                 if success {
                     // 先採用 Helper 已確認的結果，系統通知會再同步一次。
                     isLowPowerModeEnabled = enabled
@@ -223,6 +261,7 @@ final class PrivilegedHelperManager: ObservableObject {
                     lastError = errorText ?? "低耗電模式切換失敗。請修復 Helper 後再試一次。"
                 }
             } catch {
+                helperLog.error("Low power mode request failed: \(error.localizedDescription, privacy: .public)")
                 invalidateConnection()
                 needsRepair = true
                 lastError = "無法使用 Privileged Helper：\(error.localizedDescription)\n請按「修復 Helper」重新註冊目前 App 內的 Helper。"
@@ -242,13 +281,15 @@ final class PrivilegedHelperManager: ObservableObject {
     private func ensureCurrentHelperVersion() async throws {
         guard !verifiedHelperVersion, let expected = bundledHelperVersion else { return }
 
-        let running = try await send { proxy, done in proxy.getVersion { done($0) } }
+        // getVersion 很輕量，Helper 能啟動時一秒內就會回覆；用較短逾時讓失敗時能更快自動修復。
+        let running = try await send(timeout: 5) { proxy, done in proxy.getVersion { done($0) } }
+        helperLog.notice("Helper version running \(running, privacy: .public), bundled \(expected, privacy: .public)")
         if running != expected {
             _ = try? await send(timeout: 3) { proxy, done in proxy.exitForUpdate { done(true) } }
             invalidateConnection()
             try await Task.sleep(for: .milliseconds(500))
 
-            let relaunched = try await send { proxy, done in proxy.getVersion { done($0) } }
+            let relaunched = try await send(timeout: 5) { proxy, done in proxy.getVersion { done($0) } }
             guard relaunched == expected else {
                 throw HelperError.versionMismatch(running: relaunched, expected: expected)
             }

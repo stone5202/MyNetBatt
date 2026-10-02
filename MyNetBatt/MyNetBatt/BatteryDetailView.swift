@@ -132,6 +132,10 @@ struct BatteryDetailView: View {
             .tint(.green)
             .disabled(helper.isBusy)
 
+            if helper.isBusy {
+                ProgressView().controlSize(.small)
+            }
+
             if helper.hasLegacyInstall {
                 Button("更新 Helper") {
                     helper.registerHelper()
