@@ -44,7 +44,7 @@ MyNetBatt/LaunchDaemons/com.stone5202.MyNetBatt.PrivilegedHelper.plist
 
 Xcode project 已設定：
 
-- `MyNetBattPrivilegedHelper` Command Line Tool target
+- `MyNetBattPrivilegedHelper` Command Line Tool target（產出的執行檔名稱為 `com.stone5202.MyNetBatt.PrivilegedHelper`，必須和簽章 identifier 相同，否則 launchd 的 launch constraint 會拒絕啟動）
 - 主程式對 helper 的 target dependency
 - 將簽章後的 helper 複製到 `MyNetBatt.app/Contents/MacOS`
 - 將 LaunchDaemon plist 複製到 `MyNetBatt.app/Contents/Library/LaunchDaemons`
@@ -56,7 +56,7 @@ Xcode project 已設定：
 
 1. 使用者按「啟用 Helper」，主程式呼叫 `SMAppService.daemon(plistName:).register()`。
 2. macOS 將背景項目設為「等待核准」，主程式開啟「系統設定 › 一般 › 登入項目與延伸功能」。
-3. 使用者允許後，launchd 會在第一次連線時按需啟動 `Contents/MacOS/MyNetBattPrivilegedHelper`。
+3. 使用者允許後，launchd 會在第一次連線時按需啟動 `Contents/MacOS/com.stone5202.MyNetBatt.PrivilegedHelper`。
 4. 主程式透過 privileged `NSXPCConnection` 呼叫 helper。
 5. Helper 閒置 60 秒後自行結束，下一次請求時再由 launchd 啟動。
 
@@ -77,7 +77,7 @@ PrivilegedHelperManager
     ↓
 NSXPCConnection(options: .privileged)
     ↓
-MyNetBattPrivilegedHelper
+com.stone5202.MyNetBatt.PrivilegedHelper
     ↓
 /usr/bin/pmset -a lowpowermode 1 / 0
 ```
@@ -107,13 +107,13 @@ xcodebuild \
 
 ```bash
 codesign -dv --verbose=4 /path/to/MyNetBatt.app
-codesign -dv --verbose=4 /path/to/MyNetBatt.app/Contents/MacOS/MyNetBattPrivilegedHelper
+codesign -dv --verbose=4 /path/to/MyNetBatt.app/Contents/MacOS/com.stone5202.MyNetBatt.PrivilegedHelper
 ```
 
 建置後，app bundle 應包含：
 
 ```text
-MyNetBatt.app/Contents/MacOS/MyNetBattPrivilegedHelper
+MyNetBatt.app/Contents/MacOS/com.stone5202.MyNetBatt.PrivilegedHelper
 MyNetBatt.app/Contents/Library/LaunchDaemons/com.stone5202.MyNetBatt.PrivilegedHelper.plist
 ```
 

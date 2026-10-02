@@ -11,6 +11,9 @@ import Foundation
 
 enum PrivilegedHelperConstants {
     static let machServiceName = "com.stone5202.MyNetBatt.PrivilegedHelper"
+    /// Helper 執行檔名稱必須等於它的簽章 identifier：SMAppService 會依 BundleProgram 的檔名
+    /// 產生 launch constraint，兩者不同時 launchd 會拒絕啟動（EX_CONFIG）。
+    static let helperExecutableName = "com.stone5202.MyNetBatt.PrivilegedHelper"
     /// SMAppService 從 MyNetBatt.app/Contents/Library/LaunchDaemons/ 讀取這個 plist。
     static let daemonPlistName = "com.stone5202.MyNetBatt.PrivilegedHelper.plist"
     // 同時驗證 signing identifier 與 Team ID，避免誤連到同名的 XPC service。

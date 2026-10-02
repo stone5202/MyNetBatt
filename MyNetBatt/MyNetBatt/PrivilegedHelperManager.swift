@@ -234,7 +234,7 @@ final class PrivilegedHelperManager: ObservableObject {
 
     /// App 內附 Helper 的 CFBundleVersion（Helper 的 Info.plist 內嵌在執行檔中）。
     private var bundledHelperVersion: String? {
-        let url = Bundle.main.bundleURL.appendingPathComponent("Contents/MacOS/MyNetBattPrivilegedHelper") as CFURL
+        let url = Bundle.main.bundleURL.appendingPathComponent("Contents/MacOS/\(PrivilegedHelperConstants.helperExecutableName)") as CFURL
         return (CFBundleCopyInfoDictionaryForURL(url) as? [String: Any])?["CFBundleVersion"] as? String
     }
 
