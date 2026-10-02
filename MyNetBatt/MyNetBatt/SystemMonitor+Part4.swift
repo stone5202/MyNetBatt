@@ -7,8 +7,18 @@ import ServiceManagement
 import Darwin
 
 extension SystemMonitor {
+    /// 用量紀錄每 2 秒都會變動，最多每分鐘寫入一次；App 結束時由 AppDelegate 強制寫入。
+    func saveAppUsageHistory(force: Bool = false) {
+        let now = Date()
+        if !force, let last = lastAppUsageSave, now.timeIntervalSince(last) < 60 { return }
+        lastAppUsageSave = now
+        if let encoded = try? JSONEncoder().encode(appUsageHistory) {
+            UserDefaults.standard.set(encoded, forKey: appUsageHistoryDefaultsKey)
+        }
+    }
+
     func fetchPerAppNetworkTraffic() {
-        Task.detached {
+        runExclusive("perAppNetwork") {
             let output = self.runCommand("/usr/bin/nettop", [
                 "-P", "-L", "1", "-x", "-n", "-J", "bytes_in,bytes_out"
             ])
@@ -105,9 +115,7 @@ extension SystemMonitor {
                     guard let d = formatter.date(from: key) else { return false }
                     return d >= cutoff
                 }
-                if let encoded = try? JSONEncoder().encode(self.appUsageHistory) {
-                    UserDefaults.standard.set(encoded, forKey: self.appUsageHistoryDefaultsKey)
-                }
+                self.saveAppUsageHistory()
 
                 if outputIsEmpty {
                     self.appNetworkStatus = "無法取得 nettop 資料"

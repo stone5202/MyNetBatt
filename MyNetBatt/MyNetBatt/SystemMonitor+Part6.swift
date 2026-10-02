@@ -8,7 +8,7 @@ import Darwin
 
 extension SystemMonitor {
     func fetchThunderboltDevices() {
-        Task.detached {
+        runExclusive("thunderboltDevices") {
             var devices: [ThunderboltDeviceInfo] = []
 
             func stringValue(_ dict: [String: Any], keys: [String]) -> String {

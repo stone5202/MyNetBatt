@@ -12,7 +12,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var batItem: NSStatusItem!
     var netPopover: NSPopover!
     var batPopover: NSPopover!
-    var settingsWindow: NSWindow!
+    var settingsWindow: NSWindow?
+    private var settingsWindowCloseObserver: NSObjectProtocol?
     
     let monitor = SystemMonitor()
     private var cancellables = Set<AnyCancellable>()
@@ -22,7 +23,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         setupPopovers()
         setupStatusBar()
-        setupSettingsWindow()
         
         monitor.layoutChanged
             .receive(on: RunLoop.main)
@@ -43,6 +43,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        monitor.saveAppUsageHistory(force: true)
         let workspaceCenter = NSWorkspace.shared.notificationCenter
         workspaceCenter.removeObserver(self)
     }
@@ -57,7 +58,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     @objc func openSettingsWindow() {
-        settingsWindow.makeKeyAndOrderFront(nil)
+        if settingsWindow == nil { setupSettingsWindow() }
+        settingsWindow?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
     }
 
@@ -117,13 +119,29 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         batItem.isVisible = monitor.showBatModule
     }
     
+    /// 監控中心視窗只在開啟時建立、關閉時釋放：隱藏的 SwiftUI 視窗仍會隨每次資料更新重算
+    /// （包含最多 2880 點的電量圖），常駐會讓 App 持續吃掉兩成以上 CPU。
     private func setupSettingsWindow() {
         let hostingController = NSHostingController(rootView: MainWindowView(monitor: monitor))
-        settingsWindow = NSWindow(contentViewController: hostingController)
-        settingsWindow.title = "MyNetBatt 監控中心"
-        settingsWindow.styleMask = [.titled, .closable, .miniaturizable, .fullSizeContentView]
-        settingsWindow.center()
-        settingsWindow.isReleasedWhenClosed = false
+        let window = NSWindow(contentViewController: hostingController)
+        window.title = "MyNetBatt 監控中心"
+        window.styleMask = [.titled, .closable, .miniaturizable, .fullSizeContentView]
+        window.isReleasedWhenClosed = false
+        window.center()
+        window.setFrameAutosaveName("MyNetBattMainWindow")
+        settingsWindowCloseObserver = NotificationCenter.default.addObserver(
+            forName: NSWindow.willCloseNotification, object: window, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                if let observer = self.settingsWindowCloseObserver {
+                    NotificationCenter.default.removeObserver(observer)
+                }
+                self.settingsWindowCloseObserver = nil
+                self.settingsWindow = nil
+            }
+        }
+        settingsWindow = window
     }
 
     @objc func toggleNetPopover(_ sender: AnyObject?) {

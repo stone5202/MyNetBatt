@@ -26,7 +26,7 @@ extension SystemMonitor {
     }
 
     func refreshNetworkDetails() {
-        fetchNetworkDetails()
+        fetchNetworkDetails(forcePublicIP: true)
     }
 
     func appDataUsageItems(days: Int) -> [AppDataUsageItem] {
@@ -68,7 +68,8 @@ extension SystemMonitor {
         Task {
             while !Task.isCancelled {
                 fetchBatteryHealthInfo()
-                try? await Task.sleep(nanoseconds: 60_000_000_000)
+                // 健康度與循環次數變化很慢，system_profiler 又很耗資源，10 分鐘更新一次即可。
+                try? await Task.sleep(nanoseconds: 600_000_000_000)
             }
         }
     }
@@ -86,8 +87,19 @@ extension SystemMonitor {
         Task {
             while !Task.isCancelled {
                 fetchThunderboltDevices()
-                try? await Task.sleep(nanoseconds: 10_000_000_000)
+                // 插拔由 DeviceChangeObserver 即時觸發，這裡只是低頻率的保底更新。
+                try? await Task.sleep(nanoseconds: 300_000_000_000)
             }
+        }
+    }
+
+    /// 裝置插拔常會連續觸發多次通知（例如 Hub 上的多個裝置），合併成一次掃描。
+    func scheduleDeviceRefresh() {
+        deviceRefreshTask?.cancel()
+        deviceRefreshTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(1.5))
+            guard !Task.isCancelled else { return }
+            self?.fetchThunderboltDevices()
         }
     }
 

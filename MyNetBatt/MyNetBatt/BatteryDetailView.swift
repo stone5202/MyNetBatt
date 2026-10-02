@@ -79,12 +79,14 @@ struct BatteryDetailView: View {
             }
             
             Text("電量變化趨勢").font(.title3.bold()).foregroundColor(.secondary).padding(.top, 16)
+            // 顏色整張圖只算一次，不要在每個資料點（最多 2880 點）重複計算。
+            let chartColor = monitor.displayedBatteryColor
             Chart {
                 ForEach(monitor.batteryHistory) { data in
                     LineMark(x: .value("時間", data.time), y: .value("電量", data.level))
-                        .foregroundStyle(monitor.displayedBatteryColor)
                         .interpolationMethod(.monotone)
                 }
+                .foregroundStyle(chartColor)
             }
             .frame(minHeight: 130).chartYScale(domain: 0...100).chartXAxis(.hidden)
             

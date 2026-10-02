@@ -7,8 +7,8 @@ import ServiceManagement
 import Darwin
 
 extension SystemMonitor {
-    func fetchNetworkDetails() {
-        Task.detached {
+    func fetchNetworkDetails(forcePublicIP: Bool = false) {
+        runExclusive("networkDetails") {
             var interface = "--"
             var gateway = "--"
             var localIP = "--"
@@ -83,11 +83,30 @@ extension SystemMonitor {
             }
             let dns = dnsServers.isEmpty ? "--" : dnsServers.joined(separator: ", ")
 
+            // 公網 IP 需要對外連線，只在網路環境改變、手動刷新或快取過期時才重新查詢
+            // （成功的結果保留 10 分鐘，失敗則 2 分鐘後重試）。
+            let networkKey = [interface, localIP, gateway].joined(separator: "|")
+            let (cachedPublicIP, shouldQueryPublicIP) = await MainActor.run { () -> (String, Bool) in
+                let cached = self.networkPublicIP
+                let hasValidCache = cached != "--" && cached != "無法取得"
+                let maxAge: TimeInterval = hasValidCache ? 600 : 120
+                let expired = self.lastPublicIPCheck.map { Date().timeIntervalSince($0) >= maxAge } ?? true
+                return (cached, forcePublicIP || networkKey != self.lastPublicIPNetworkKey || expired)
+            }
+
             var publicIP = "無法取得"
             if localIP != "--" {
-                let publicIPRaw = self.runCommand("/usr/bin/curl", ["-fsS", "--max-time", "2", "https://api.ipify.org"])
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                if !publicIPRaw.isEmpty { publicIP = publicIPRaw }
+                if shouldQueryPublicIP {
+                    let publicIPRaw = self.runCommand("/usr/bin/curl", ["-fsS", "--max-time", "2", "https://api.ipify.org"])
+                        .trimmingCharacters(in: .whitespacesAndNewlines)
+                    if !publicIPRaw.isEmpty { publicIP = publicIPRaw }
+                    await MainActor.run {
+                        self.lastPublicIPCheck = Date()
+                        self.lastPublicIPNetworkKey = networkKey
+                    }
+                } else {
+                    publicIP = cachedPublicIP
+                }
             }
 
             let fInterface = interface
