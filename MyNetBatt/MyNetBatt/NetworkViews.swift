@@ -35,6 +35,8 @@ struct NetworkDetailView: View {
             }
             .padding(24)
         }
+        .onAppear { monitor.setPerAppUsageVisible(true, source: "mainWindow") }
+        .onDisappear { monitor.setPerAppUsageVisible(false, source: "mainWindow") }
     }
 }
 

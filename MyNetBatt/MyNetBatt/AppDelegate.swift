@@ -68,6 +68,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         netPopover.behavior = .transient
         netPopover.contentSize = NSSize(width: 380, height: 540)
         netPopover.contentViewController = NSHostingController(rootView: NetworkPopoverView(monitor: monitor))
+        // 網路小視窗打開期間加快各 App 用量取樣。
+        NotificationCenter.default.publisher(for: NSPopover.willShowNotification, object: netPopover)
+            .sink { [weak self] _ in self?.monitor.setPerAppUsageVisible(true, source: "popover") }
+            .store(in: &cancellables)
+        NotificationCenter.default.publisher(for: NSPopover.didCloseNotification, object: netPopover)
+            .sink { [weak self] _ in self?.monitor.setPerAppUsageVisible(false, source: "popover") }
+            .store(in: &cancellables)
 
         batPopover = NSPopover()
         batPopover.behavior = .transient

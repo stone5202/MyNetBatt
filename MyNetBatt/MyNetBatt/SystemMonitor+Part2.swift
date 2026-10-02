@@ -7,12 +7,33 @@ import ServiceManagement
 import Darwin
 
 extension SystemMonitor {
+    /// nettop 每次都要 spawn 子程序：網路頁面打開時每 2 秒取樣，關著時每 60 秒取樣一次。
+    /// nettop 回報的是各程序的累計流量，間隔拉長仍能算出差額，今日／近 7 日統計不會漏掉長時間執行的 App。
+    static let perAppVisibleInterval: TimeInterval = 2
+    static let perAppBackgroundInterval: TimeInterval = 60
+
     func startPerAppNetworkMonitor() {
         Task {
             while !Task.isCancelled {
-                fetchPerAppNetworkTraffic()
+                let interval = perAppUsageViewers.isEmpty ? Self.perAppBackgroundInterval : Self.perAppVisibleInterval
+                let elapsed = lastAppNetworkSampleTime.map { Date().timeIntervalSince($0) } ?? .infinity
+                if elapsed >= interval - 0.5 {
+                    fetchPerAppNetworkTraffic()
+                }
+                // 只是檢查是否該取樣，不會 spawn 子程序；畫面打開後最多 2 秒內就會切換成快速取樣。
                 try? await Task.sleep(nanoseconds: 2_000_000_000)
             }
+        }
+    }
+
+    func setPerAppUsageVisible(_ visible: Bool, source: String) {
+        if visible {
+            let wasHidden = perAppUsageViewers.isEmpty
+            perAppUsageViewers.insert(source)
+            // 打開時立刻更新一次，不必等下一輪。
+            if wasHidden { fetchPerAppNetworkTraffic() }
+        } else {
+            perAppUsageViewers.remove(source)
         }
     }
 

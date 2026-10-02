@@ -123,6 +123,8 @@ class SystemMonitor: ObservableObject {
     /// 正在執行中的背景取樣；同一種取樣尚未完成時不再疊加新的一輪。
     var inFlightFetches = Set<String>()
     var lastAppUsageSave: Date?
+    /// 目前正在顯示各 App 用量的畫面（網路小視窗、監控中心網路頁）；有任何一個時加快 nettop 取樣。
+    var perAppUsageViewers = Set<String>()
     var lastPublicIPCheck: Date?
     var lastPublicIPNetworkKey = ""
     var deviceChangeObserver: DeviceChangeObserver?

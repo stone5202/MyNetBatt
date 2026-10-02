@@ -100,5 +100,5 @@ extension SystemMonitor {
         }
     }
 
-    // Per-App 網路用量由 startPerAppNetworkMonitor()（Part2）以 nettop 每 2 秒取樣。
+    // Per-App 網路用量由 startPerAppNetworkMonitor()（Part2）以 nettop 取樣：網路頁面打開時每 2 秒，關著時每 60 秒。
 }
