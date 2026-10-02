@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		A10000000000000000000001 /* MyNetBattPrivilegedHelper in Embed Privileged Helper */ = {isa = PBXBuildFile; fileRef = A10000000000000000000011 /* MyNetBattPrivilegedHelper */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		A10000000000000000000071 /* com.stone5202.MyNetBatt.PrivilegedHelper.plist in Embed LaunchDaemon */ = {isa = PBXBuildFile; fileRef = A10000000000000000000070 /* com.stone5202.MyNetBatt.PrivilegedHelper.plist */; };
+		A10000000000000000000071 /* com.stone5202.MyNetBatt.LowPowerHelper.plist in Embed LaunchDaemon */ = {isa = PBXBuildFile; fileRef = A10000000000000000000070 /* com.stone5202.MyNetBatt.LowPowerHelper.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -39,7 +39,7 @@
 			dstPath = Contents/Library/LaunchDaemons;
 			dstSubfolderSpec = 1;
 			files = (
-				A10000000000000000000071 /* com.stone5202.MyNetBatt.PrivilegedHelper.plist in Embed LaunchDaemon */,
+				A10000000000000000000071 /* com.stone5202.MyNetBatt.LowPowerHelper.plist in Embed LaunchDaemon */,
 			);
 			name = "Embed LaunchDaemon";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -49,7 +49,7 @@
 /* Begin PBXFileReference section */
 		4BCFC5E430539F750045F91E /* MyNetBatt.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MyNetBatt.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A10000000000000000000011 /* MyNetBattPrivilegedHelper */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = com.stone5202.MyNetBatt.PrivilegedHelper; sourceTree = BUILT_PRODUCTS_DIR; };
-		A10000000000000000000070 /* com.stone5202.MyNetBatt.PrivilegedHelper.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = com.stone5202.MyNetBatt.PrivilegedHelper.plist; sourceTree = "<group>"; };
+		A10000000000000000000070 /* com.stone5202.MyNetBatt.LowPowerHelper.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = com.stone5202.MyNetBatt.LowPowerHelper.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -86,7 +86,7 @@
 		A10000000000000000000073 /* LaunchDaemons */ = {
 			isa = PBXGroup;
 			children = (
-				A10000000000000000000070 /* com.stone5202.MyNetBatt.PrivilegedHelper.plist */,
+				A10000000000000000000070 /* com.stone5202.MyNetBatt.LowPowerHelper.plist */,
 			);
 			path = LaunchDaemons;
 			sourceTree = "<group>";

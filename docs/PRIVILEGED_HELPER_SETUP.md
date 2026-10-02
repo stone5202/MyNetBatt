@@ -7,7 +7,8 @@ MyNetBatt 使用獨立的 privileged helper 修改 macOS 低耗電模式。Helpe
 ```text
 主 App：      com.stone5202.MyNetBatt
 Helper：      com.stone5202.MyNetBatt.PrivilegedHelper
-Mach Service：com.stone5202.MyNetBatt.PrivilegedHelper
+Mach Service：com.stone5202.MyNetBatt.LowPowerHelper
+launchd label：com.stone5202.MyNetBatt.LowPowerHelper
 Team ID：     MHCATJULGT
 ```
 
@@ -39,12 +40,12 @@ MyNetBatt/PrivilegedHelper/MyNetBattPrivilegedHelper.entitlements
 LaunchDaemon plist：
 
 ```text
-MyNetBatt/LaunchDaemons/com.stone5202.MyNetBatt.PrivilegedHelper.plist
+MyNetBatt/LaunchDaemons/com.stone5202.MyNetBatt.LowPowerHelper.plist
 ```
 
 Xcode project 已設定：
 
-- `MyNetBattPrivilegedHelper` Command Line Tool target（產出的執行檔名稱為 `com.stone5202.MyNetBatt.PrivilegedHelper`，必須和簽章 identifier 相同，否則 launchd 的 launch constraint 會拒絕啟動）
+- `MyNetBattPrivilegedHelper` Command Line Tool target（產出的執行檔名稱為 `com.stone5202.MyNetBatt.PrivilegedHelper`，與簽章 identifier 相同）
 - 主程式對 helper 的 target dependency
 - 將簽章後的 helper 複製到 `MyNetBatt.app/Contents/MacOS`
 - 將 LaunchDaemon plist 複製到 `MyNetBatt.app/Contents/Library/LaunchDaemons`
@@ -67,6 +68,8 @@ Helper 的 `getVersion` 會回傳 `CFBundleVersion`（`CURRENT_PROJECT_VERSION`�
 ### 從舊版升級
 
 3.2 以前的版本以 AppleScript 將 helper 複製到 `/Library/PrivilegedHelperTools/`，並將 plist 安裝到 `/Library/LaunchDaemons/`。新版偵測到這些檔案時會顯示「更新 Helper」，按下後在背景要求一次管理員授權，執行 `launchctl bootout` 並刪除舊檔案，再改用 `SMAppService` 註冊。
+
+新版的 launchd label 與 Mach service 改為 `com.stone5202.MyNetBatt.LowPowerHelper`。原因：系統的背景項目資料庫（BTM）會保留某個 label 第一次註冊時產生的 launch constraint（要求的簽章 identifier），之後即使取消再重新註冊也不會更新。若該 label 曾以不同簽章的 helper 註冊過，AMFI 會以「Launch Constraint Violation」拒絕啟動 helper。**請勿改回舊 label，也不要在 helper 簽章 identifier 變更後沿用同一個 label。**
 
 資料流：
 
@@ -114,11 +117,11 @@ codesign -dv --verbose=4 /path/to/MyNetBatt.app/Contents/MacOS/com.stone5202.MyN
 
 ```text
 MyNetBatt.app/Contents/MacOS/com.stone5202.MyNetBatt.PrivilegedHelper
-MyNetBatt.app/Contents/Library/LaunchDaemons/com.stone5202.MyNetBatt.PrivilegedHelper.plist
+MyNetBatt.app/Contents/Library/LaunchDaemons/com.stone5202.MyNetBatt.LowPowerHelper.plist
 ```
 
 可用以下指令確認 launchd 已載入 helper：
 
 ```bash
-launchctl print system/com.stone5202.MyNetBatt.PrivilegedHelper
+launchctl print system/com.stone5202.MyNetBatt.LowPowerHelper
 ```
