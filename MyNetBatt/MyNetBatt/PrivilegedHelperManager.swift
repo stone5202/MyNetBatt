@@ -84,9 +84,17 @@ final class PrivilegedHelperManager: ObservableObject {
         case .enabled: registrationState = .enabled
         case .requiresApproval: registrationState = .requiresApproval
         case .notRegistered: registrationState = .notRegistered
-        case .notFound: registrationState = .notFound
+        case .notFound:
+            // 從未註冊過的 daemon 也會回報 notFound；只要 plist 確實在 App 內，就視為「尚未啟用」。
+            registrationState = bundledDaemonPlistExists ? .notRegistered : .notFound
         @unknown default: registrationState = .unknown
         }
+    }
+
+    private var bundledDaemonPlistExists: Bool {
+        let url = Bundle.main.bundleURL
+            .appendingPathComponent("Contents/Library/LaunchDaemons/\(PrivilegedHelperConstants.daemonPlistName)")
+        return FileManager.default.fileExists(atPath: url.path)
     }
 
     /// 安裝或更新 Helper：必要時先移除舊版，再向 SMAppService 註冊。
@@ -154,7 +162,7 @@ final class PrivilegedHelperManager: ObservableObject {
     /// （launchd 會保留首次註冊時產生的 launch constraint，只換 App 不會更新）。
     private func reregister() async {
         invalidateConnection()
-        if daemon.status != .notRegistered {
+        if daemon.status == .enabled || daemon.status == .requiresApproval {
             do {
                 try await daemon.unregister()
                 helperLog.notice("Unregistered helper for re-registration")
