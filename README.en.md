@@ -91,7 +91,9 @@ xcodebuild \
 
 ## Privileged Helper
 
-Changing macOS Low Power Mode requires administrator privileges. MyNetBatt displays the system authorization prompt when the helper is first installed or repaired. After that, changing Low Power Mode does not require the password again.
+Changing macOS Low Power Mode requires administrator privileges. MyNetBatt uses `SMAppService` so macOS manages the helper bundled inside the app: when enabling it for the first time, allow MyNetBatt in System Settings › General › Login Items & Extensions. After that, changing Low Power Mode does not require a password. The helper is updated together with the app and leaves no extra files on the system.
+
+When upgrading from 3.2 or earlier, the app shows an "Update Helper" button and asks for an administrator password once to remove the old installation.
 
 The helper exposes only methods for reading and changing Low Power Mode. It does not accept arbitrary shell commands, paths, or arguments. The main app and helper mutually verify their signing identifiers and Team ID. See the [Privileged Helper documentation](docs/PRIVILEGED_HELPER_SETUP.md) for the complete design.
 

@@ -1,7 +1,7 @@
 import Foundation
 
 final class HelperListenerDelegate: NSObject, NSXPCListenerDelegate {
-    private let service = HelperService()
+    let service = HelperService()
 
     func listener(_ listener: NSXPCListener, shouldAcceptNewConnection newConnection: NSXPCConnection) -> Bool {
         newConnection.exportedInterface = NSXPCInterface(with: MyNetBattPrivilegedHelperProtocol.self)
@@ -13,6 +13,7 @@ final class HelperListenerDelegate: NSObject, NSXPCListenerDelegate {
 }
 
 let delegate = HelperListenerDelegate()
+delegate.service.scheduleIdleExit()
 let listener = NSXPCListener(machServiceName: PrivilegedHelperConstants.machServiceName)
 listener.delegate = delegate
 listener.resume()
