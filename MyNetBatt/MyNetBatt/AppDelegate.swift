@@ -18,7 +18,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     let monitor = SystemMonitor()
     private var cancellables = Set<AnyCancellable>()
 
+    /// 這個程序是否為重複啟動、即將自行結束的實例。
+    private var isDuplicateInstance = false
+
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // 已有另一個 MyNetBatt 在執行時直接結束，避免選單列出現兩組圖示、兩邊同時取樣與寫入資料。
+        if Self.hasEarlierRunningInstance() {
+            isDuplicateInstance = true
+            NSApp.terminate(nil)
+            return
+        }
+
         NSApp.setActivationPolicy(.accessory)
 
         setupPopovers()
@@ -42,7 +52,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         updateStatusBarWidths()
     }
 
+    /// 只保留最早啟動的實例；同時啟動時以 PID 決定，確保恰好留下一個。
+    private static func hasEarlierRunningInstance() -> Bool {
+        let current = NSRunningApplication.current
+        guard let bundleID = Bundle.main.bundleIdentifier else { return false }
+        let currentKey = (current.launchDate ?? .distantFuture, current.processIdentifier)
+        return NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).contains { other in
+            guard other.processIdentifier != current.processIdentifier, !other.isTerminated else { return false }
+            return (other.launchDate ?? .distantFuture, other.processIdentifier) < currentKey
+        }
+    }
+
     func applicationWillTerminate(_ notification: Notification) {
+        // 重複的實例沒有最新資料，不要覆寫正在執行那一份的紀錄。
+        guard !isDuplicateInstance else { return }
         monitor.saveAppUsageHistory(force: true)
         let workspaceCenter = NSWorkspace.shared.notificationCenter
         workspaceCenter.removeObserver(self)
