@@ -137,7 +137,8 @@ extension SystemMonitor {
             }
 
             var tIcon = "battery.100"
-            if tempCharging {
+            // 接著電源就顯示閃電：充滿或最佳化充電暫停時 IsCharging 為 false，但仍在使用外部電源。
+            if tempPlugged {
                 tIcon = "battery.100.bolt"
             } else if tempPct > 80 {
                 tIcon = "battery.100"

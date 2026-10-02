@@ -43,7 +43,7 @@ struct BatteryBarView: View {
                     Image(systemName: monitor.batteryIcon)
                         .symbolRenderingMode(.monochrome)
                         .foregroundStyle(.red)
-                } else if monitor.isCharging {
+                } else if monitor.isPluggedIn {
                     Image(systemName: monitor.batteryIcon)
                         .symbolRenderingMode(.palette)
                         .foregroundStyle(.primary, .primary, monitor.batteryColor)

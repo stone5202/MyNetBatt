@@ -25,7 +25,7 @@ struct BatteryDetailView: View {
                         .resizable().scaledToFit().frame(height: 50)
                         .symbolRenderingMode(.monochrome)
                         .foregroundStyle(.red)
-                } else if monitor.isCharging {
+                } else if monitor.isPluggedIn {
                     Image(systemName: monitor.batteryIcon)
                         .resizable().scaledToFit().frame(height: 50)
                         .symbolRenderingMode(.palette)
