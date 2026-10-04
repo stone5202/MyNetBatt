@@ -186,7 +186,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     private func syncMetricItem(_ metric: MetricBarView.Metric, visible: Bool) {
         if visible, metricItems[metric] == nil {
-            let width: CGFloat = 34
+            let width = MetricBarView.width
             let item = NSStatusBar.system.statusItem(withLength: width)
             if let button = item.button {
                 let host = NSHostingView(rootView: MetricBarView(monitor: monitor, metric: metric).allowsHitTesting(false))

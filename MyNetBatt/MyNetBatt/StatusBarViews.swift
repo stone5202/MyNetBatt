@@ -74,17 +74,19 @@ struct BatteryBarView: View {
     }
 }
 
-/// CPU、記憶體、儲存空間的選單列項目：上方小標題、下方百分比。
+/// CPU、記憶體、儲存空間的選單列項目：左邊圖示、右邊百分比。
 struct MetricBarView: View {
     enum Metric { case cpu, memory, disk }
     @Bindable var monitor: SystemMonitor
     let metric: Metric
 
-    private var title: String {
+    static let width: CGFloat = 54
+
+    private var symbol: String {
         switch metric {
-        case .cpu: return "CPU"
-        case .memory: return "RAM"
-        case .disk: return "SSD"
+        case .cpu: return "cpu"
+        case .memory: return "memorychip"
+        case .disk: return "internaldrive"
         }
     }
 
@@ -97,9 +99,9 @@ struct MetricBarView: View {
     }
 
     var body: some View {
-        VStack(spacing: -1) {
-            Text(title).font(.system(size: 7, weight: .bold)).foregroundStyle(.secondary)
-            Text("\(Int(value.rounded()))%").font(.system(size: 10, weight: .semibold).monospacedDigit())
+        HStack(spacing: 3) {
+            Image(systemName: symbol).font(.system(size: 12, weight: .medium))
+            Text("\(Int(value.rounded()))%").font(.system(size: 12, weight: .medium).monospacedDigit())
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
