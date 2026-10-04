@@ -298,6 +298,7 @@ struct ActiveNetworkAppsList: View {
     @Bindable var monitor: SystemMonitor
     var maxRows = 8
     var iconSize: CGFloat = 30
+    var speedWidth: CGFloat = 92
 
     var body: some View {
         let apps = Array(monitor.appNetworkUsages.filter(\.isActive).prefix(maxRows))
@@ -314,10 +315,10 @@ struct ActiveNetworkAppsList: View {
                     Spacer(minLength: 8)
                     Text("↑ \(monitor.formatSpeedForUI(app.uploadSpeed))")
                         .foregroundStyle(.pink)
-                        .frame(width: 92, alignment: .trailing)
+                        .frame(width: speedWidth, alignment: .trailing)
                     Text("↓ \(monitor.formatSpeedForUI(app.downloadSpeed))")
                         .foregroundStyle(.green)
-                        .frame(width: 92, alignment: .trailing)
+                        .frame(width: speedWidth, alignment: .trailing)
                 }
                 .font(.caption.monospacedDigit())
             }

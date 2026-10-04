@@ -53,11 +53,11 @@ struct NetworkPopoverView: View {
                 WidgetCard {
                     Label("正在使用網路", systemImage: "arrow.up.arrow.down")
                         .font(.subheadline.bold())
-                    // 固定保留 4 列的高度，清單增減時下方內容不會跳動。
+                    // 固定保留 3 列的高度，清單增減時下方內容不會跳動。
                     VStack(alignment: .leading, spacing: 8) {
-                        ActiveNetworkAppsList(monitor: monitor, maxRows: 4, iconSize: 22)
+                        ActiveNetworkAppsList(monitor: monitor, maxRows: 3, iconSize: 22, speedWidth: 68)
                     }
-                    .frame(maxWidth: .infinity, minHeight: 112, alignment: .topLeading)
+                    .frame(maxWidth: .infinity, minHeight: 82, alignment: .topLeading)
                 }
 
                 CompactAppUsageList(monitor: monitor)
