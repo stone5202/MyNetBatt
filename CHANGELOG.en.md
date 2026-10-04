@@ -4,6 +4,22 @@
 
 This document summarizes the major changes in each MyNetBatt release. Versions before 3.0 were uploaded by replacing earlier copies, so their original per-version Git history can no longer be fully recovered. Changes from 1.0 through 2.x are therefore consolidated from the source code that can still be verified, without attributing uncertain details to individual releases.
 
+## [3.6] - 2026-10-04
+
+### New features
+
+- Battery health log: health and cycle count are recorded once a day and charted on the battery page, kept for up to two years.
+- Optional CPU, memory, and storage usage items in the menu bar (icon on the left, value on the right) that open the System page when clicked; off by default.
+- Choose which sections the network and battery popovers show from the Settings tab.
+- App data usage tracking can be paused; live network speeds are still shown while paused.
+- Cumulative upload and download totals can be reset and count from zero until the next restart.
+
+### Improvements
+
+- The battery page now scrolls.
+- The gear button in the popovers opens the Settings tab directly.
+- The cancel button in reset confirmation dialogs is now shown in Chinese.
+
 ## [3.5.1] - 2026-10-04
 
 ### Fixes and improvements

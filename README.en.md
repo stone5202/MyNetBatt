@@ -10,7 +10,7 @@
 
 MyNetBatt is a native macOS menu bar system monitor that brings battery, network, and system performance information together in a clean SwiftUI interface.
 
-> Current version: 3.5.1 · Interface language: Traditional Chinese
+> Current version: 3.6 · Interface language: Traditional Chinese
 
 For release highlights and fixes, see the [changelog](CHANGELOG.en.md) or [GitHub Releases](https://github.com/stone5202/MyNetBatt/releases). The changelog is also available in [Traditional Chinese](CHANGELOG.md).
 
@@ -39,14 +39,17 @@ MyNetBatt is under active development and maintenance. Its complete source code 
 ## Features
 
 - Battery icon, percentage, real-time network speed, and traffic chart in the menu bar; network speed can show upload and download, upload only, or download only
+- Optional CPU, memory, and storage usage items in the menu bar
 - Battery level, charging state, health, cycle count, temperature, power, charge duration, and 48-hour trend
+- Daily log of battery health and cycle count with a long-term trend chart
 - Low battery and fully charged notifications
 - macOS Low Power Mode control through a signed Privileged Helper
 - Upload and download speeds, cumulative traffic, interface, local IP, gateway, DNS, and public IP details
 - Wi-Fi channel, signal strength, transmit rate, and security
-- Daily, weekly, monthly, and yearly network usage for individual apps and processes, with upload and download counted separately and a history chart
+- Daily, weekly, monthly, and yearly network usage for individual apps and processes, with upload and download counted separately and a history chart; tracking can be paused
 - Live list of apps currently using the network
 - Always-on-top float window that can be toggled with a global shortcut
+- Configurable sections in the network and battery popovers
 - CPU, GPU, memory (including memory pressure), swap, and storage monitoring, with an eject button for external volumes
 - Thunderbolt, USB4, and USB device information
 - Theme (auto, light, dark) and accent color
