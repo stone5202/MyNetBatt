@@ -35,57 +35,65 @@ struct NetworkPopoverView: View {
                 Divider()
                 NetworkLiveRow(title: "下載", arrow: "arrow.down", speed: monitor.downSpeedStr, total: monitor.totalDownStr, history: monitor.trafficHistory, upload: false, color: .green)
 
-                Divider()
-                Text("數據用量").font(.headline).foregroundStyle(monitor.accentColor)
-                HStack {
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text("上載").font(.caption).foregroundStyle(.pink)
-                        Text(monitor.totalUpStr).font(.title2.bold()).monospacedDigit()
+                if monitor.popNetShowTotals {
+                    Divider()
+                    Text("數據用量").font(.headline).foregroundStyle(monitor.accentColor)
+                    HStack {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text("上載").font(.caption).foregroundStyle(.pink)
+                            Text(monitor.totalUpStr).font(.title2.bold()).monospacedDigit()
+                        }
+                        Spacer()
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text("下載").font(.caption).foregroundStyle(.green)
+                            Text(monitor.totalDownStr).font(.title2.bold()).monospacedDigit()
+                        }
+                        Spacer()
                     }
-                    Spacer()
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text("下載").font(.caption).foregroundStyle(.green)
-                        Text(monitor.totalDownStr).font(.title2.bold()).monospacedDigit()
-                    }
-                    Spacer()
                 }
 
-                WidgetCard {
-                    Label("正在使用網路", systemImage: "arrow.up.arrow.down")
-                        .font(.subheadline.bold())
-                    // 固定保留 3 列的高度，清單增減時下方內容不會跳動。
-                    VStack(alignment: .leading, spacing: 8) {
-                        ActiveNetworkAppsList(monitor: monitor, maxRows: 3, iconSize: 22, speedWidth: 68)
+                if monitor.popNetShowActive {
+                    WidgetCard {
+                        Label("正在使用網路", systemImage: "arrow.up.arrow.down")
+                            .font(.subheadline.bold())
+                        // 固定保留 3 列的高度，清單增減時下方內容不會跳動。
+                        VStack(alignment: .leading, spacing: 8) {
+                            ActiveNetworkAppsList(monitor: monitor, maxRows: 3, iconSize: 22, speedWidth: 68)
+                        }
+                        .frame(maxWidth: .infinity, minHeight: 82, alignment: .topLeading)
                     }
-                    .frame(maxWidth: .infinity, minHeight: 82, alignment: .topLeading)
                 }
 
-                CompactAppUsageList(monitor: monitor)
+                if monitor.popNetShowAppUsage { CompactAppUsageList(monitor: monitor) }
 
-                WidgetCard {
-                    Text("Macintosh HD").font(.caption).foregroundStyle(monitor.accentColor).bold()
-                    HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text(String(format: "%.0f", monitor.diskUsagePct)).font(.system(size: 34, weight: .bold, design: .rounded))
-                        Text("%").font(.title3.bold()).foregroundStyle(.secondary)
+                if monitor.popNetShowDisk {
+                    WidgetCard {
+                        Text("Macintosh HD").font(.caption).foregroundStyle(monitor.accentColor).bold()
+                        HStack(alignment: .firstTextBaseline, spacing: 4) {
+                            Text(String(format: "%.0f", monitor.diskUsagePct)).font(.system(size: 34, weight: .bold, design: .rounded))
+                            Text("%").font(.title3.bold()).foregroundStyle(.secondary)
+                        }
+                        Text("\(monitor.diskFreeStr) 可用（共 \(monitor.diskTotalStr)）").font(.caption).foregroundStyle(.secondary)
+                        ProgressView(value: monitor.diskUsagePct, total: 100).tint(.cyan)
                     }
-                    Text("\(monitor.diskFreeStr) 可用（共 \(monitor.diskTotalStr)）").font(.caption).foregroundStyle(.secondary)
-                    ProgressView(value: monitor.diskUsagePct, total: 100).tint(.cyan)
                 }
 
-                WidgetCard {
-                    Text("狀態列顯示")
-                        .font(.caption)
-                        .foregroundStyle(monitor.accentColor)
-                        .bold()
-                    HStack(spacing: 18) {
-                        Toggle("流量圖表", isOn: $monitor.showNetChart)
-                        Toggle("即時速度", isOn: $monitor.showNetSpeed)
+                if monitor.popNetShowBarToggles {
+                    WidgetCard {
+                        Text("狀態列顯示")
+                            .font(.caption)
+                            .foregroundStyle(monitor.accentColor)
+                            .bold()
+                        HStack(spacing: 18) {
+                            Toggle("流量圖表", isOn: $monitor.showNetChart)
+                            Toggle("即時速度", isOn: $monitor.showNetSpeed)
+                        }
+                        .toggleStyle(.switch)
+                        .controlSize(.mini)
+                        .tint(.cyan)
                     }
-                    .toggleStyle(.switch)
-                    .controlSize(.mini)
-                    .tint(.cyan)
+                    .fixedSize(horizontal: false, vertical: true)
                 }
-                .fixedSize(horizontal: false, vertical: true)
 
                 Divider()
                 HStack {
@@ -93,7 +101,10 @@ struct NetworkPopoverView: View {
                     Spacer()
                     Text("啟用").font(.caption).foregroundStyle(.secondary)
                     Toggle("", isOn: $monitor.showNetModule).labelsHidden().toggleStyle(.switch).controlSize(.mini)
-                    Button { NotificationCenter.default.post(name: NSNotification.Name("OpenSettings"), object: nil) } label: { Image(systemName: "gearshape.fill").foregroundStyle(.secondary) }.buttonStyle(.plain)
+                    Button {
+                        monitor.mainWindowTab = "settings"
+                        NotificationCenter.default.post(name: NSNotification.Name("OpenSettings"), object: nil)
+                    } label: { Image(systemName: "gearshape.fill").foregroundStyle(.secondary) }.buttonStyle(.plain)
                 }
             }.padding(16)
         }.background(Color(NSColor.windowBackgroundColor))

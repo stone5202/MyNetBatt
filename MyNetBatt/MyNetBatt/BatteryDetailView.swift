@@ -12,6 +12,7 @@ struct BatteryDetailView: View {
     @ObservedObject private var helper = PrivilegedHelperManager.shared
 
     var body: some View {
+        ScrollView {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
                 Text("電池與電源狀態").font(.largeTitle.bold())
@@ -95,9 +96,10 @@ struct BatteryDetailView: View {
                 }
                 .foregroundStyle(chartColor)
             }
-            .frame(minHeight: 130).chartYScale(domain: 0...100).chartXAxis(.hidden)
-            
-            Spacer()
+            .frame(height: 150).chartYScale(domain: 0...100).chartXAxis(.hidden)
+
+            BatteryHealthLogSection(monitor: monitor)
+
             Divider()
             HStack(spacing: 20) {
                 Toggle("啟用電池模組", isOn: $monitor.showBatModule)
@@ -108,6 +110,7 @@ struct BatteryDetailView: View {
             .toggleStyle(.switch).tint(.green)
         }
         .padding(24)
+        }
         .task {
             helper.refreshRegistrationState()
             helper.refreshLowPowerMode()
@@ -194,5 +197,54 @@ struct BatteryDetailView: View {
         .controlSize(.regular)
         .padding(.horizontal, 14)
         .frame(height: 50)
+    }
+}
+
+/// 每天一筆的健康度與循環次數；累積兩天以上才畫趨勢圖。
+struct BatteryHealthLogSection: View {
+    @Bindable var monitor: SystemMonitor
+
+    private struct Point: Identifiable {
+        let id: String
+        let date: Date
+        let health: Int
+    }
+
+    var body: some View {
+        let log = monitor.batteryHealthLog
+        let points = log.compactMap { entry in
+            SystemMonitor.dayKeyFormatter.date(from: entry.day).map { Point(id: entry.day, date: $0, health: entry.health) }
+        }
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("電池健康紀錄").font(.title3.bold()).foregroundColor(.secondary)
+                Spacer()
+                Text("已記錄 \(log.count) 天").font(.caption).foregroundStyle(.secondary)
+            }
+            if let first = log.first, let last = log.last, log.count >= 2 {
+                Text("\(first.day)：\(first.health)%、\(first.cycles) 次循環 → 目前 \(last.health)%、\(last.cycles) 次循環")
+                    .font(.caption).foregroundStyle(.secondary).monospacedDigit()
+                let lowest = points.map(\.health).min() ?? 100
+                Chart(points) { point in
+                    LineMark(x: .value("日期", point.date), y: .value("健康度", point.health))
+                        .interpolationMethod(.monotone)
+                    PointMark(x: .value("日期", point.date), y: .value("健康度", point.health))
+                        .symbolSize(points.count > 60 ? 0 : 18)
+                }
+                .foregroundStyle(.red)
+                .chartYScale(domain: max(0, min(lowest - 5, 80))...100)
+                .chartYAxis {
+                    AxisMarks { value in
+                        AxisGridLine()
+                        if let v = value.as(Int.self) { AxisValueLabel("\(v)%") }
+                    }
+                }
+                .frame(height: 120)
+            } else {
+                Text("每天會記錄一筆健康度與循環次數，累積兩天以上後顯示趨勢。")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+        }
+        .padding(.top, 8)
     }
 }

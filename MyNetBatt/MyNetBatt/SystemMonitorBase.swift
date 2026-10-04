@@ -42,6 +42,25 @@ final class SystemMonitor {
     /// 以系統電池圖示的尺寸自繪（約 27×12.5 pt）；關閉時使用較小的 SF Symbol。
     var batIconLarge: Bool = storedSetting("batIconLarge", true) { didSet { UserDefaults.standard.set(batIconLarge, forKey: "batIconLarge"); layoutChanged.send() } }
 
+    // MARK: 其他選單列項目（點擊會打開監控中心的系統效能頁）
+    var showCpuItem: Bool = storedSetting("showCpuItem", false) { didSet { UserDefaults.standard.set(showCpuItem, forKey: "showCpuItem"); layoutChanged.send() } }
+    var showMemItem: Bool = storedSetting("showMemItem", false) { didSet { UserDefaults.standard.set(showMemItem, forKey: "showMemItem"); layoutChanged.send() } }
+    var showDiskItem: Bool = storedSetting("showDiskItem", false) { didSet { UserDefaults.standard.set(showDiskItem, forKey: "showDiskItem"); layoutChanged.send() } }
+
+    // MARK: 小視窗內容
+    var popNetShowTotals: Bool = storedSetting("popNetShowTotals", true) { didSet { UserDefaults.standard.set(popNetShowTotals, forKey: "popNetShowTotals") } }
+    var popNetShowActive: Bool = storedSetting("popNetShowActive", true) { didSet { UserDefaults.standard.set(popNetShowActive, forKey: "popNetShowActive") } }
+    var popNetShowAppUsage: Bool = storedSetting("popNetShowAppUsage", true) { didSet { UserDefaults.standard.set(popNetShowAppUsage, forKey: "popNetShowAppUsage") } }
+    var popNetShowDisk: Bool = storedSetting("popNetShowDisk", true) { didSet { UserDefaults.standard.set(popNetShowDisk, forKey: "popNetShowDisk") } }
+    var popNetShowBarToggles: Bool = storedSetting("popNetShowBarToggles", true) { didSet { UserDefaults.standard.set(popNetShowBarToggles, forKey: "popNetShowBarToggles") } }
+    var popBatShowChart: Bool = storedSetting("popBatShowChart", true) { didSet { UserDefaults.standard.set(popBatShowChart, forKey: "popBatShowChart") } }
+
+    /// 暫停時仍顯示即時網速，但不再把用量累計進每日／每月紀錄。
+    var usageTrackingPaused: Bool = storedSetting("usageTrackingPaused", false) { didSet { UserDefaults.standard.set(usageTrackingPaused, forKey: "usageTrackingPaused") } }
+
+    /// 監控中心目前選取的分頁；選單列項目與齒輪按鈕可指定要打開的分頁。
+    var mainWindowTab: String = "battery"
+
     // MARK: 外觀
     @ObservationIgnored let appearanceChanged = PassthroughSubject<Void, Never>()
     /// 0 = 自動、1 = 淺色、2 = 深色
@@ -124,6 +143,14 @@ final class SystemMonitor {
     var chargeSessionText: String = storedSetting("lastChargeSummary", "")
     @ObservationIgnored var chargeSessionStart: Date?
     @ObservationIgnored var chargeSessionStartLevel = 0
+
+    /// 每天一筆的健康度與循環次數，用來看電池長期衰退的趨勢；最多保留兩年。
+    var batteryHealthLog: [BatteryHealthEntry] = []
+
+    /// 「重置總數據量」時記下的網卡累計值；顯示的累計量為目前值減去這個基準。
+    /// 網卡計數在重開機後歸零，因此基準只在同一次開機期間有效。
+    @ObservationIgnored var trafficBaselineIn: UInt64 = 0
+    @ObservationIgnored var trafficBaselineOut: UInt64 = 0
 
     /// 每分鐘新增一筆、最多 2880 筆；寫入由 saveBatteryHistory() 節流，不在每次變動時整包編碼。
     var batteryHistory: [BatteryData] = []
@@ -242,6 +269,16 @@ final class SystemMonitor {
         if let data = UserDefaults.standard.data(forKey: appUsageMonthlySplitDefaultsKey),
            let decoded = try? JSONDecoder().decode([String: [String: [UInt64]]].self, from: data) {
             appUsageMonthlySplit = decoded
+        }
+
+        if let data = UserDefaults.standard.data(forKey: "batteryHealthLogV1"),
+           let decoded = try? JSONDecoder().decode([BatteryHealthEntry].self, from: data) {
+            batteryHealthLog = decoded
+        }
+        // kern.boottime 會隨系統校時微幅變動，容許 5 分鐘的誤差。
+        if abs(UserDefaults.standard.double(forKey: "trafficBaselineBoot") - SystemReaders.bootTime) < 300 {
+            trafficBaselineIn = UInt64(max(0, UserDefaults.standard.double(forKey: "trafficBaselineIn")))
+            trafficBaselineOut = UInt64(max(0, UserDefaults.standard.double(forKey: "trafficBaselineOut")))
         }
 
         updateBatteryColor()

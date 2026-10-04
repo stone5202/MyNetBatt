@@ -34,8 +34,48 @@ extension SystemMonitor {
             await MainActor.run {
                 if let finalCycle { self.batCycle = finalCycle }
                 if let finalHealth { self.batHealth = finalHealth }
+                self.recordBatteryHealth()
             }
         }
+    }
+
+    /// 把今天的健康度與循環次數記進長期紀錄；同一天只保留最新的一筆。
+    func recordBatteryHealth() {
+        guard let health = Int(batHealth.trimmingCharacters(in: CharacterSet(charactersIn: "% "))),
+              (1...150).contains(health), let cycles = Int(batCycle) else { return }
+        let entry = BatteryHealthEntry(day: Self.dayKeyFormatter.string(from: Date()), health: health, cycles: cycles)
+        if batteryHealthLog.last?.day == entry.day {
+            guard batteryHealthLog.last != entry else { return }
+            batteryHealthLog[batteryHealthLog.count - 1] = entry
+        } else {
+            batteryHealthLog.append(entry)
+        }
+        if batteryHealthLog.count > 730 { batteryHealthLog.removeFirst(batteryHealthLog.count - 730) }
+        saveBatteryHealthLog()
+    }
+
+    func saveBatteryHealthLog() {
+        if let encoded = try? JSONEncoder().encode(batteryHealthLog) {
+            UserDefaults.standard.set(encoded, forKey: "batteryHealthLogV1")
+        }
+    }
+
+    func resetBatteryHealthLog() {
+        batteryHealthLog.removeAll()
+        saveBatteryHealthLog()
+        recordBatteryHealth()
+    }
+
+    /// 把累計上傳／下載量歸零重新計算（到下次重開機為止）。
+    func resetTrafficTotals() {
+        guard lastInBytes > 0 || lastOutBytes > 0 else { return }
+        trafficBaselineIn = lastInBytes
+        trafficBaselineOut = lastOutBytes
+        UserDefaults.standard.set(Double(trafficBaselineIn), forKey: "trafficBaselineIn")
+        UserDefaults.standard.set(Double(trafficBaselineOut), forKey: "trafficBaselineOut")
+        UserDefaults.standard.set(SystemReaders.bootTime, forKey: "trafficBaselineBoot")
+        totalDownStr = formatBytes(0)
+        totalUpStr = formatBytes(0)
     }
 
     func fetchNetworkTraffic() {
@@ -55,8 +95,13 @@ extension SystemMonitor {
         lastInBytes = currentIn; lastOutBytes = currentOut
         self.assignIfChanged(\.upSpeedStr, formatSpeed(outDiff))
         self.assignIfChanged(\.downSpeedStr, formatSpeed(inDiff))
-        self.assignIfChanged(\.totalDownStr, formatBytes(currentIn))
-        self.assignIfChanged(\.totalUpStr, formatBytes(currentOut))
+        // 計數比基準還小代表網卡計數已重置，基準不再適用。
+        if currentIn < trafficBaselineIn || currentOut < trafficBaselineOut {
+            trafficBaselineIn = 0
+            trafficBaselineOut = 0
+        }
+        self.assignIfChanged(\.totalDownStr, formatBytes(currentIn - trafficBaselineIn))
+        self.assignIfChanged(\.totalUpStr, formatBytes(currentOut - trafficBaselineOut))
         self.trafficHistory.append(TrafficData(time: Date(), downloadSpeed: Double(inDiff), uploadSpeed: Double(outDiff)))
         if trafficHistory.count > 30 { trafficHistory.removeFirst() }
     }

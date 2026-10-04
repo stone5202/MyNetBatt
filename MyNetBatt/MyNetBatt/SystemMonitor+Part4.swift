@@ -98,7 +98,7 @@ extension SystemMonitor {
                     let inDiff = previous.map { sample.incoming >= $0.incoming ? sample.incoming - $0.incoming : 0 } ?? 0
                     let outDiff = previous.map { sample.outgoing >= $0.outgoing ? sample.outgoing - $0.outgoing : 0 } ?? 0
 
-                    if hadPreviousSample {
+                    if hadPreviousSample, !self.usageTrackingPaused {
                         let delta = inDiff + outDiff
                         if delta > 0 {
                             let dayKey = Self.dayKeyFormatter.string(from: now)

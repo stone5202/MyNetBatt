@@ -9,7 +9,6 @@ import Darwin
 // MARK: - 主視窗：側邊欄控制中心
 struct MainWindowView: View {
     @Bindable var monitor: SystemMonitor
-    @State private var selectedTab: String? = "battery"
     
     var body: some View {
         NavigationSplitView {
@@ -44,26 +43,26 @@ struct MainWindowView: View {
             }
         } detail: {
             Group {
-                if selectedTab == "battery" {
+                if monitor.mainWindowTab == "battery" {
                     BatteryDetailView(monitor: monitor)
-                } else if selectedTab == "network" {
+                } else if monitor.mainWindowTab == "network" {
                     NetworkDetailView(monitor: monitor)
-                } else if selectedTab == "settings" {
+                } else if monitor.mainWindowTab == "settings" {
                     SettingsDetailView(monitor: monitor)
                 } else {
                     SystemDetailView(monitor: monitor)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .padding(selectedTab == "settings" ? 0 : 30)
+            .padding(monitor.mainWindowTab == "settings" ? 0 : 30)
         }
         .frame(minWidth: 850, minHeight: 650)
         .tint(monitor.accentColor)
     }
 
     private func sidebarRow(_ title: String, icon: String, tab: String) -> some View {
-        let isSelected = selectedTab == tab
-        return Button { selectedTab = tab } label: {
+        let isSelected = monitor.mainWindowTab == tab
+        return Button { monitor.mainWindowTab = tab } label: {
             HStack(spacing: 8) {
                 Image(systemName: icon)
                     .foregroundStyle(isSelected ? monitor.accentContrastColor : monitor.accentColor)

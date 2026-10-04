@@ -179,7 +179,18 @@ struct AppDataUsagePanel: View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
                 Text("數據用量").font(.title2.bold())
+                if monitor.usageTrackingPaused {
+                    Text("已暫停記錄").font(.caption.bold()).foregroundStyle(.orange)
+                }
                 Spacer()
+                Button {
+                    monitor.usageTrackingPaused.toggle()
+                } label: {
+                    Image(systemName: monitor.usageTrackingPaused ? "play.fill" : "pause.fill")
+                }
+                .buttonStyle(.borderless)
+                .help(monitor.usageTrackingPaused ? "繼續記錄用量" : "暫停記錄用量")
+                .accessibilityLabel(monitor.usageTrackingPaused ? "繼續記錄用量" : "暫停記錄用量")
                 Picker("期間", selection: $usageDays) { Text("日").tag(1); Text("週").tag(7); Text("月").tag(30); Text("年").tag(365) }
                     .pickerStyle(.segmented).frame(width: 240)
             }

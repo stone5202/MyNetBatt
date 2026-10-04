@@ -11,6 +11,8 @@ import UserNotifications
 class AppDelegate: NSObject, NSApplicationDelegate {
     var netItem: NSStatusItem!
     var batItem: NSStatusItem!
+    /// 只在設定打開時才建立，關閉時移除，隱藏的項目不會在背景跟著取樣結果重繪。
+    private var metricItems: [MetricBarView.Metric: NSStatusItem] = [:]
     var netPopover: NSPopover!
     var batPopover: NSPopover!
     var settingsWindow: NSWindow?
@@ -182,7 +184,33 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
     
+    private func syncMetricItem(_ metric: MetricBarView.Metric, visible: Bool) {
+        if visible, metricItems[metric] == nil {
+            let width: CGFloat = 34
+            let item = NSStatusBar.system.statusItem(withLength: width)
+            if let button = item.button {
+                let host = NSHostingView(rootView: MetricBarView(monitor: monitor, metric: metric).allowsHitTesting(false))
+                host.frame = NSRect(x: 0, y: 0, width: width, height: 22)
+                button.addSubview(host)
+                button.target = self
+                button.action = #selector(openSystemTab)
+            }
+            metricItems[metric] = item
+        } else if !visible, let item = metricItems.removeValue(forKey: metric) {
+            NSStatusBar.system.removeStatusItem(item)
+        }
+    }
+
+    @objc private func openSystemTab() {
+        monitor.mainWindowTab = "system"
+        openSettingsWindow()
+    }
+
     @objc func updateStatusBarWidths() {
+        syncMetricItem(.disk, visible: monitor.showDiskItem)
+        syncMetricItem(.memory, visible: monitor.showMemItem)
+        syncMetricItem(.cpu, visible: monitor.showCpuItem)
+
         if let btn = netItem.button {
             var nW: CGFloat = 6
             if monitor.showNetChart { nW += 32 }

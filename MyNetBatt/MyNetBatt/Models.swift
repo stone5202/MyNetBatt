@@ -9,6 +9,13 @@ import Darwin
 // MARK: - 資料結構與監控邏輯
 struct TrafficData: Identifiable { let id = UUID(); let time: Date; let downloadSpeed: Double; let uploadSpeed: Double }
 struct BatteryData: Identifiable, Codable { var id = UUID(); let time: Date; let level: Int }
+struct BatteryHealthEntry: Codable, Identifiable, Equatable {
+    /// "yyyy-MM-dd"，與用量紀錄相同的日期 key。
+    let day: String
+    var health: Int
+    var cycles: Int
+    var id: String { day }
+}
 struct SimpleData: Identifiable { let id = UUID(); let time: Date; let value: Double }
 
 struct AppNetworkUsage: Identifiable {

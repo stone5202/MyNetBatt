@@ -74,6 +74,37 @@ struct BatteryBarView: View {
     }
 }
 
+/// CPU、記憶體、儲存空間的選單列項目：上方小標題、下方百分比。
+struct MetricBarView: View {
+    enum Metric { case cpu, memory, disk }
+    @Bindable var monitor: SystemMonitor
+    let metric: Metric
+
+    private var title: String {
+        switch metric {
+        case .cpu: return "CPU"
+        case .memory: return "RAM"
+        case .disk: return "SSD"
+        }
+    }
+
+    private var value: Double {
+        switch metric {
+        case .cpu: return monitor.currentCpuUsage
+        case .memory: return monitor.ramUsagePct
+        case .disk: return monitor.diskUsagePct
+        }
+    }
+
+    var body: some View {
+        VStack(spacing: -1) {
+            Text(title).font(.system(size: 7, weight: .bold)).foregroundStyle(.secondary)
+            Text("\(Int(value.rounded()))%").font(.system(size: 10, weight: .semibold).monospacedDigit())
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
 /// 與系統電池圖示同尺寸的自繪圖示（含正極約 27×12.5 pt），電量依實際百分比連續填充。
 /// 接上電源時閃電會超出外框上下緣，並在外框與填色上留出一圈間隙。
 struct BatteryGlyph: View {

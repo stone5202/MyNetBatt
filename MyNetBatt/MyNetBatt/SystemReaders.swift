@@ -20,6 +20,14 @@ nonisolated enum SystemReaders {
         return String(cString: buffer).trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    /// 開機時間（自 1970 起的秒數）；讀取失敗時為 0。
+    static let bootTime: Double = {
+        var value = timeval()
+        var size = MemoryLayout<timeval>.size
+        guard sysctlbyname("kern.boottime", &value, &size, nil, 0) == 0 else { return 0 }
+        return Double(value.tv_sec)
+    }()
+
     static func sysctlInt32(_ name: String) -> Int32? {
         var value: Int32 = 0
         var size = MemoryLayout<Int32>.size
