@@ -4,6 +4,34 @@
 
 This document summarizes the major changes in each MyNetBatt release. Versions before 3.0 were uploaded by replacing earlier copies, so their original per-version Git history can no longer be fully recovered. Changes from 1.0 through 2.x are therefore consolidated from the source code that can still be verified, without attributing uncertain details to individual releases.
 
+## [3.5] - 2026-10-04
+
+### New features
+
+- Added a Settings tab to the main window for menu bar, float window, shortcut, notification, and data-reset options; the existing switches on each page and popover remain.
+- Float window: always on top and draggable, showing network speed, battery level, CPU, and memory, with adjustable size, opacity, background blur, border, and shadow.
+- Global shortcuts for showing or hiding the float window and opening the main window.
+- Battery notifications for low battery and fully charged, with an optional sound.
+- Wi-Fi details: channel, signal strength, transmit rate, security, and MAC address. Showing the network name requires Location access, which is requested only when you click "Show Wi-Fi name".
+- Copy buttons next to the local IP, public IP, and MAC address.
+- Live list of apps currently using the network, with their upload and download speeds.
+- External volumes can be ejected from the storage list.
+- The memory card now shows memory pressure.
+- Shows the start and end level and the duration of the current or last charge.
+
+### Menu bar and appearance
+
+- Menu bar network speed can show upload and download, upload only, or download only, with optional arrows and a wide or compact width.
+- The battery icon now matches the size of the system battery icon and fills continuously with the actual percentage; the previous smaller icon is still available in Settings.
+- Added a theme option (auto, light, dark) and an accent color.
+
+### Data usage
+
+- Added month and year periods: daily detail is kept for 31 days, plus monthly totals for 12 months.
+- Upload and download are recorded separately per app; records from before the upgrade only have a total and are shown as unclassified.
+- A history chart is shown for the week, month, and year periods.
+- Data usage and battery history can be reset from the Settings tab.
+
 ## [3.4] - 2026-10-02
 
 ### Performance and power usage

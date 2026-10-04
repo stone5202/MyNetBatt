@@ -10,7 +10,7 @@
 
 MyNetBatt is a native macOS menu bar system monitor that brings battery, network, and system performance information together in a clean SwiftUI interface.
 
-> Current version: 3.4 · Interface language: Traditional Chinese
+> Current version: 3.5 · Interface language: Traditional Chinese
 
 For release highlights and fixes, see the [changelog](CHANGELOG.en.md) or [GitHub Releases](https://github.com/stone5202/MyNetBatt/releases). The changelog is also available in [Traditional Chinese](CHANGELOG.md).
 
@@ -38,13 +38,18 @@ MyNetBatt is under active development and maintenance. Its complete source code 
 
 ## Features
 
-- Battery icon, percentage, real-time network speed, and traffic chart in the menu bar
-- Battery level, charging state, health, cycle count, temperature, power, and 48-hour trend
+- Battery icon, percentage, real-time network speed, and traffic chart in the menu bar; network speed can show upload and download, upload only, or download only
+- Battery level, charging state, health, cycle count, temperature, power, charge duration, and 48-hour trend
+- Low battery and fully charged notifications
 - macOS Low Power Mode control through a signed Privileged Helper
 - Upload and download speeds, cumulative traffic, interface, local IP, gateway, DNS, and public IP details
-- Daily and weekly network usage statistics for individual apps and processes
-- CPU, GPU, memory, swap, and storage monitoring
+- Wi-Fi channel, signal strength, transmit rate, and security
+- Daily, weekly, monthly, and yearly network usage for individual apps and processes, with upload and download counted separately and a history chart
+- Live list of apps currently using the network
+- Always-on-top float window that can be toggled with a global shortcut
+- CPU, GPU, memory (including memory pressure), swap, and storage monitoring, with an eject button for external volumes
 - Thunderbolt, USB4, and USB device information
+- Theme (auto, light, dark) and accent color
 - Automatic monitoring refresh after waking from sleep
 - Launch-at-login support
 
@@ -102,6 +107,7 @@ The helper exposes only methods for reading and changing Low Power Mode. It does
 - Battery history, per-app network usage, and interface preferences are stored locally in `UserDefaults`.
 - MyNetBatt contains no analytics, advertising, or user-tracking SDKs.
 - To display the public IP address, the app sends a request to [`https://api.ipify.org`](https://api.ipify.org); that service will naturally receive the source IP address of the request.
+- Showing the Wi-Fi network name requires Location access (a macOS requirement) and is requested only when you ask for it; MyNetBatt does not record or transmit your location.
 - Other hardware and system information comes from built-in macOS APIs and command-line tools.
 
 ## Project structure
