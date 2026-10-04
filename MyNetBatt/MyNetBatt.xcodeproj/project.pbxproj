@@ -368,6 +368,8 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSLocationUsageDescription = "MyNetBatt 需要定位權限才能顯示目前連線的 Wi‑Fi 名稱，不會記錄或傳送你的位置。";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "MyNetBatt 需要定位權限才能顯示目前連線的 Wi‑Fi 名稱，不會記錄或傳送你的位置。";
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.5;
 				MARKETING_VERSION = 3.4;
@@ -400,6 +402,8 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSLocationUsageDescription = "MyNetBatt 需要定位權限才能顯示目前連線的 Wi‑Fi 名稱，不會記錄或傳送你的位置。";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "MyNetBatt 需要定位權限才能顯示目前連線的 Wi‑Fi 名稱，不會記錄或傳送你的位置。";
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.5;
 				MARKETING_VERSION = 3.4;

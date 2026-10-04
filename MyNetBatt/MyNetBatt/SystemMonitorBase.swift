@@ -6,6 +6,11 @@ import Charts
 import ServiceManagement
 import Darwin
 
+/// 屬性的預設值在 init 註冊 defaults 之前就會求值，因此直接讀取並自帶預設值。
+nonisolated func storedSetting<T>(_ key: String, _ fallback: T) -> T {
+    UserDefaults.standard.object(forKey: key) as? T ?? fallback
+}
+
 /// 使用 Observation：每個畫面只在它實際讀取的屬性改變時才重算，
 /// 不會因為任何一個取樣結果更新就讓所有畫面（包括狀態列）一起重繪。
 @MainActor
@@ -28,6 +33,48 @@ final class SystemMonitor {
     var lowBatteryThreshold: Int = 20 {
         didSet { UserDefaults.standard.set(lowBatteryThreshold, forKey: "lowBatteryThreshold") }
     }
+
+    // MARK: 選單列樣式
+    /// 0 = 上傳＋下載、1 = 僅上傳、2 = 僅下載
+    var netSpeedStyle: Int = storedSetting("netSpeedStyle", 0) { didSet { UserDefaults.standard.set(netSpeedStyle, forKey: "netSpeedStyle"); layoutChanged.send() } }
+    var showNetArrow: Bool = storedSetting("showNetArrow", true) { didSet { UserDefaults.standard.set(showNetArrow, forKey: "showNetArrow"); layoutChanged.send() } }
+    var netBarCompact: Bool = storedSetting("netBarCompact", false) { didSet { UserDefaults.standard.set(netBarCompact, forKey: "netBarCompact"); layoutChanged.send() } }
+    /// 以系統電池圖示的尺寸自繪（約 27×12.5 pt）；關閉時使用較小的 SF Symbol。
+    var batIconLarge: Bool = storedSetting("batIconLarge", true) { didSet { UserDefaults.standard.set(batIconLarge, forKey: "batIconLarge"); layoutChanged.send() } }
+
+    // MARK: 外觀
+    @ObservationIgnored let appearanceChanged = PassthroughSubject<Void, Never>()
+    /// 0 = 自動、1 = 淺色、2 = 深色
+    var appearanceMode: Int = storedSetting("appearanceMode", 0) { didSet { UserDefaults.standard.set(appearanceMode, forKey: "appearanceMode"); appearanceChanged.send() } }
+    var accentColorIndex: Int = storedSetting("accentColorIndex", 0) { didSet { UserDefaults.standard.set(accentColorIndex, forKey: "accentColorIndex") } }
+
+    // MARK: 懸浮視窗
+    /// 視窗層級的設定（顯示、不透明度、陰影）改變時通知 AppDelegate；內容樣式由 SwiftUI 直接觀察。
+    @ObservationIgnored let floatWindowChanged = PassthroughSubject<Void, Never>()
+    var showFloatWindow: Bool = storedSetting("showFloatWindow", false) { didSet { UserDefaults.standard.set(showFloatWindow, forKey: "showFloatWindow"); floatWindowChanged.send() } }
+    /// 0 = 小、1 = 中、2 = 大
+    var floatSize: Int = storedSetting("floatSize", 1) { didSet { UserDefaults.standard.set(floatSize, forKey: "floatSize") } }
+    var floatOpacity: Double = storedSetting("floatOpacity", 1.0) { didSet { UserDefaults.standard.set(floatOpacity, forKey: "floatOpacity"); floatWindowChanged.send() } }
+    var floatBlur: Bool = storedSetting("floatBlur", true) { didSet { UserDefaults.standard.set(floatBlur, forKey: "floatBlur") } }
+    var floatShadow: Bool = storedSetting("floatShadow", true) { didSet { UserDefaults.standard.set(floatShadow, forKey: "floatShadow"); floatWindowChanged.send() } }
+    var floatBorder: Bool = storedSetting("floatBorder", true) { didSet { UserDefaults.standard.set(floatBorder, forKey: "floatBorder") } }
+    var floatShowNet: Bool = storedSetting("floatShowNet", true) { didSet { UserDefaults.standard.set(floatShowNet, forKey: "floatShowNet") } }
+    var floatShowBattery: Bool = storedSetting("floatShowBattery", true) { didSet { UserDefaults.standard.set(floatShowBattery, forKey: "floatShowBattery") } }
+    var floatShowSystem: Bool = storedSetting("floatShowSystem", false) { didSet { UserDefaults.standard.set(floatShowSystem, forKey: "floatShowSystem") } }
+
+    // MARK: 電池通知
+    var notifyLowBattery: Bool = storedSetting("notifyLowBattery", false) {
+        didSet { UserDefaults.standard.set(notifyLowBattery, forKey: "notifyLowBattery"); if notifyLowBattery { ensureNotificationPermission() } }
+    }
+    var notifyFullyCharged: Bool = storedSetting("notifyFullyCharged", false) {
+        didSet { UserDefaults.standard.set(notifyFullyCharged, forKey: "notifyFullyCharged"); if notifyFullyCharged { ensureNotificationPermission() } }
+    }
+    var notificationSound: Bool = storedSetting("notificationSound", true) { didSet { UserDefaults.standard.set(notificationSound, forKey: "notificationSound") } }
+    /// 使用者在系統設定拒絕通知時為 true，設定頁據此顯示提示。
+    var notificationPermissionDenied = false
+    @ObservationIgnored var lowBatteryNotified = false
+    @ObservationIgnored var fullChargeNotified = false
+    @ObservationIgnored var hasBatteryNotificationBaseline = false
 
     var isAutoStartEnabled: Bool = SMAppService.mainApp.status == .enabled {
         didSet {
@@ -73,6 +120,11 @@ final class SystemMonitor {
     var batSourceType: String = "--"
     var batTimeRemain: String = "--"
 
+    /// 充電中顯示本次充電的進度，結束後保留上一次充電的起訖電量與耗時。
+    var chargeSessionText: String = storedSetting("lastChargeSummary", "")
+    @ObservationIgnored var chargeSessionStart: Date?
+    @ObservationIgnored var chargeSessionStartLevel = 0
+
     /// 每分鐘新增一筆、最多 2880 筆；寫入由 saveBatteryHistory() 節流，不在每次變動時整包編碼。
     var batteryHistory: [BatteryData] = []
 
@@ -81,6 +133,9 @@ final class SystemMonitor {
     var gpuModelStr: String = "讀取中..."
     var ramUsageStr: String = "讀取中..."
     var ramUsagePct: Double = 0.0
+    var memoryPressurePct: Double = 0.0
+    /// 1 = 正常、2 = 警告、4 = 嚴重
+    var memoryPressureLevel: Int = 1
     var swapUsageStr: String = "讀取中..."
     var swapUsagePct: Double = 0.0
     var diskUsageStr: String = "讀取中..."
@@ -96,6 +151,15 @@ final class SystemMonitor {
     var appNetworkUsages: [AppNetworkUsage] = []
     var appNetworkStatus: String = "建立程序流量基準中…"
     var appUsageHistory: [String: [String: UInt64]] = [:]
+    /// 以 "yyyy-MM" 為 key 的每月用量，保留 12 個月；每日明細（appUsageHistory）只保留 31 天。
+    var appUsageMonthly: [String: [String: UInt64]] = [:]
+    /// 與上面兩份紀錄相同的 key，值為 [上傳, 下載]。加入這份紀錄之前的用量沒有區分方向，
+    /// 合計與兩者相加的差額在畫面上顯示為「未分類」。
+    var appUsageSplit: [String: [String: [UInt64]]] = [:]
+    var appUsageMonthlySplit: [String: [String: [UInt64]]] = [:]
+    /// 未連上 Wi‑Fi 時為 nil。
+    var wifiInfo: WiFiInfo?
+    @ObservationIgnored var wifiLocationAuthorizer: WiFiLocationAuthorizer?
     var networkInterfaceName: String = "--"
     var networkLocalIP: String = "--"
     var networkGateway: String = "--"
@@ -110,9 +174,12 @@ final class SystemMonitor {
     @ObservationIgnored var lastAppNetworkBytes: [String: (incoming: UInt64, outgoing: UInt64)] = [:]
     @ObservationIgnored var lastAppNetworkSampleTime: Date?
     @ObservationIgnored let appUsageHistoryDefaultsKey = "appUsageHistoryV2"
+    @ObservationIgnored let appUsageMonthlyDefaultsKey = "appUsageMonthlyV1"
+    @ObservationIgnored let appUsageSplitDefaultsKey = "appUsageSplitV1"
+    @ObservationIgnored let appUsageMonthlySplitDefaultsKey = "appUsageMonthlySplitV1"
 
     /// 每日用量紀錄的 key 固定使用西曆與 POSIX locale，避免使用者切換曆法（如民國曆）後
-    /// 舊 key 解析錯誤，導致 14 天清理誤刪或永遠保留紀錄。
+    /// 舊 key 解析錯誤，導致過期清理誤刪或永遠保留紀錄。
     static let dayKeyFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.calendar = Calendar(identifier: .gregorian)
@@ -157,7 +224,25 @@ final class SystemMonitor {
            let decoded = try? JSONDecoder().decode([String: [String: UInt64]].self, from: data) {
             appUsageHistory = decoded
         }
+        if let data = UserDefaults.standard.data(forKey: appUsageMonthlyDefaultsKey),
+           let decoded = try? JSONDecoder().decode([String: [String: UInt64]].self, from: data) {
+            appUsageMonthly = decoded
+        } else {
+            // 第一次升級到有每月統計的版本：以既有的每日紀錄建立每月統計。
+            for (dayKey, usage) in appUsageHistory {
+                let monthKey = String(dayKey.prefix(7))
+                for (name, bytes) in usage { appUsageMonthly[monthKey, default: [:]][name, default: 0] += bytes }
+            }
+        }
 
+        if let data = UserDefaults.standard.data(forKey: appUsageSplitDefaultsKey),
+           let decoded = try? JSONDecoder().decode([String: [String: [UInt64]]].self, from: data) {
+            appUsageSplit = decoded
+        }
+        if let data = UserDefaults.standard.data(forKey: appUsageMonthlySplitDefaultsKey),
+           let decoded = try? JSONDecoder().decode([String: [String: [UInt64]]].self, from: data) {
+            appUsageMonthlySplit = decoded
+        }
 
         updateBatteryColor()
         startNetworkSpeedMonitor()
@@ -184,6 +269,37 @@ final class SystemMonitor {
 
     var isLowBatteryWarning: Bool {
         batPct > 0 && batPct <= lowBatteryThreshold && !isPluggedIn
+    }
+
+    static let accentPalette: [(name: String, color: Color)] = [
+        ("藍色", .blue), ("紫色", .purple), ("粉紅色", .pink), ("紅色", .red),
+        ("橘色", .orange), ("黃色", .yellow), ("綠色", .green), ("青色", .cyan)
+    ]
+
+    var accentColor: Color {
+        Self.accentPalette.indices.contains(accentColorIndex) ? Self.accentPalette[accentColorIndex].color : .blue
+    }
+
+    /// 疊在強調色上的文字顏色；黃色與青色偏亮，改用黑色才看得清楚。
+    var accentContrastColor: Color {
+        [5, 7].contains(accentColorIndex) ? .black : .white
+    }
+
+    /// 選單列網速文字的寬度；狀態列項目的長度（AppDelegate）與畫面共用同一個值。
+    var netSpeedTextWidth: CGFloat {
+        let twoLine = netSpeedStyle == 0
+        var width: CGFloat = twoLine ? (netBarCompact ? 32 : 40) : (netBarCompact ? 42 : 56)
+        if showNetArrow { width += twoLine ? 8 : 10 }
+        return width
+    }
+
+    /// 選單列顯示的網速文字；窄版省略空白與「/s」。
+    func barSpeedText(upload: Bool) -> String {
+        var text = upload ? upSpeedStr : downSpeedStr
+        if netBarCompact {
+            text = text.replacingOccurrences(of: "/s", with: "").replacingOccurrences(of: " ", with: "")
+        }
+        return showNetArrow ? "\(upload ? "↑" : "↓") \(text)" : text
     }
 
     var displayedBatteryColor: Color {

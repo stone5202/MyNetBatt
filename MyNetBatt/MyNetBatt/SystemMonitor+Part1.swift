@@ -11,8 +11,10 @@ extension SystemMonitor {
         tempDisplayInFahrenheit.toggle()
     }
     
+    static let batteryColorOptions: [Color] = [.primary, .red, .orange, .yellow, .green]
+
     func updateBatteryColor() {
-        let colors: [Color] = [.primary, .red, .orange, .yellow, .green]
+        let colors = Self.batteryColorOptions
         if selectedColorIndex >= 0 && selectedColorIndex < colors.count { batteryColor = colors[selectedColorIndex] }
     }
     

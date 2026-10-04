@@ -20,6 +20,8 @@ extension SystemMonitor {
                 if elapsed >= interval - 0.5 {
                     fetchPerAppNetworkTraffic()
                 }
+                // 訊號強度與傳輸率變動頻繁，只在網路畫面開著時跟著更新。
+                if !perAppUsageViewers.isEmpty { fetchWiFiInfo() }
                 // 只是檢查是否該取樣，不會 spawn 子程序；畫面打開後最多 2 秒內就會切換成快速取樣。
                 try? await Task.sleep(nanoseconds: 2_000_000_000)
             }
@@ -31,7 +33,7 @@ extension SystemMonitor {
             let wasHidden = perAppUsageViewers.isEmpty
             perAppUsageViewers.insert(source)
             // 打開時立刻更新一次，不必等下一輪。
-            if wasHidden { fetchPerAppNetworkTraffic() }
+            if wasHidden { fetchPerAppNetworkTraffic(); fetchWiFiInfo() }
         } else {
             perAppUsageViewers.remove(source)
         }
@@ -83,22 +85,74 @@ extension SystemMonitor {
         let calendar = Calendar.current
         let formatter = Self.dayKeyFormatter
         var totals: [String: UInt64] = [:]
-        for offset in 0..<max(1, days) {
-            guard let date = calendar.date(byAdding: .day, value: -offset, to: Date()) else { continue }
-            let key = formatter.string(from: date)
-            for (name, bytes) in appUsageHistory[key] ?? [:] { totals[name, default: 0] += bytes }
+        var uploads: [String: UInt64] = [:]
+        var downloads: [String: UInt64] = [:]
+        func add(_ usage: [String: UInt64], _ split: [String: [UInt64]]) {
+            for (name, bytes) in usage { totals[name, default: 0] += bytes }
+            for (name, pair) in split where pair.count == 2 {
+                uploads[name, default: 0] += pair[0]
+                downloads[name, default: 0] += pair[1]
+            }
+        }
+        if days > 31 {
+            // 「年」：每日明細只保留 31 天，改用每月統計（最近 12 個月）。
+            for (key, usage) in appUsageMonthly { add(usage, appUsageMonthlySplit[key] ?? [:]) }
+        } else {
+            for offset in 0..<max(1, days) {
+                guard let date = calendar.date(byAdding: .day, value: -offset, to: Date()) else { continue }
+                let key = formatter.string(from: date)
+                add(appUsageHistory[key] ?? [:], appUsageSplit[key] ?? [:])
+            }
         }
 
         if totals.isEmpty {
             for usage in appNetworkUsages {
                 totals[usage.name, default: 0] += usage.totalDownload + usage.totalUpload
+                uploads[usage.name, default: 0] += usage.totalUpload
+                downloads[usage.name, default: 0] += usage.totalDownload
             }
         }
 
         return totals.map { name, bytes in
             let pid = appNetworkUsages.first(where: { $0.name == name })?.pid
-            return AppDataUsageItem(id: name, name: name, bytes: bytes, pid: pid)
+            return AppDataUsageItem(
+                id: name, name: name, bytes: bytes, pid: pid,
+                upload: uploads[name] ?? 0, download: downloads[name] ?? 0
+            )
         }.filter { $0.bytes > 0 }.sorted { $0.bytes > $1.bytes }
+    }
+
+    /// 用量長條圖的資料：週、月為每日一根，年為每月一根；每根依下載、上傳、未分類堆疊。
+    func usageBarPoints(days: Int) -> [UsageBarPoint] {
+        let calendar = Calendar.current
+        var points: [UsageBarPoint] = []
+        func append(key: String, date: Date, usage: [String: UInt64], split: [String: [UInt64]]) {
+            let total = usage.values.reduce(0, +)
+            let upload = split.values.reduce(UInt64(0)) { $0 + ($1.first ?? 0) }
+            let download = split.values.reduce(UInt64(0)) { $0 + ($1.count == 2 ? $1[1] : 0) }
+            let unknown = total > upload + download ? total - upload - download : 0
+            points.append(UsageBarPoint(id: "\(key)-down", date: date, kind: "下載", bytes: Double(download)))
+            points.append(UsageBarPoint(id: "\(key)-up", date: date, kind: "上傳", bytes: Double(upload)))
+            if unknown > 0 {
+                points.append(UsageBarPoint(id: "\(key)-unknown", date: date, kind: "未分類", bytes: Double(unknown)))
+            }
+        }
+        if days > 31 {
+            let thisMonth = calendar.dateInterval(of: .month, for: Date())?.start ?? Date()
+            for offset in (0..<12).reversed() {
+                guard let date = calendar.date(byAdding: .month, value: -offset, to: thisMonth) else { continue }
+                let key = String(Self.dayKeyFormatter.string(from: date).prefix(7))
+                append(key: key, date: date, usage: appUsageMonthly[key] ?? [:], split: appUsageMonthlySplit[key] ?? [:])
+            }
+        } else {
+            let today = calendar.startOfDay(for: Date())
+            for offset in (0..<max(1, days)).reversed() {
+                guard let date = calendar.date(byAdding: .day, value: -offset, to: today) else { continue }
+                let key = Self.dayKeyFormatter.string(from: date)
+                append(key: key, date: date, usage: appUsageHistory[key] ?? [:], split: appUsageSplit[key] ?? [:])
+            }
+        }
+        return points
     }
 
     func appDataUsageTotal(days: Int) -> UInt64 {

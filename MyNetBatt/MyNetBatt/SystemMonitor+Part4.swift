@@ -15,6 +15,23 @@ extension SystemMonitor {
         if let encoded = try? JSONEncoder().encode(appUsageHistory) {
             UserDefaults.standard.set(encoded, forKey: appUsageHistoryDefaultsKey)
         }
+        if let encoded = try? JSONEncoder().encode(appUsageMonthly) {
+            UserDefaults.standard.set(encoded, forKey: appUsageMonthlyDefaultsKey)
+        }
+        if let encoded = try? JSONEncoder().encode(appUsageSplit) {
+            UserDefaults.standard.set(encoded, forKey: appUsageSplitDefaultsKey)
+        }
+        if let encoded = try? JSONEncoder().encode(appUsageMonthlySplit) {
+            UserDefaults.standard.set(encoded, forKey: appUsageMonthlySplitDefaultsKey)
+        }
+    }
+
+    func resetAppUsageHistory() {
+        appUsageHistory.removeAll()
+        appUsageMonthly.removeAll()
+        appUsageSplit.removeAll()
+        appUsageMonthlySplit.removeAll()
+        saveAppUsageHistory(force: true)
     }
 
     func fetchPerAppNetworkTraffic() {
@@ -88,6 +105,12 @@ extension SystemMonitor {
                             var dayUsage = self.appUsageHistory[dayKey] ?? [:]
                             dayUsage[sample.name, default: 0] += delta
                             self.appUsageHistory[dayKey] = dayUsage
+                            let monthKey = String(dayKey.prefix(7))
+                            self.appUsageMonthly[monthKey, default: [:]][sample.name, default: 0] += delta
+                            self.appUsageSplit[dayKey, default: [:]][sample.name, default: [0, 0]][0] += outDiff
+                            self.appUsageSplit[dayKey, default: [:]][sample.name, default: [0, 0]][1] += inDiff
+                            self.appUsageMonthlySplit[monthKey, default: [:]][sample.name, default: [0, 0]][0] += outDiff
+                            self.appUsageMonthlySplit[monthKey, default: [:]][sample.name, default: [0, 0]][1] += inDiff
                         }
                     }
 
@@ -110,10 +133,21 @@ extension SystemMonitor {
                     .sorted { ($0.downloadSpeed + $0.uploadSpeed) > ($1.downloadSpeed + $1.uploadSpeed) }
 
                 let formatter = Self.dayKeyFormatter
-                let cutoff = Calendar.current.date(byAdding: .day, value: -14, to: now) ?? now
+                let cutoff = Calendar.current.date(byAdding: .day, value: -31, to: now) ?? now
                 self.appUsageHistory = self.appUsageHistory.filter { key, _ in
                     guard let d = formatter.date(from: key) else { return false }
                     return d >= cutoff
+                }
+                if self.appUsageSplit.count > self.appUsageHistory.count {
+                    self.appUsageSplit = self.appUsageSplit.filter { self.appUsageHistory[$0.key] != nil }
+                }
+                // 每月統計保留最近 12 個月；"yyyy-MM" 可直接以字串比較先後。
+                if let oldest = Calendar.current.date(byAdding: .month, value: -11, to: now) {
+                    let oldestKey = String(formatter.string(from: oldest).prefix(7))
+                    if self.appUsageMonthly.keys.contains(where: { $0 < oldestKey }) {
+                        self.appUsageMonthly = self.appUsageMonthly.filter { $0.key >= oldestKey }
+                        self.appUsageMonthlySplit = self.appUsageMonthlySplit.filter { $0.key >= oldestKey }
+                    }
                 }
                 self.saveAppUsageHistory()
 

@@ -11,7 +11,7 @@ import Darwin
 struct BatteryPopoverView: View {
     @Bindable var monitor: SystemMonitor
     @ObservedObject private var helper = PrivilegedHelperManager.shared
-    let colorOptions: [Color] = [.primary, .red, .orange, .yellow, .green]
+    let colorOptions = SystemMonitor.batteryColorOptions
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -45,12 +45,12 @@ struct BatteryPopoverView: View {
                         HStack {
                             Text("百分比").font(.subheadline)
                             Spacer()
-                            Toggle("", isOn: $monitor.showBatText).labelsHidden().toggleStyle(.switch).tint(.blue).controlSize(.mini)
+                            Toggle("", isOn: $monitor.showBatText).labelsHidden().toggleStyle(.switch).tint(monitor.accentColor).controlSize(.mini)
                         }
                         HStack {
                             Text("圖示").font(.subheadline)
                             Spacer()
-                            Toggle("", isOn: $monitor.showBatIcon).labelsHidden().toggleStyle(.switch).tint(.blue).controlSize(.mini)
+                            Toggle("", isOn: $monitor.showBatIcon).labelsHidden().toggleStyle(.switch).tint(monitor.accentColor).controlSize(.mini)
                         }
                     }
                     Spacer()
@@ -63,7 +63,7 @@ struct BatteryPopoverView: View {
                                     .frame(width: 16, height: 16)
                                     .overlay(Circle().stroke(Color.gray.opacity(0.3), lineWidth: 1))
                                     .overlay(
-                                        Circle().stroke(Color.blue, lineWidth: monitor.selectedColorIndex == index ? 2 : 0).padding(-2)
+                                        Circle().stroke(monitor.accentColor, lineWidth: monitor.selectedColorIndex == index ? 2 : 0).padding(-2)
                                     )
                                     .onTapGesture { monitor.selectedColorIndex = index }
                             }
@@ -250,7 +250,7 @@ struct BatteryPopoverView: View {
 
             // 第五排
             WidgetCard {
-                Text("過去 48 小時").font(.caption).foregroundColor(.blue).bold()
+                Text("過去 48 小時").font(.caption).foregroundColor(monitor.accentColor).bold()
                 Chart {
                     ForEach(monitor.batteryHistory) { data in
                         BarMark(

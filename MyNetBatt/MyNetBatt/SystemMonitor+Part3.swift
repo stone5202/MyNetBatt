@@ -35,6 +35,8 @@ extension SystemMonitor {
                 }
             }
 
+            let pressure = SystemReaders.memoryPressure()
+
             let swap = SystemReaders.swapUsage()
             let swapUsedBytes = swap?.usedBytes ?? 0
             let swapTotalBytes = swap?.totalBytes ?? 0
@@ -75,6 +77,10 @@ extension SystemMonitor {
                 self.assignIfChanged(\.gpuModelStr, fGpu)
                 self.assignIfChanged(\.ramUsageStr, fRam)
                 self.assignIfChanged(\.ramUsagePct, fRamPct)
+                if let pressure {
+                    self.assignIfChanged(\.memoryPressurePct, pressure.percent)
+                    self.assignIfChanged(\.memoryPressureLevel, pressure.level)
+                }
                 self.assignIfChanged(\.swapUsageStr, fSwap)
                 self.assignIfChanged(\.swapUsagePct, fSwapPct)
                 self.assignIfChanged(\.currentCpuUsage, fCpuUsage)
@@ -89,6 +95,21 @@ extension SystemMonitor {
         }
     }
 
+
+    /// 卸載並退出外接磁碟；失敗時回傳錯誤訊息（例如磁碟上還有檔案正在使用）。
+    func ejectVolume(_ volume: StorageVolumeInfo) async -> String? {
+        let url = URL(fileURLWithPath: volume.mountPath)
+        let message = await Task.detached { () -> String? in
+            do {
+                try NSWorkspace.shared.unmountAndEjectDevice(at: url)
+                return nil
+            } catch {
+                return error.localizedDescription
+            }
+        }.value
+        fetchStorageInfo()
+        return message
+    }
 
     /// 磁碟容量與外接磁碟清單變化很慢：每 30 秒更新一次，掛載／卸除磁碟時由 AppDelegate 立即觸發。
     func fetchStorageInfo() {
@@ -135,7 +156,8 @@ extension SystemMonitor {
                     let name = values.volumeName ?? (url.path == "/" ? "Macintosh HD" : url.lastPathComponent)
                     volumes.append(StorageVolumeInfo(
                         id: url.path, name: name, mountPath: url.path, usedBytes: used,
-                        availableBytes: available, totalBytes: total64, isInternal: isInternal
+                        availableBytes: available, totalBytes: total64, isInternal: isInternal,
+                        isEjectable: !isInternal && url.path != "/"
                     ))
                 }
             }

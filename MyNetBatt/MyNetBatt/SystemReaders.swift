@@ -20,6 +20,21 @@ nonisolated enum SystemReaders {
         return String(cString: buffer).trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    static func sysctlInt32(_ name: String) -> Int32? {
+        var value: Int32 = 0
+        var size = MemoryLayout<Int32>.size
+        guard sysctlbyname(name, &value, &size, nil, 0) == 0 else { return nil }
+        return value
+    }
+
+    /// 記憶體壓力：percent 為 100 減去系統回報的可用百分比（與 memory_pressure 指令相同來源）；
+    /// level 為 1 正常、2 警告、4 嚴重。
+    static func memoryPressure() -> (percent: Double, level: Int)? {
+        guard let free = sysctlInt32("kern.memorystatus_level") else { return nil }
+        let level = sysctlInt32("kern.memorystatus_vm_pressure_level") ?? 1
+        return (Double(max(0, min(100, 100 - free))), Int(level))
+    }
+
     /// 與 vm_stat 相同的計算方式：active + wired + compressor 佔用的頁數。
     static func memoryUsedBytes() -> Double? {
         var stats = vm_statistics64_data_t()

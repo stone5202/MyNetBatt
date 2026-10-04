@@ -16,8 +16,9 @@ struct NetworkPopoverView: View {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("網路").font(.caption).foregroundStyle(.blue).bold()
-                        Text(monitor.networkInterfaceName == "en0" ? "Wi‑Fi" : monitor.networkInterfaceName)
+                        Text("網路").font(.caption).foregroundStyle(monitor.accentColor).bold()
+                        Text(monitor.wifiInfo?.ssid ?? (monitor.networkInterfaceName == "en0" ? "Wi‑Fi" : monitor.networkInterfaceName))
+                            .lineLimit(1)
                             .font(.system(size: 28, weight: .bold, design: .rounded))
                         Text(monitor.networkDetailStatus).font(.caption).foregroundStyle(.secondary)
                     }
@@ -35,7 +36,7 @@ struct NetworkPopoverView: View {
                 NetworkLiveRow(title: "下載", arrow: "arrow.down", speed: monitor.downSpeedStr, total: monitor.totalDownStr, history: monitor.trafficHistory, upload: false, color: .green)
 
                 Divider()
-                Text("數據用量").font(.headline).foregroundStyle(.blue)
+                Text("數據用量").font(.headline).foregroundStyle(monitor.accentColor)
                 HStack {
                     VStack(alignment: .leading, spacing: 3) {
                         Text("上載").font(.caption).foregroundStyle(.pink)
@@ -49,10 +50,20 @@ struct NetworkPopoverView: View {
                     Spacer()
                 }
 
+                WidgetCard {
+                    Label("正在使用網路", systemImage: "arrow.up.arrow.down")
+                        .font(.subheadline.bold())
+                    // 固定保留 4 列的高度，清單增減時下方內容不會跳動。
+                    VStack(alignment: .leading, spacing: 8) {
+                        ActiveNetworkAppsList(monitor: monitor, maxRows: 4, iconSize: 22)
+                    }
+                    .frame(maxWidth: .infinity, minHeight: 112, alignment: .topLeading)
+                }
+
                 CompactAppUsageList(monitor: monitor)
 
                 WidgetCard {
-                    Text("Macintosh HD").font(.caption).foregroundStyle(.blue).bold()
+                    Text("Macintosh HD").font(.caption).foregroundStyle(monitor.accentColor).bold()
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
                         Text(String(format: "%.0f", monitor.diskUsagePct)).font(.system(size: 34, weight: .bold, design: .rounded))
                         Text("%").font(.title3.bold()).foregroundStyle(.secondary)
@@ -64,7 +75,7 @@ struct NetworkPopoverView: View {
                 WidgetCard {
                     Text("狀態列顯示")
                         .font(.caption)
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(monitor.accentColor)
                         .bold()
                     HStack(spacing: 18) {
                         Toggle("流量圖表", isOn: $monitor.showNetChart)
@@ -86,6 +97,7 @@ struct NetworkPopoverView: View {
                 }
             }.padding(16)
         }.background(Color(NSColor.windowBackgroundColor))
+        .tint(monitor.accentColor)
     }
 }
 
@@ -159,17 +171,35 @@ struct NetworkDetailsPopover: View {
             Button { monitor.refreshNetworkDetails() } label: { Label("刷新", systemImage: "arrow.clockwise") }.buttonStyle(.plain)
             Divider()
             NetworkDetailLine(title: "介面", value: monitor.networkInterfaceName)
-            NetworkDetailLine(title: "本機 IP", value: monitor.networkLocalIP)
-            NetworkDetailLine(title: "公網 IP", value: monitor.networkPublicIP)
+            NetworkDetailLine(title: "本機 IP", value: monitor.networkLocalIP, copyable: true)
+            NetworkDetailLine(title: "公網 IP", value: monitor.networkPublicIP, copyable: true)
             NetworkDetailLine(title: "預設閘道", value: monitor.networkGateway)
             NetworkDetailLine(title: "DNS", value: monitor.networkDNS)
+            if let wifi = monitor.wifiInfo {
+                Divider()
+                HStack {
+                    Text("Wi‑Fi 詳情").font(.caption).foregroundStyle(monitor.accentColor).bold()
+                    Spacer()
+                    if wifi.ssid == nil { WiFiNameAccessButton(monitor: monitor) }
+                }
+                if let ssid = wifi.ssid { NetworkDetailLine(title: "無線網路", value: ssid) }
+                NetworkDetailLine(title: "頻道", value: wifi.channel)
+                NetworkDetailLine(title: "訊號強度", value: wifi.rssiText)
+                NetworkDetailLine(title: "傳輸率", value: wifi.transmitRateText)
+                NetworkDetailLine(title: "安全性", value: wifi.security)
+                NetworkDetailLine(title: "MAC 位址", value: wifi.macAddress, copyable: true)
+            }
         }.padding(16).frame(width: 290)
     }
 }
 
 struct NetworkDetailLine: View {
-    let title: String; let value: String
+    let title: String; let value: String; var copyable = false
     var body: some View {
-        VStack(alignment: .leading, spacing: 2) { Text(title).font(.caption).foregroundStyle(.secondary); Text(value).font(.body).textSelection(.enabled) }
+        HStack {
+            VStack(alignment: .leading, spacing: 2) { Text(title).font(.caption).foregroundStyle(.secondary); Text(value).font(.body).textSelection(.enabled) }
+            Spacer(minLength: 8)
+            if copyable { CopyButton(value: value) }
+        }
     }
 }

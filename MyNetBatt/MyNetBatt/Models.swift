@@ -28,6 +28,17 @@ struct AppDataUsageItem: Identifiable {
     let name: String
     let bytes: UInt64
     let pid: Int?
+    /// 已知的上傳、下載量；舊版紀錄沒有區分方向，兩者相加可能小於 bytes。
+    var upload: UInt64 = 0
+    var download: UInt64 = 0
+}
+
+/// 用量長條圖的一段：某一天（或某個月）某個方向的用量。
+struct UsageBarPoint: Identifiable {
+    let id: String
+    let date: Date
+    let kind: String
+    let bytes: Double
 }
 
 struct ThunderboltDeviceInfo: Identifiable, Equatable {
@@ -47,6 +58,7 @@ struct StorageVolumeInfo: Identifiable, Equatable {
     let availableBytes: Int64
     let totalBytes: Int64
     let isInternal: Bool
+    var isEjectable = false
 
     var usagePct: Double {
         guard totalBytes > 0 else { return 0 }

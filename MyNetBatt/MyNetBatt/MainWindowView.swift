@@ -22,12 +22,16 @@ struct MainWindowView: View {
                 
                 Divider()
                 
-                List(selection: $selectedTab) {
-                    Label("電池狀態", systemImage: "battery.100").tag("battery")
-                    Label("網路監控", systemImage: "network").tag("network")
-                    Label("系統效能", systemImage: "cpu").tag("system")
+                // 系統的側邊欄 List 選取色固定跟隨 macOS 的強調色，因此自行繪製選取狀態以套用 App 的強調色。
+                VStack(spacing: 4) {
+                    sidebarRow("電池狀態", icon: "battery.100", tab: "battery")
+                    sidebarRow("網路監控", icon: "network", tab: "network")
+                    sidebarRow("系統效能", icon: "cpu", tab: "system")
+                    sidebarRow("設定", icon: "gearshape", tab: "settings")
+                    Spacer()
                 }
-                .listStyle(SidebarListStyle())
+                .padding(.horizontal, 10)
+                .padding(.top, 10)
             }
             .safeAreaInset(edge: .bottom) {
                 VStack(spacing: 0) {
@@ -44,13 +48,37 @@ struct MainWindowView: View {
                     BatteryDetailView(monitor: monitor)
                 } else if selectedTab == "network" {
                     NetworkDetailView(monitor: monitor)
+                } else if selectedTab == "settings" {
+                    SettingsDetailView(monitor: monitor)
                 } else {
                     SystemDetailView(monitor: monitor)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .padding(30)
+            .padding(selectedTab == "settings" ? 0 : 30)
         }
         .frame(minWidth: 850, minHeight: 650)
+        .tint(monitor.accentColor)
+    }
+
+    private func sidebarRow(_ title: String, icon: String, tab: String) -> some View {
+        let isSelected = selectedTab == tab
+        return Button { selectedTab = tab } label: {
+            HStack(spacing: 8) {
+                Image(systemName: icon)
+                    .foregroundStyle(isSelected ? monitor.accentContrastColor : monitor.accentColor)
+                    .frame(width: 24)
+                Text(title)
+                    .foregroundStyle(isSelected ? monitor.accentContrastColor : Color.primary)
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 7)
+            .background(isSelected ? monitor.accentColor : Color.clear, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(title)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }

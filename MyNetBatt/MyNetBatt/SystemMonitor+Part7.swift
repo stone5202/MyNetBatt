@@ -178,6 +178,8 @@ extension SystemMonitor {
                 self.assignIfChanged(\.batteryIcon, fIcon)
                 self.assignIfChanged(\.isCharging, isChg)
                 self.assignIfChanged(\.isPluggedIn, isPlugged)
+                self.evaluateBatteryNotifications()
+                self.updateChargeSession()
 
                 let now = Date()
                 if let last = self.batteryHistory.last {
@@ -193,6 +195,37 @@ extension SystemMonitor {
         }
     }
     
+
+    /// 記錄一次充電從開始到結束（充滿、暫停或拔掉電源）的起訖電量與耗時。
+    /// App 在充電途中才啟動時，以啟動當下作為起點。
+    func updateChargeSession() {
+        func format(_ interval: TimeInterval) -> String {
+            let minutes = max(0, Int(interval / 60))
+            return minutes >= 60 ? "\(minutes / 60) 小時 \(minutes % 60) 分" : "\(minutes) 分"
+        }
+        let now = Date()
+        if isCharging, isPluggedIn {
+            guard let start = chargeSessionStart else {
+                chargeSessionStart = now
+                chargeSessionStartLevel = batPct
+                return
+            }
+            if batPct > chargeSessionStartLevel {
+                assignIfChanged(\.chargeSessionText, "本次充電：\(chargeSessionStartLevel)% → \(batPct)%，已 \(format(now.timeIntervalSince(start)))")
+            }
+        } else if let start = chargeSessionStart {
+            chargeSessionStart = nil
+            guard batPct > chargeSessionStartLevel else { return }
+            let summary = "上次充電：\(chargeSessionStartLevel)% → \(batPct)%，用時 \(format(now.timeIntervalSince(start)))"
+            assignIfChanged(\.chargeSessionText, summary)
+            UserDefaults.standard.set(summary, forKey: "lastChargeSummary")
+        }
+    }
+
+    func resetBatteryHistory() {
+        batteryHistory.removeAll()
+        saveBatteryHistory(force: true)
+    }
 
     /// 48 小時電量紀錄最多 2880 筆，最多每 10 分鐘寫入一次；App 結束時由 AppDelegate 強制寫入。
     func saveBatteryHistory(force: Bool = false) {

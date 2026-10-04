@@ -10,6 +10,22 @@ import Darwin
 struct SystemDetailView: View {
     @Bindable var monitor: SystemMonitor
 
+    private var memoryPressureLabel: String {
+        switch monitor.memoryPressureLevel {
+        case 4: return "嚴重"
+        case 2: return "警告"
+        default: return "正常"
+        }
+    }
+
+    private var memoryPressureColor: Color {
+        switch monitor.memoryPressureLevel {
+        case 4: return .red
+        case 2: return .yellow
+        default: return .blue
+        }
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
@@ -89,13 +105,15 @@ struct SystemDetailView: View {
                         icon: "memorychip.fill",
                         title: "實體記憶體",
                         value: monitor.ramUsageStr,
+                        detail: String(format: "記憶體壓力 %.0f%% · %@", monitor.memoryPressurePct, memoryPressureLabel),
                         progress: monitor.ramUsagePct,
-                        color: .blue
+                        color: memoryPressureColor
                     )
                     SystemCard(
                         icon: "arrow.up.arrow.down.circle.fill",
                         title: "Swap 虛擬記憶體",
                         value: monitor.swapUsageStr,
+                        detail: String(format: "已使用 %.0f%%", monitor.swapUsagePct),
                         progress: monitor.swapUsagePct,
                         color: .orange
                     )
@@ -196,6 +214,16 @@ struct SystemCard: View {
 
 struct StorageVolumesCard: View {
     @Bindable var monitor: SystemMonitor
+    @State private var ejectingID: String?
+    @State private var ejectError: String?
+
+    private func eject(_ volume: StorageVolumeInfo) {
+        ejectingID = volume.id
+        Task {
+            ejectError = await monitor.ejectVolume(volume)
+            ejectingID = nil
+        }
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -226,7 +254,9 @@ struct StorageVolumesCard: View {
                         free: monitor.formatStorageBytesForUI(volume.availableBytes),
                         total: monitor.formatStorageBytesForUI(volume.totalBytes),
                         pct: volume.usagePct,
-                        subtitle: volume.isInternal ? "內建磁碟" : volume.mountPath
+                        subtitle: volume.isInternal ? "內建磁碟" : volume.mountPath,
+                        isEjecting: ejectingID == volume.id,
+                        onEject: volume.isEjectable ? { eject(volume) } : nil
                     )
                     if volume.id != monitor.storageVolumes.last?.id { Divider() }
                 }
@@ -235,6 +265,11 @@ struct StorageVolumesCard: View {
         .padding(16)
         .background(Color.secondary.opacity(0.08))
         .cornerRadius(12)
+        .alert("無法退出磁碟", isPresented: Binding(get: { ejectError != nil }, set: { if !$0 { ejectError = nil } })) {
+            Button("好") { ejectError = nil }
+        } message: {
+            Text(ejectError ?? "")
+        }
     }
 }
 
@@ -245,6 +280,8 @@ struct StorageVolumeRow: View {
     let total: String
     let pct: Double
     let subtitle: String
+    var isEjecting = false
+    var onEject: (() -> Void)? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -256,6 +293,16 @@ struct StorageVolumeRow: View {
                 Spacer()
                 Text(String(format: "%.1f%% 已使用", pct))
                     .font(.caption).foregroundStyle(.secondary).monospacedDigit()
+                if let onEject {
+                    if isEjecting {
+                        ProgressView().controlSize(.small)
+                    } else {
+                        Button(action: onEject) { Image(systemName: "eject.fill") }
+                            .buttonStyle(.borderless)
+                            .help("退出「\(name)」")
+                            .accessibilityLabel("退出 \(name)")
+                    }
+                }
             }
             Text("已用 \(used) / 共 \(total)")
                 .font(.subheadline.weight(.semibold)).monospacedDigit()

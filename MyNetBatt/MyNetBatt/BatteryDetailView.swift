@@ -56,6 +56,13 @@ struct BatteryDetailView: View {
                 InfoBox(title: monitor.batteryPowerTitle, value: monitor.batWatts, icon: "bolt.fill", color: .yellow)
             }
             
+            if !monitor.chargeSessionText.isEmpty {
+                Label(monitor.chargeSessionText, systemImage: "bolt.badge.clock")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .monospacedDigit()
+            }
+
             if let error = helper.lastError, !error.isEmpty {
                 HStack(alignment: .top, spacing: 8) {
                     Image(systemName: "exclamationmark.triangle.fill")

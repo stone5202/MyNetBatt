@@ -15,12 +15,23 @@ struct NetworkBarView: View {
                 MiniGraphView(history: Array(monitor.trafficHistory.suffix(5)), globalMaxDl: monitor.trafficHistory.map(\.downloadSpeed).max() ?? 1, globalMaxUl: monitor.trafficHistory.map(\.uploadSpeed).max() ?? 1)
             }
             if monitor.showNetSpeed {
-                VStack(alignment: .leading, spacing: -2) {
-                    Text("↑ \(monitor.upSpeedStr)").foregroundColor(.green)
-                    Text("↓ \(monitor.downSpeedStr)").foregroundColor(.cyan)
+                Group {
+                    if monitor.netSpeedStyle == 0 {
+                        VStack(alignment: .leading, spacing: -2) {
+                            Text(monitor.barSpeedText(upload: true)).foregroundColor(.green)
+                            Text(monitor.barSpeedText(upload: false)).foregroundColor(.cyan)
+                        }
+                        .font(.system(size: 9, weight: .bold).monospacedDigit())
+                    } else {
+                        let upload = monitor.netSpeedStyle == 1
+                        Text(monitor.barSpeedText(upload: upload))
+                            .foregroundColor(upload ? .green : .cyan)
+                            .font(.system(size: 11, weight: .semibold).monospacedDigit())
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                    }
                 }
-                .font(.system(size: 9, weight: .bold).monospacedDigit())
-                .frame(width: 48, alignment: .leading)
+                .frame(width: monitor.netSpeedTextWidth, alignment: .leading)
             }
         }
         .padding(.horizontal, 2).frame(maxHeight: .infinity)
@@ -37,7 +48,12 @@ struct BatteryBarView: View {
                     .foregroundStyle(monitor.isLowBatteryWarning ? Color.red : Color.primary)
             }
             if monitor.showBatIcon {
-                if monitor.isLowBatteryWarning {
+                if monitor.batIconLarge {
+                    BatteryGlyph(
+                        level: monitor.batPct, fill: monitor.displayedBatteryColor, plugged: monitor.isPluggedIn,
+                        outline: monitor.isLowBatteryWarning ? .red : .primary
+                    )
+                } else if monitor.isLowBatteryWarning {
                     // Monochrome colors every layer, including the outline of
                     // battery.0 when the symbol has no visible fill remaining.
                     Image(systemName: monitor.batteryIcon)
@@ -55,6 +71,69 @@ struct BatteryBarView: View {
             }
         }
         .padding(.horizontal, 2).frame(maxHeight: .infinity)
+    }
+}
+
+/// 與系統電池圖示同尺寸的自繪圖示（含正極約 27×12.5 pt），電量依實際百分比連續填充。
+/// 接上電源時閃電會超出外框上下緣，並在外框與填色上留出一圈間隙。
+struct BatteryGlyph: View {
+    let level: Int
+    let fill: Color
+    let plugged: Bool
+    var outline: Color = .primary
+    var height: CGFloat = 12.5
+
+    var body: some View {
+        let width = height * 2.0
+        let line = max(1, height * 0.1)
+        let inset = line + height * 0.09
+        let fraction = CGFloat(max(0, min(100, level))) / 100
+        let bolt = BatteryBoltShape()
+        HStack(spacing: height * 0.07) {
+            ZStack {
+                ZStack {
+                    RoundedRectangle(cornerRadius: height * 0.3, style: .continuous)
+                        .strokeBorder(outline.opacity(0.55), lineWidth: line)
+                    RoundedRectangle(cornerRadius: height * 0.15, style: .continuous)
+                        .fill(fill)
+                        .frame(width: max(height * 0.15, (width - inset * 2) * fraction))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(inset)
+                }
+                .frame(width: width, height: height)
+
+                if plugged {
+                    bolt.stroke(style: StrokeStyle(lineWidth: height * 0.26, lineJoin: .round))
+                        .frame(width: height * 0.6, height: height * 1.22)
+                        .blendMode(.destinationOut)
+                    bolt.fill(outline)
+                        .frame(width: height * 0.6, height: height * 1.22)
+                }
+            }
+            .frame(width: width, height: height * 1.3)
+            .compositingGroup()
+
+            // 正極：右側為圓角的半膠囊形。
+            UnevenRoundedRectangle(bottomTrailingRadius: height * 0.12, topTrailingRadius: height * 0.12)
+                .fill(outline.opacity(0.55))
+                .frame(width: height * 0.11, height: height * 0.36)
+        }
+        .frame(height: height)
+    }
+}
+
+private struct BatteryBoltShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        let points: [(CGFloat, CGFloat)] = [
+            (0.64, 0.0), (0.06, 0.57), (0.45, 0.57), (0.34, 1.0), (0.94, 0.42), (0.55, 0.42)
+        ]
+        var path = Path()
+        for (index, point) in points.enumerated() {
+            let p = CGPoint(x: rect.minX + point.0 * rect.width, y: rect.minY + point.1 * rect.height)
+            if index == 0 { path.move(to: p) } else { path.addLine(to: p) }
+        }
+        path.closeSubpath()
+        return path
     }
 }
 

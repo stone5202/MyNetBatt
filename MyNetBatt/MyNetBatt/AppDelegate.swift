@@ -5,6 +5,7 @@ import Combine
 import Charts
 import ServiceManagement
 import Darwin
+import UserNotifications
 
 // MARK: - 系統控制核心
 class AppDelegate: NSObject, NSApplicationDelegate {
@@ -17,6 +18,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     let monitor = SystemMonitor()
     private var cancellables = Set<AnyCancellable>()
+    private lazy var floatWindow = FloatWindowController(monitor: monitor)
 
     /// 這個程序是否為重複啟動、即將自行結束的實例。
     private var isDuplicateInstance = false
@@ -40,6 +42,25 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             .store(in: &cancellables)
         
         NotificationCenter.default.addObserver(self, selector: #selector(openSettingsWindow), name: NSNotification.Name("OpenSettings"), object: nil)
+
+        UNUserNotificationCenter.current().delegate = BatteryNotifier.shared
+
+        // 主題與懸浮視窗的設定改變時重新套用。
+        monitor.appearanceChanged
+            .merge(with: monitor.floatWindowChanged)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] in self?.applyAppearance() }
+            .store(in: &cancellables)
+        applyAppearance()
+
+        HotKeyManager.shared.onAction = { [weak self] action in
+            guard let self else { return }
+            switch action {
+            case .toggleFloatWindow: self.monitor.showFloatWindow.toggle()
+            case .openMainWindow: self.openSettingsWindow()
+            }
+        }
+        HotKeyManager.shared.registerAll()
 
         let workspaceCenter = NSWorkspace.shared.notificationCenter
         workspaceCenter.addObserver(
@@ -89,6 +110,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         return true
     }
     
+    /// 只套用在自己的視窗上，不動 NSApp.appearance，選單列項目維持跟隨系統選單列的深淺。
+    private var selectedAppearance: NSAppearance? {
+        switch monitor.appearanceMode {
+        case 1: return NSAppearance(named: .aqua)
+        case 2: return NSAppearance(named: .darkAqua)
+        default: return nil
+        }
+    }
+
+    private func applyAppearance() {
+        let appearance = selectedAppearance
+        netPopover.appearance = appearance
+        batPopover.appearance = appearance
+        settingsWindow?.appearance = appearance
+        floatWindow.update(appearance: appearance)
+    }
+
     @objc func openSettingsWindow() {
         if settingsWindow == nil { setupSettingsWindow() }
         settingsWindow?.makeKeyAndOrderFront(nil)
@@ -148,7 +186,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if let btn = netItem.button {
             var nW: CGFloat = 6
             if monitor.showNetChart { nW += 32 }
-            if monitor.showNetSpeed { nW += 48 }
+            if monitor.showNetSpeed { nW += monitor.netSpeedTextWidth }
             if monitor.showNetChart && monitor.showNetSpeed { nW += 4 }
             let finalNetWidth = max(nW, 1)
             netItem.length = finalNetWidth
@@ -159,7 +197,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             var bW: CGFloat = 8
             // 稍微增加寬度以完美容納 "100%"，避免被截斷成 ...
             if monitor.showBatText { bW += 42 }
-            if monitor.showBatIcon { bW += 22 }
+            if monitor.showBatIcon { bW += monitor.batIconLarge ? 28 : 22 }
             if monitor.showBatText && monitor.showBatIcon { bW += 4 }
             let finalBatWidth = max(bW, 1)
             batItem.length = finalBatWidth
@@ -180,6 +218,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.isReleasedWhenClosed = false
         window.center()
         window.setFrameAutosaveName("MyNetBattMainWindow")
+        window.appearance = selectedAppearance
         settingsWindowCloseObserver = NotificationCenter.default.addObserver(
             forName: NSWindow.willCloseNotification, object: window, queue: .main
         ) { [weak self] _ in

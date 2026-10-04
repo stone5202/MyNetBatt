@@ -8,6 +8,7 @@ import Darwin
 
 extension SystemMonitor {
     func fetchNetworkDetails(forcePublicIP: Bool = false) {
+        fetchWiFiInfo()
         runExclusive("networkDetails") {
             var interface = "--"
             var gateway = "--"

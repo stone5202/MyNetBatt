@@ -82,6 +82,31 @@ struct BatteryTemperatureGaugeView: View {
     }
 }
 
+/// 把值複製到剪貼簿，並短暫顯示打勾作為回饋。
+struct CopyButton: View {
+    let value: String
+    @State private var copied = false
+
+    var body: some View {
+        Button {
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(value, forType: .string)
+            copied = true
+            Task {
+                try? await Task.sleep(for: .seconds(1.2))
+                copied = false
+            }
+        } label: {
+            Image(systemName: copied ? "checkmark" : "doc.on.doc")
+                .font(.caption)
+                .foregroundStyle(copied ? Color.green : Color.secondary)
+        }
+        .buttonStyle(.plain)
+        .disabled(value == "--" || value == "無法取得")
+        .help("複製")
+    }
+}
+
 struct WidgetCard<Content: View>: View {
     let content: Content
     init(@ViewBuilder content: () -> Content) { self.content = content() }
