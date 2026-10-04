@@ -26,6 +26,18 @@ For release highlights and fixes, see the [changelog](CHANGELOG.en.md) or [GitHu
   Network & system monitoring · Battery health & power monitoring
 </p>
 
+<p align="center">
+  <img src="docs/screenshots/menubar.webp" width="45%" alt="MyNetBatt menu bar items for CPU, memory, storage and network">
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/settings.webp" width="80%" alt="MyNetBatt settings tab">
+</p>
+
+<p align="center">
+  Menu bar items · Settings
+</p>
+
 ## Project status
 
 MyNetBatt is under active development and maintenance. Its complete source code is available under the MIT License, and community bug reports, feature suggestions, and pull requests are welcome.

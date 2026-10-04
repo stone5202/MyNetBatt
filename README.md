@@ -26,6 +26,18 @@ MyNetBatt 是一款原生 macOS 選單列系統監控工具，將電池、網路
   Network & system monitoring · Battery health & power monitoring
 </p>
 
+<p align="center">
+  <img src="docs/screenshots/menubar.webp" width="45%" alt="MyNetBatt menu bar items for CPU, memory, storage and network">
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/settings.webp" width="80%" alt="MyNetBatt settings tab">
+</p>
+
+<p align="center">
+  Menu bar items · Settings
+</p>
+
 ## 開發狀態
 
 MyNetBatt 目前持續開發與維護中，專案完整原始碼以 MIT License 公開，歡迎社群回報問題、提出功能建議或提交 pull request。
