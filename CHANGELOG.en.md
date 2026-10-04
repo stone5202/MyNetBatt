@@ -4,6 +4,13 @@
 
 This document summarizes the major changes in each MyNetBatt release. Versions before 3.0 were uploaded by replacing earlier copies, so their original per-version Git history can no longer be fully recovered. Changes from 1.0 through 2.x are therefore consolidated from the source code that can still be verified, without attributing uncertain details to individual releases.
 
+## [3.5.1] - 2026-10-04
+
+### Fixes and improvements
+
+- App names in the network popover's active network list are no longer truncated, and the empty space below the list is reduced.
+- Updated the README screenshots.
+
 ## [3.5] - 2026-10-04
 
 ### New features
