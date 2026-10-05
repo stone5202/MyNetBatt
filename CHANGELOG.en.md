@@ -4,6 +4,17 @@
 
 This document summarizes the major changes in each MyNetBatt release. Versions before 3.0 were uploaded by replacing earlier copies, so their original per-version Git history can no longer be fully recovered. Changes from 1.0 through 2.x are therefore consolidated from the source code that can still be verified, without attributing uncertain details to individual releases.
 
+## [3.7.1] - 2026-10-05
+
+### New features
+
+- New "glass style" appearance option: the network and battery popovers, their cards, and the float window use the system glass material. It works with the light, dark, and auto themes and is off by default.
+- The theme is now picked from light, dark, and auto thumbnails in Settings.
+
+### Improvements
+
+- The float window's opacity now only affects its background, so text and icons stay fully opaque; the range is widened to 0%–100%.
+
 ## [3.7] - 2026-10-05
 
 ### New features

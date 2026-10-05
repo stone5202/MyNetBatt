@@ -10,7 +10,7 @@
 
 MyNetBatt is a native macOS menu bar system monitor that brings battery, network, and system performance information together in a clean SwiftUI interface.
 
-> Current version: 3.7 · Interface language: Traditional Chinese
+> Current version: 3.7.1 · Interface language: Traditional Chinese
 
 For release highlights and fixes, see the [changelog](CHANGELOG.en.md) or [GitHub Releases](https://github.com/stone5202/MyNetBatt/releases). The changelog is also available in [Traditional Chinese](CHANGELOG.md).
 
@@ -60,11 +60,11 @@ MyNetBatt is under active development and maintenance. Its complete source code 
 - Wi-Fi channel, signal strength, transmit rate, and security
 - Daily, weekly, monthly, and yearly network usage per app (helpers and other child processes count towards the app that owns them, and other processes can optionally be listed separately), with upload and download counted separately and a history chart; tracking can be paused
 - Live list of apps currently using the network
-- Always-on-top float window that can be toggled with a global shortcut
+- Always-on-top float window that can be toggled with a global shortcut, with adjustable background opacity
 - Configurable sections in the network and battery popovers
 - CPU, GPU, memory (including memory pressure), swap, and storage monitoring, with an eject button for external volumes
 - Thunderbolt, USB4, and USB device information
-- Theme (auto, light, dark) and accent color
+- Theme (auto, light, dark), glass style, and accent color
 - Automatic monitoring refresh after waking from sleep
 - Launch-at-login support
 
