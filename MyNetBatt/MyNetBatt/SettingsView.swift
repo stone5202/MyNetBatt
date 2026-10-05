@@ -37,10 +37,11 @@ struct SettingsDetailView: View {
                 Toggle("啟用網路模組", isOn: $monitor.showNetModule)
                 Toggle("流量圖表", isOn: $monitor.showNetChart)
                 Toggle("即時速度", isOn: $monitor.showNetSpeed)
-                Picker("網速顯示", selection: $monitor.netSpeedStyle) {
-                    Text("上傳＋下載").tag(0)
-                    Text("僅上傳").tag(1)
-                    Text("僅下載").tag(2)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("網速樣式")
+                    ForEach(NetSpeedLabel.styleNames.indices, id: \.self) { style in
+                        NetSpeedStyleRow(monitor: monitor, style: style)
+                    }
                 }
                 Picker("網速寬度", selection: $monitor.netBarCompact) {
                     Text("寬").tag(false)
@@ -193,5 +194,31 @@ struct SettingsDetailView: View {
             }
         }
         .formStyle(.grouped)
+    }
+}
+
+/// 網速樣式的一個選項：左邊是選單列實際顯示的樣子（即時數值），右邊是名稱與勾選標記。
+private struct NetSpeedStyleRow: View {
+    @Bindable var monitor: SystemMonitor
+    let style: Int
+
+    var body: some View {
+        let selected = monitor.netSpeedStyle == style
+        Button {
+            monitor.netSpeedStyle = style
+        } label: {
+            HStack(spacing: 10) {
+                NetSpeedLabel(monitor: monitor, style: style)
+                    .padding(.horizontal, 8)
+                    .frame(height: 24)
+                    .background(Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 6))
+                Text(NetSpeedLabel.styleNames[style]).foregroundStyle(selected ? .primary : .secondary)
+                Spacer(minLength: 0)
+                Image(systemName: selected ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(selected ? monitor.accentColor : Color.secondary.opacity(0.5))
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 }

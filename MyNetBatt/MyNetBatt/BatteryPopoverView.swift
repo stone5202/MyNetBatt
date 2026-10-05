@@ -202,11 +202,15 @@ struct BatteryPopoverView: View {
                                     .font(.title3.bold())
                                     .monospacedDigit()
                                     .lineLimit(1)
-                                Text("電池溫度")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                    .lineLimit(1)
-                                    .minimumScaleFactor(0.72)
+                                HStack(spacing: 4) {
+                                    Text("25")
+                                    TemperatureScaleBar(celsius: monitor.batTempDouble > 0 ? monitor.batTempDouble : nil, height: 5)
+                                    Text("45°C")
+                                }
+                                .font(.system(size: 9, weight: .semibold))
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                                .fixedSize(horizontal: false, vertical: true)
                             }
                             Spacer(minLength: 0)
                         }
@@ -216,6 +220,7 @@ struct BatteryPopoverView: View {
                 }
                 .buttonStyle(.plain)
                 .frame(maxWidth: .infinity, minHeight: 70, maxHeight: 70)
+                .help("電池溫度（點一下切換 °C／°F）")
 
                 Button {
                     helper.setLowPowerMode(!helper.isLowPowerModeEnabled)

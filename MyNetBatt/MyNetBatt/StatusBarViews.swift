@@ -15,26 +15,72 @@ struct NetworkBarView: View {
                 MiniGraphView(history: Array(monitor.trafficHistory.suffix(5)), globalMaxDl: monitor.trafficHistory.map(\.downloadSpeed).max() ?? 1, globalMaxUl: monitor.trafficHistory.map(\.uploadSpeed).max() ?? 1)
             }
             if monitor.showNetSpeed {
-                Group {
-                    if monitor.netSpeedStyle == 0 {
-                        VStack(alignment: .leading, spacing: -2) {
-                            Text(monitor.barSpeedText(upload: true)).foregroundColor(.green)
-                            Text(monitor.barSpeedText(upload: false)).foregroundColor(.cyan)
-                        }
-                        .font(.system(size: 9, weight: .bold).monospacedDigit())
-                    } else {
-                        let upload = monitor.netSpeedStyle == 1
-                        Text(monitor.barSpeedText(upload: upload))
-                            .foregroundColor(upload ? .green : .cyan)
-                            .font(.system(size: 11, weight: .semibold).monospacedDigit())
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
-                    }
-                }
-                .frame(width: monitor.netSpeedTextWidth, alignment: .leading)
+                NetSpeedLabel(monitor: monitor, style: monitor.netSpeedStyle)
             }
         }
         .padding(.horizontal, 2).frame(maxHeight: .infinity)
+    }
+}
+
+/// 選單列的網速文字；設定頁的樣式預覽也用同一個畫面，所見即所得。
+struct NetSpeedLabel: View {
+    let monitor: SystemMonitor
+    let style: Int
+
+    static let styleNames = ["上傳＋下載（兩行）", "僅上傳", "僅下載", "上傳＋下載合計", "上傳＋下載（單行）", "速度＋今日用量"]
+
+    var body: some View {
+        Group {
+            switch style {
+            case 1, 2:
+                singleLine(monitor.barSpeedText(upload: style == 1), color: style == 1 ? .green : .cyan)
+            case 3:
+                singleLine(monitor.barText(monitor.totalSpeedStr, arrow: "⇅"), color: .primary)
+            case 4:
+                HStack(spacing: 6) {
+                    singleLine(monitor.barSpeedText(upload: true), color: .green)
+                        .frame(width: monitor.netSpeedTextWidth(style: 1), alignment: .leading)
+                    singleLine(monitor.barSpeedText(upload: false), color: .cyan)
+                        .frame(width: monitor.netSpeedTextWidth(style: 1), alignment: .leading)
+                }
+            case 5:
+                HStack(spacing: 6) {
+                    speedOverUsage(upload: true, color: .green)
+                    speedOverUsage(upload: false, color: .cyan)
+                }
+            default:
+                VStack(alignment: .leading, spacing: -2) {
+                    Text(monitor.barSpeedText(upload: true)).foregroundColor(.green)
+                    Text(monitor.barSpeedText(upload: false)).foregroundColor(.cyan)
+                }
+                .font(.system(size: 9, weight: .bold).monospacedDigit())
+                // 三位數的速度在窄版放不下時縮小字級，不要截成「…」。
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+            }
+        }
+        .frame(width: monitor.netSpeedTextWidth(style: style), alignment: .leading)
+    }
+
+    private func singleLine(_ text: String, color: Color) -> some View {
+        Text(text)
+            .foregroundColor(color)
+            .font(.system(size: 11, weight: .semibold).monospacedDigit())
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
+    }
+
+    /// 上面是即時速度，下面是今天累計的用量。
+    private func speedOverUsage(upload: Bool, color: Color) -> some View {
+        VStack(alignment: .leading, spacing: -2) {
+            Text(monitor.barSpeedText(upload: upload)).foregroundColor(color)
+                .font(.system(size: 9, weight: .bold).monospacedDigit())
+            Text(upload ? monitor.todayUpStr : monitor.todayDownStr).foregroundStyle(.secondary)
+                .font(.system(size: 8, weight: .semibold).monospacedDigit())
+        }
+        .lineLimit(1)
+        .minimumScaleFactor(0.7)
+        .frame(width: monitor.netSpeedTextWidth(style: 0), alignment: .leading)
     }
 }
 

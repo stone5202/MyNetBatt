@@ -123,6 +123,10 @@ final class SystemMonitor {
     var avgUpStr: String = "0 B/s"
     var avgDownStr: String = "0 B/s"
     var hourlyTraffic = HourlyTraffic(day: "")
+    /// 選單列樣式用：上傳加下載的即時速度，以及今天累計的上傳／下載量。
+    var totalSpeedStr: String = "0 B/s"
+    var todayUpStr: String = "0 B"
+    var todayDownStr: String = "0 B"
     @ObservationIgnored var lastHourlyTrafficSave: Date?
     var trafficHistory: [TrafficData] = []
     
@@ -337,20 +341,27 @@ final class SystemMonitor {
     }
 
     /// 選單列網速文字的寬度；狀態列項目的長度（AppDelegate）與畫面共用同一個值。
-    var netSpeedTextWidth: CGFloat {
-        let twoLine = netSpeedStyle == 0
+    var netSpeedTextWidth: CGFloat { netSpeedTextWidth(style: netSpeedStyle) }
+
+    /// 各種網速樣式（NetSpeedLabel.styleNames）的寬度；4、5 是兩欄並排。
+    func netSpeedTextWidth(style: Int) -> CGFloat {
+        let twoLine = style == 0 || style == 5
         var width: CGFloat = twoLine ? (netBarCompact ? 32 : 40) : (netBarCompact ? 42 : 56)
         if showNetArrow { width += twoLine ? 8 : 10 }
-        return width
+        return style >= 4 ? width * 2 + 6 : width
     }
 
     /// 選單列顯示的網速文字；窄版省略空白與「/s」。
     func barSpeedText(upload: Bool) -> String {
-        var text = upload ? upSpeedStr : downSpeedStr
+        barText(upload ? upSpeedStr : downSpeedStr, arrow: upload ? "↑" : "↓")
+    }
+
+    func barText(_ speed: String, arrow: String) -> String {
+        var text = speed
         if netBarCompact {
             text = text.replacingOccurrences(of: "/s", with: "").replacingOccurrences(of: " ", with: "")
         }
-        return showNetArrow ? "\(upload ? "↑" : "↓") \(text)" : text
+        return showNetArrow ? "\(arrow) \(text)" : text
     }
 
     var displayedBatteryColor: Color {

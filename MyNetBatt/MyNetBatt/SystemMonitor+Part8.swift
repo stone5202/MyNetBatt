@@ -99,6 +99,7 @@ extension SystemMonitor {
         lastInBytes = currentIn; lastOutBytes = currentOut
         self.assignIfChanged(\.upSpeedStr, formatSpeed(outDiff))
         self.assignIfChanged(\.downSpeedStr, formatSpeed(inDiff))
+        self.assignIfChanged(\.totalSpeedStr, formatSpeed(inDiff + outDiff))
         // 計數比基準還小代表網卡計數已重置，基準不再適用。
         if currentIn < trafficBaselineIn || currentOut < trafficBaselineOut {
             trafficBaselineIn = 0
@@ -112,6 +113,8 @@ extension SystemMonitor {
         self.assignIfChanged(\.avgDownStr, formatSpeed(UInt64(Double(currentIn - trafficBaselineIn) / elapsed)))
         self.assignIfChanged(\.avgUpStr, formatSpeed(UInt64(Double(currentOut - trafficBaselineOut) / elapsed)))
         recordHourlyTraffic(upload: outDiff, download: inDiff, at: now)
+        self.assignIfChanged(\.todayUpStr, formatBytes(hourlyTraffic.upload.reduce(0, +)))
+        self.assignIfChanged(\.todayDownStr, formatBytes(hourlyTraffic.download.reduce(0, +)))
         self.trafficHistory.append(TrafficData(time: Date(), downloadSpeed: Double(inDiff), uploadSpeed: Double(outDiff)))
         if trafficHistory.count > 30 { trafficHistory.removeFirst() }
     }

@@ -203,26 +203,57 @@ struct BatteryDetailView: View {
 /// 每天一筆的健康度與循環次數；累積兩天以上才畫趨勢圖。
 struct BatteryHealthLogSection: View {
     @Bindable var monitor: SystemMonitor
+    /// 要看的天數；0 代表全部。
+    @State private var rangeDays = 90
+    @State private var showsAllRows = false
 
     private struct Point: Identifiable {
         let id: String
         let date: Date
         let health: Int
+        let cycles: Int
+        /// 與前一筆紀錄相比的變化。
+        var healthChange = 0
+        var cycleChange = 0
+    }
+
+    private static let collapsedRows = 7
+
+    private var points: [Point] {
+        var result: [Point] = []
+        for entry in monitor.batteryHealthLog {
+            guard let date = SystemMonitor.dayKeyFormatter.date(from: entry.day) else { continue }
+            var point = Point(id: entry.day, date: date, health: entry.health, cycles: entry.cycles)
+            if let previous = result.last {
+                point.healthChange = entry.health - previous.health
+                point.cycleChange = entry.cycles - previous.cycles
+            }
+            result.append(point)
+        }
+        guard rangeDays > 0, let cutoff = Calendar.current.date(byAdding: .day, value: -rangeDays, to: Date()) else { return result }
+        return result.filter { $0.date >= cutoff }
     }
 
     var body: some View {
-        let log = monitor.batteryHealthLog
-        let points = log.compactMap { entry in
-            SystemMonitor.dayKeyFormatter.date(from: entry.day).map { Point(id: entry.day, date: $0, health: entry.health) }
-        }
+        let total = monitor.batteryHealthLog.count
+        let points = points
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .firstTextBaseline) {
                 Text("電池健康紀錄").font(.title3.bold()).foregroundColor(.secondary)
                 Spacer()
-                Text("已記錄 \(log.count) 天").font(.caption).foregroundStyle(.secondary)
+                Text("已記錄 \(total) 天").font(.caption).foregroundStyle(.secondary)
             }
-            if let first = log.first, let last = log.last, log.count >= 2 {
-                Text("\(first.day)：\(first.health)%、\(first.cycles) 次循環 → 目前 \(last.health)%、\(last.cycles) 次循環")
+            Picker("範圍", selection: $rangeDays) {
+                Text("30 天").tag(30)
+                Text("90 天").tag(90)
+                Text("1 年").tag(365)
+                Text("全部").tag(0)
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+
+            if let first = points.first, let last = points.last, points.count >= 2 {
+                Text("\(first.id)：\(first.health)%、\(first.cycles) 次循環 → 目前 \(last.health)%、\(last.cycles) 次循環")
                     .font(.caption).foregroundStyle(.secondary).monospacedDigit()
                 let lowest = points.map(\.health).min() ?? 100
                 Chart(points) { point in
@@ -239,12 +270,56 @@ struct BatteryHealthLogSection: View {
                         if let v = value.as(Int.self) { AxisValueLabel("\(v)%") }
                     }
                 }
+                .chartXAxis {
+                    // 一天一筆，刻度以「天」為單位，最多約 6 個。
+                    let spanDays = max(1, Int(last.date.timeIntervalSince(first.date) / 86400))
+                    AxisMarks(values: .stride(by: .day, count: max(1, spanDays / 5))) { _ in
+                        AxisGridLine()
+                        AxisValueLabel(format: .dateTime.month(.defaultDigits).day())
+                    }
+                }
                 .frame(height: 120)
             } else {
                 Text("每天會記錄一筆健康度與循環次數，累積兩天以上後顯示趨勢。")
                     .font(.caption).foregroundStyle(.secondary)
             }
+
+            if !points.isEmpty {
+                let rows = Array(points.reversed())
+                let visible = showsAllRows ? rows : Array(rows.prefix(Self.collapsedRows))
+                VStack(spacing: 0) {
+                    ForEach(visible) { point in
+                        HStack {
+                            Text(point.id).monospacedDigit()
+                            Spacer()
+                            Label("\(point.health)%\(Self.changeText(point.healthChange, unit: "%"))", systemImage: "heart.fill")
+                                .foregroundStyle(point.healthChange < 0 ? Color.orange : Color.primary)
+                                .frame(width: 120, alignment: .leading)
+                            Label("\(point.cycles) 次\(Self.changeText(point.cycleChange, unit: ""))", systemImage: "arrow.3.trianglepath")
+                                .frame(width: 120, alignment: .leading)
+                        }
+                        .font(.callout)
+                        .monospacedDigit()
+                        .padding(.vertical, 6)
+                        .padding(.horizontal, 10)
+                        if point.id != visible.last?.id { Divider() }
+                    }
+                }
+                .background(Color.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
+
+                if rows.count > Self.collapsedRows {
+                    Button(showsAllRows ? "只顯示最近 \(Self.collapsedRows) 天" : "顯示全部 \(rows.count) 天") { showsAllRows.toggle() }
+                        .buttonStyle(.link)
+                        .font(.caption)
+                }
+            }
         }
         .padding(.top, 8)
+    }
+
+    /// 與前一筆相同時不顯示；有變化時顯示成「（−1%）」。
+    private static func changeText(_ change: Int, unit: String) -> String {
+        guard change != 0 else { return "" }
+        return "（\(change > 0 ? "+" : "−")\(abs(change))\(unit)）"
     }
 }

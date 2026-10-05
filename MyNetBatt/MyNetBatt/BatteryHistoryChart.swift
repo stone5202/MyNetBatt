@@ -33,6 +33,19 @@ struct BatteryTimeline {
     let segments: [Segment]
     var domain: ClosedRange<Date> { (buckets.first?.start ?? Date())...(buckets.last?.end ?? Date()) }
 
+    /// 範圍內每個午夜與中午；以日曆計算，不用 stride（它從範圍起點起算，刻度不會落在整點）。
+    var axisDates: [Date] {
+        let calendar = Calendar.current
+        var dates: [Date] = []
+        var date = calendar.startOfDay(for: domain.lowerBound)
+        while date <= domain.upperBound {
+            if date >= domain.lowerBound { dates.append(date) }
+            guard let next = calendar.date(byAdding: .hour, value: 12, to: date) else { break }
+            date = next
+        }
+        return dates
+    }
+
     init(history: [BatteryData], now: Date = Date()) {
         let lastIndex = Int(now.timeIntervalSince1970 / Self.bucketSeconds)
         let firstIndex = lastIndex - Self.bucketCount + 1
@@ -141,7 +154,7 @@ struct BatteryHistoryChart: View {
                 }
             }
             .chartXAxis {
-                AxisMarks(values: .stride(by: .hour, count: 12)) { value in
+                AxisMarks(values: timeline.axisDates) { value in
                     AxisTick()
                     if let date = value.as(Date.self) {
                         // 午夜的刻度標日期，中午的刻度標時間。

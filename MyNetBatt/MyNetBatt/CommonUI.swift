@@ -44,10 +44,6 @@ struct BatteryTemperatureGaugeView: View {
 
     private var celsius: Double? { monitor.batTempDouble > 0 ? monitor.batTempDouble : nil }
     private var fahrenheit: Double? { celsius.map { $0 * 9.0 / 5.0 + 32.0 } }
-    private var normalized: CGFloat {
-        guard let celsius else { return 0 }
-        return CGFloat(max(0, min(1, (celsius - 25.0) / 20.0)))
-    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: compact ? 5 : 8) {
@@ -61,16 +57,7 @@ struct BatteryTemperatureGaugeView: View {
             }
             HStack(spacing: 8) {
                 Text("25").font(.caption2).bold()
-                GeometryReader { geo in
-                    ZStack(alignment: .leading) {
-                        Capsule().fill(LinearGradient(colors: [.cyan, .green, .yellow, .orange, .red], startPoint: .leading, endPoint: .trailing))
-                        if celsius != nil {
-                            Circle().fill(Color.white).overlay(Circle().stroke(Color.secondary, lineWidth: 1))
-                                .frame(width: 10, height: 10)
-                                .offset(x: max(0, min(geo.size.width - 10, normalized * (geo.size.width - 10))))
-                        }
-                    }
-                }.frame(height: 8)
+                TemperatureScaleBar(celsius: celsius)
                 Text("45°C").font(.caption2).bold()
             }
             Text("電池溫度").font(.caption).foregroundStyle(.secondary)
@@ -79,6 +66,29 @@ struct BatteryTemperatureGaugeView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(compact ? Color.secondary.opacity(0.1) : Color.clear)
         .cornerRadius(compact ? 8 : 0)
+    }
+}
+
+/// 25～45°C 的漸層刻度條，圓點標出目前的電池溫度；讀不到溫度時不顯示圓點。
+struct TemperatureScaleBar: View {
+    let celsius: Double?
+    var height: CGFloat = 8
+
+    var body: some View {
+        let knob = height + 2
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                Capsule().fill(LinearGradient(colors: [.cyan, .green, .yellow, .orange, .red], startPoint: .leading, endPoint: .trailing))
+                    .frame(height: height)
+                if let celsius {
+                    let normalized = CGFloat(max(0, min(1, (celsius - 25.0) / 20.0)))
+                    Circle().fill(Color.white).overlay(Circle().stroke(Color.secondary, lineWidth: 1))
+                        .frame(width: knob, height: knob)
+                        .offset(x: normalized * max(0, geo.size.width - knob))
+                }
+            }
+        }
+        .frame(height: knob)
     }
 }
 
