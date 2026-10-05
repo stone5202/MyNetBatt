@@ -263,8 +263,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.title = "MyNetBatt 監控中心"
         window.styleMask = [.titled, .closable, .miniaturizable, .fullSizeContentView]
         window.isReleasedWhenClosed = false
+        // 視窗每次開啟都重新建立，一律置中；不記住上次的位置，以免被還原到螢幕邊緣或螢幕外。
+        // 剛建立時 SwiftUI 內容還沒排版、視窗尺寸是 0，要先定出尺寸再置中，否則會以左上角對齊螢幕中心。
+        window.setContentSize(hostingController.view.fittingSize)
         window.center()
-        window.setFrameAutosaveName("MyNetBattMainWindow")
         window.appearance = selectedAppearance
         applyGlass(to: window)
         settingsWindowCloseObserver = NotificationCenter.default.addObserver(

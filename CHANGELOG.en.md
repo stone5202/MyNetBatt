@@ -11,6 +11,7 @@ This document summarizes the major changes in each MyNetBatt release. Versions b
 - With the glass style on, content scrolled up in the monitor window no longer overlaps the window title.
 - With the glass style on, the monitor window's background gets a tint so headings outside the cards and the text on the Settings tab are easier to read, most noticeably in the dark theme; all four tabs share the same background.
 - Cards in the monitor window use a translucent fill, and glass cards are kept to the popovers: glass cards made the system brighten the whole page behind them, so tabs with cards looked paler than the Settings tab.
+- The monitor window now opens centred on the screen every time: it used to be centred before its content was laid out, which pushed it towards the bottom right or partly off screen, and that position was then restored on every open.
 
 ## [3.7.2] - 2026-10-05
 
