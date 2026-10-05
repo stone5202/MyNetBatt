@@ -4,6 +4,12 @@
 
 This document summarizes the major changes in each MyNetBatt release. Versions before 3.0 were uploaded by replacing earlier copies, so their original per-version Git history can no longer be fully recovered. Changes from 1.0 through 2.x are therefore consolidated from the source code that can still be verified, without attributing uncertain details to individual releases.
 
+## [3.7.2] - 2026-10-05
+
+### Improvements
+
+- The glass style now also applies to the monitor window: the window becomes translucent, the cards on the network and system pages and the info boxes on the battery page use the glass material, and the settings form sits directly on the glass. Toggling the option takes effect immediately.
+
 ## [3.7.1] - 2026-10-05
 
 ### New features
