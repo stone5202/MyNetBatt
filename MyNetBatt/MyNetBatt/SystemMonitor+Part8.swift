@@ -74,8 +74,12 @@ extension SystemMonitor {
         UserDefaults.standard.set(Double(trafficBaselineIn), forKey: "trafficBaselineIn")
         UserDefaults.standard.set(Double(trafficBaselineOut), forKey: "trafficBaselineOut")
         UserDefaults.standard.set(SystemReaders.bootTime, forKey: "trafficBaselineBoot")
+        trafficBaselineTime = Date().timeIntervalSince1970
+        UserDefaults.standard.set(trafficBaselineTime, forKey: "trafficBaselineTime")
         totalDownStr = formatBytes(0)
         totalUpStr = formatBytes(0)
+        avgDownStr = formatSpeed(0)
+        avgUpStr = formatSpeed(0)
     }
 
     func fetchNetworkTraffic() {
@@ -99,13 +103,43 @@ extension SystemMonitor {
         if currentIn < trafficBaselineIn || currentOut < trafficBaselineOut {
             trafficBaselineIn = 0
             trafficBaselineOut = 0
+            trafficBaselineTime = SystemReaders.bootTime
         }
         self.assignIfChanged(\.totalDownStr, formatBytes(currentIn - trafficBaselineIn))
         self.assignIfChanged(\.totalUpStr, formatBytes(currentOut - trafficBaselineOut))
+        let now = Date()
+        let elapsed = max(1, now.timeIntervalSince1970 - trafficBaselineTime)
+        self.assignIfChanged(\.avgDownStr, formatSpeed(UInt64(Double(currentIn - trafficBaselineIn) / elapsed)))
+        self.assignIfChanged(\.avgUpStr, formatSpeed(UInt64(Double(currentOut - trafficBaselineOut) / elapsed)))
+        recordHourlyTraffic(upload: outDiff, download: inDiff, at: now)
         self.trafficHistory.append(TrafficData(time: Date(), downloadSpeed: Double(inDiff), uploadSpeed: Double(outDiff)))
         if trafficHistory.count > 30 { trafficHistory.removeFirst() }
     }
     
+    /// 把這一秒的流量加進今天對應的小時；換日時整份歸零。
+    func recordHourlyTraffic(upload: UInt64, download: UInt64, at now: Date) {
+        let day = Self.dayKeyFormatter.string(from: now)
+        if hourlyTraffic.day != day {
+            hourlyTraffic = HourlyTraffic(day: day)
+            saveHourlyTraffic(force: true)
+        }
+        guard upload > 0 || download > 0 else { return }
+        let hour = max(0, min(23, Calendar.current.component(.hour, from: now)))
+        hourlyTraffic.upload[hour] += upload
+        hourlyTraffic.download[hour] += download
+        saveHourlyTraffic()
+    }
+
+    /// 最多每 5 分鐘寫入一次；App 結束時由 AppDelegate 強制寫入。
+    func saveHourlyTraffic(force: Bool = false) {
+        let now = Date()
+        if !force, let last = lastHourlyTrafficSave, now.timeIntervalSince(last) < 300 { return }
+        lastHourlyTrafficSave = now
+        if let encoded = try? JSONEncoder().encode(hourlyTraffic) {
+            UserDefaults.standard.set(encoded, forKey: "hourlyTrafficV1")
+        }
+    }
+
     func formatStorageBytesForUI(_ bytes: Int64) -> String {
         let value = Double(max(0, bytes))
         if value >= 1_000_000_000_000 { return String(format: "%.2f TB", value / 1_000_000_000_000) }

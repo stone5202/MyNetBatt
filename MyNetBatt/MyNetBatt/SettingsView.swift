@@ -88,7 +88,7 @@ struct SettingsDetailView: View {
             }
 
             Section("小視窗內容") {
-                Toggle("網路：累計上傳／下載", isOn: $monitor.popNetShowTotals)
+                Toggle("網路：今日數據用量", isOn: $monitor.popNetShowTotals)
                 Toggle("網路：正在使用網路的 App", isOn: $monitor.popNetShowActive)
                 Toggle("網路：今日 App 用量", isOn: $monitor.popNetShowAppUsage)
                 Toggle("網路：儲存空間", isOn: $monitor.popNetShowDisk)

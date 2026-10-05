@@ -252,30 +252,8 @@ struct BatteryPopoverView: View {
             if monitor.popBatShowChart {
                 WidgetCard {
                     Text("過去 48 小時").font(.caption).foregroundColor(monitor.accentColor).bold()
-                    Chart {
-                        ForEach(monitor.batteryHistory) { data in
-                            BarMark(
-                                x: .value("時間", data.time),
-                                y: .value("電量", data.level)
-                            )
-                            .foregroundStyle(Color.gray.opacity(0.4))
-                        }
-                    }
-                    .chartYAxis {
-                        AxisMarks(position: .trailing, values: [0, 50, 100]) { value in
-                            AxisGridLine()
-                            if let val = value.as(Int.self) { AxisValueLabel("\(val)%") }
-                        }
-                    }
-                    .chartXAxis {
-                        AxisMarks(values: .automatic(desiredCount: 3)) { value in
-                            AxisGridLine()
-                            AxisValueLabel(format: .dateTime.hour().minute())
-                        }
-                    }
-                    .chartYScale(domain: 0...100)
-                    .frame(height: 100)
-                    .padding(.top, 4)
+                    BatteryHistoryChart(history: monitor.batteryHistory)
+                        .padding(.top, 4)
                 }
             
             }

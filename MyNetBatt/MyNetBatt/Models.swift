@@ -8,7 +8,17 @@ import Darwin
 
 // MARK: - 資料結構與監控邏輯
 struct TrafficData: Identifiable { let id = UUID(); let time: Date; let downloadSpeed: Double; let uploadSpeed: Double }
-struct BatteryData: Identifiable, Codable { var id = UUID(); let time: Date; let level: Int }
+struct BatteryData: Identifiable, Codable {
+    var id = UUID(); let time: Date; let level: Int
+    /// 取樣當下是否接著電源；3.7 以前的紀錄沒有這個欄位，圖表改由電量升降推測。
+    var plugged: Bool? = nil
+}
+/// 今天每小時經過網卡的上傳／下載量，換日時歸零。
+struct HourlyTraffic: Codable, Equatable {
+    var day: String
+    var upload: [UInt64] = Array(repeating: 0, count: 24)
+    var download: [UInt64] = Array(repeating: 0, count: 24)
+}
 struct BatteryHealthEntry: Codable, Identifiable, Equatable {
     /// "yyyy-MM-dd"，與用量紀錄相同的日期 key。
     let day: String

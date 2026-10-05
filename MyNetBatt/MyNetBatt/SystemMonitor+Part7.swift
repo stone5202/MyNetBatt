@@ -184,10 +184,10 @@ extension SystemMonitor {
                 let now = Date()
                 if let last = self.batteryHistory.last {
                     if now.timeIntervalSince(last.time) >= 60 {
-                        self.batteryHistory.append(BatteryData(time: now, level: fPct))
+                        self.batteryHistory.append(BatteryData(time: now, level: fPct, plugged: isPlugged))
                     }
                 } else {
-                    self.batteryHistory.append(BatteryData(time: now, level: fPct))
+                    self.batteryHistory.append(BatteryData(time: now, level: fPct, plugged: isPlugged))
                 }
                 if self.batteryHistory.count > 2880 { self.batteryHistory.removeFirst() }
                 self.saveBatteryHistory()

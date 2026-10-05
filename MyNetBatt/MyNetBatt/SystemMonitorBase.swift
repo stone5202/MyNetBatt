@@ -119,6 +119,11 @@ final class SystemMonitor {
     var downSpeedStr: String = "0 B/s"
     var totalUpStr: String = "0 MB"
     var totalDownStr: String = "0 MB"
+    /// 累計量除以累計時間（自開機或上次重置起）的平均速度。
+    var avgUpStr: String = "0 B/s"
+    var avgDownStr: String = "0 B/s"
+    var hourlyTraffic = HourlyTraffic(day: "")
+    @ObservationIgnored var lastHourlyTrafficSave: Date?
     var trafficHistory: [TrafficData] = []
     
     var batteryStatus: String = "--"
@@ -151,6 +156,8 @@ final class SystemMonitor {
     /// 網卡計數在重開機後歸零，因此基準只在同一次開機期間有效。
     @ObservationIgnored var trafficBaselineIn: UInt64 = 0
     @ObservationIgnored var trafficBaselineOut: UInt64 = 0
+    /// 累計量的起算時間（開機時間或重置當下），用來算平均速度。
+    @ObservationIgnored var trafficBaselineTime: TimeInterval = SystemReaders.bootTime
 
     /// 每分鐘新增一筆、最多 2880 筆；寫入由 saveBatteryHistory() 節流，不在每次變動時整包編碼。
     var batteryHistory: [BatteryData] = []
@@ -279,6 +286,13 @@ final class SystemMonitor {
         if abs(UserDefaults.standard.double(forKey: "trafficBaselineBoot") - SystemReaders.bootTime) < 300 {
             trafficBaselineIn = UInt64(max(0, UserDefaults.standard.double(forKey: "trafficBaselineIn")))
             trafficBaselineOut = UInt64(max(0, UserDefaults.standard.double(forKey: "trafficBaselineOut")))
+            let resetTime = UserDefaults.standard.double(forKey: "trafficBaselineTime")
+            if resetTime > SystemReaders.bootTime { trafficBaselineTime = resetTime }
+        }
+        if let data = UserDefaults.standard.data(forKey: "hourlyTrafficV1"),
+           let decoded = try? JSONDecoder().decode(HourlyTraffic.self, from: data),
+           decoded.upload.count == 24, decoded.download.count == 24 {
+            hourlyTraffic = decoded
         }
 
         updateBatteryColor()

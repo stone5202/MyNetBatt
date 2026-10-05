@@ -31,24 +31,16 @@ struct NetworkPopoverView: View {
                     }
                 }
 
-                NetworkLiveRow(title: "上傳", arrow: "arrow.up", speed: monitor.upSpeedStr, total: monitor.totalUpStr, history: monitor.trafficHistory, upload: true, color: .pink)
+                NetworkLiveRow(title: "上傳", arrow: "arrow.up", speed: monitor.upSpeedStr, total: monitor.totalUpStr, average: monitor.avgUpStr, history: monitor.trafficHistory, upload: true, color: .pink)
                 Divider()
-                NetworkLiveRow(title: "下載", arrow: "arrow.down", speed: monitor.downSpeedStr, total: monitor.totalDownStr, history: monitor.trafficHistory, upload: false, color: .green)
+                NetworkLiveRow(title: "下載", arrow: "arrow.down", speed: monitor.downSpeedStr, total: monitor.totalDownStr, average: monitor.avgDownStr, history: monitor.trafficHistory, upload: false, color: .green)
 
                 if monitor.popNetShowTotals {
                     Divider()
-                    Text("數據用量").font(.headline).foregroundStyle(monitor.accentColor)
-                    HStack {
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text("上載").font(.caption).foregroundStyle(.pink)
-                            Text(monitor.totalUpStr).font(.title2.bold()).monospacedDigit()
-                        }
-                        Spacer()
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text("下載").font(.caption).foregroundStyle(.green)
-                            Text(monitor.totalDownStr).font(.title2.bold()).monospacedDigit()
-                        }
-                        Spacer()
+                    Text("今日數據用量").font(.headline).foregroundStyle(monitor.accentColor)
+                    HStack(alignment: .top, spacing: 16) {
+                        HourlyUsageColumn(title: "上載", bytes: monitor.hourlyTraffic.upload, color: .pink, monitor: monitor)
+                        HourlyUsageColumn(title: "下載", bytes: monitor.hourlyTraffic.download, color: .green, monitor: monitor)
                     }
                 }
 
@@ -156,13 +148,50 @@ private struct CompactAppUsageList: View {
     }
 }
 
+/// 今天 0～24 時每小時用量的長條圖，下方是今日總量；還沒有用量的小時以淺灰短條佔位。
+private struct HourlyUsageColumn: View {
+    let title: String
+    let bytes: [UInt64]
+    let color: Color
+    let monitor: SystemMonitor
+
+    var body: some View {
+        let peak = Double(max(bytes.max() ?? 0, 1))
+        VStack(alignment: .leading, spacing: 3) {
+            Chart {
+                ForEach(Array(bytes.enumerated()), id: \.offset) { hour, value in
+                    // 用量再小也保留一點高度，才看得出該小時有流量。
+                    let height = value > 0 ? max(Double(value) / peak, 0.08) : 0.12
+                    RectangleMark(xStart: .value("起", Double(hour) + 0.14), xEnd: .value("迄", Double(hour) + 0.86), yStart: .value(title, 0), yEnd: .value(title, height))
+                        .foregroundStyle(value > 0 ? AnyShapeStyle(color) : AnyShapeStyle(Color.secondary.opacity(0.18)))
+                        .cornerRadius(1.5)
+                }
+            }
+            .chartXScale(domain: 0...24)
+            .chartYScale(domain: 0...1)
+            .chartYAxis(.hidden)
+            .chartXAxis {
+                AxisMarks(values: [0, 12, 24]) { value in
+                    AxisValueLabel(anchor: value.index == 0 ? .topLeading : (value.index == 2 ? .topTrailing : .top)) {
+                        if let hour = value.as(Int.self) { Text("\(hour)H").font(.caption2) }
+                    }
+                }
+            }
+            .frame(height: 58)
+            Text(title).font(.caption).foregroundStyle(color)
+            Text(monitor.formatBytesForUI(bytes.reduce(0, +))).font(.title2.bold()).monospacedDigit().lineLimit(1).minimumScaleFactor(0.7)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
 struct NetworkLiveRow: View {
-    let title: String; let arrow: String; let speed: String; let total: String; let history: [TrafficData]; let upload: Bool; let color: Color
+    let title: String; let arrow: String; let speed: String; let total: String; let average: String; let history: [TrafficData]; let upload: Bool; let color: Color
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text(speed.replacingOccurrences(of: "/s", with: "")).font(.system(size: 29, weight: .bold, design: .rounded)).monospacedDigit()
-                Label("\(total)", systemImage: arrow).font(.caption).bold()
+                Label("\(total) • 平均 \(average)", systemImage: arrow).font(.caption).bold().monospacedDigit().lineLimit(1)
             }
             Spacer()
             Chart {

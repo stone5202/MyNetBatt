@@ -95,6 +95,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard !isDuplicateInstance else { return }
         monitor.saveAppUsageHistory(force: true)
         monitor.saveBatteryHistory(force: true)
+        monitor.saveHourlyTraffic(force: true)
         let workspaceCenter = NSWorkspace.shared.notificationCenter
         workspaceCenter.removeObserver(self)
     }
@@ -152,7 +153,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         batPopover = NSPopover()
         batPopover.behavior = .transient
-        batPopover.contentSize = NSSize(width: 360, height: 550)
+        batPopover.contentSize = NSSize(width: 360, height: 590)
         NotificationCenter.default.publisher(for: NSPopover.didCloseNotification, object: batPopover)
             .sink { [weak self] _ in self?.batPopover.contentViewController = nil }
             .store(in: &cancellables)
@@ -164,6 +165,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard let button = item.button else { return }
         if popover.contentViewController == nil { popover.contentViewController = content() }
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        // 小視窗不是作用中的視窗時，開關與進度條會以灰色的非作用中外觀顯示，要點一下才上色。
+        // 啟用 App 是非同步的，要等它成為作用中的 App 之後，小視窗才能成為主要視窗。
+        NSApp.activate(ignoringOtherApps: true)
+        for delay in [0.0, 0.15, 0.4] {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak popover] in
+                guard let popover, popover.isShown, let window = popover.contentViewController?.view.window, !window.isKeyWindow else { return }
+                window.makeKey()
+            }
+        }
     }
     
     private func setupStatusBar() {
