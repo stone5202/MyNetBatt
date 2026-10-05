@@ -4,6 +4,28 @@
 
 This document summarizes the major changes in each MyNetBatt release. Versions before 3.0 were uploaded by replacing earlier copies, so their original per-version Git history can no longer be fully recovered. Changes from 1.0 through 2.x are therefore consolidated from the source code that can still be verified, without attributing uncertain details to individual releases.
 
+## [3.7] - 2026-10-05
+
+### New features
+
+- The network popover shows today's upload and download usage per hour, and the live speed rows also show the average speed.
+- The battery popover's 48-hour chart is now drawn in 30-minute bars coloured by power source, with a timeline of charging and on-battery periods and the duration and level change of the current one.
+- Battery temperature is shown on a 25–45°C scale.
+- The menu bar speed style is picked from live previews, with three new styles: combined upload and download, single-line upload and download, and speed with today's usage.
+- The battery health log can be viewed over 30 days, 90 days, 1 year, or all time, with a day-by-day list of health, cycle count, and their changes.
+- Data usage is attributed to apps: traffic from helpers and other child processes counts towards the app that owns them, and apps keep their icon when they are not running. Settings offers "apps only" (everything else is combined into "other processes") or "apps and processes".
+
+### Fixes and improvements
+
+- Switches and progress bars in the popovers are no longer drawn in grey until the popover is clicked.
+- Two-line speeds in the narrow menu bar layout shrink to fit instead of being truncated.
+- The cumulative totals in the network popover, which duplicated the live speed rows, are replaced by today's usage.
+
+### Notes
+
+- Hourly usage and power-source data are recorded from this version on: the hourly chart only has data from after the update on the first day, and older samples in the 48-hour chart are shown in grey.
+- Usage recorded before the update is stored by process name, so most of it appears under "other processes" in the apps-only view.
+
 ## [3.6] - 2026-10-04
 
 ### New features
