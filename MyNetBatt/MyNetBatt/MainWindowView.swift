@@ -71,7 +71,6 @@ struct MainWindowView: View {
             }
         }
         .frame(minWidth: 850, minHeight: 650)
-        .environment(\.glassStyle, monitor.glassStyle)
         .tint(monitor.accentColor)
     }
 

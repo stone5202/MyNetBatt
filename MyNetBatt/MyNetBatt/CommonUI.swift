@@ -137,24 +137,12 @@ extension View {
     }
 }
 
-/// 監控中心裡的卡片底色：一般是半透明的灰底，玻璃質感時改用玻璃材質。
-private struct CardSurface: ViewModifier {
-    @Environment(\.glassStyle) private var glassStyle
-    let cornerRadius: CGFloat
-    let fill: Double
-
-    func body(content: Content) -> some View {
-        if glassStyle {
-            content.glassEffect(.regular, in: .rect(cornerRadius: cornerRadius))
-        } else {
-            content.background(Color.secondary.opacity(fill)).cornerRadius(cornerRadius)
-        }
-    }
-}
-
 extension View {
+    /// 監控中心裡的卡片底色：半透明的灰底，和設定頁的表單區塊同一種質感。
+    /// 這裡不用 glassEffect：頁面上只要有玻璃卡片，系統就會把整頁的背景提亮，
+    /// 有卡片的分頁會比設定頁淡一截；玻璃卡片只用在小視窗（WidgetCard）。
     func cardSurface(cornerRadius: CGFloat, fill: Double = 0.08) -> some View {
-        modifier(CardSurface(cornerRadius: cornerRadius, fill: fill))
+        background(Color.secondary.opacity(fill)).cornerRadius(cornerRadius)
     }
 }
 
