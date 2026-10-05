@@ -134,7 +134,8 @@ struct FloatWindowView: View {
                 if monitor.glassStyle {
                     Color.clear.glassEffect(.regular, in: shape)
                 } else if monitor.floatBlur {
-                    VisualEffectBackground()
+                    // 懸浮視窗不會成為作用中視窗；SwiftUI 的 material 在非作用中視窗會變灰，因此用固定為 active 的版本。
+                    BehindWindowMaterial()
                 } else {
                     Color(NSColor.windowBackgroundColor)
                 }
@@ -181,17 +182,4 @@ struct FloatWindowView: View {
                 .frame(width: 34 * scale, alignment: .trailing)
         }
     }
-}
-
-/// 懸浮視窗不會成為作用中視窗；SwiftUI 的 material 在非作用中視窗會變灰，因此固定為 active。
-private struct VisualEffectBackground: NSViewRepresentable {
-    func makeNSView(context: Context) -> NSVisualEffectView {
-        let view = NSVisualEffectView()
-        view.material = .hudWindow
-        view.blendingMode = .behindWindow
-        view.state = .active
-        return view
-    }
-
-    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {}
 }

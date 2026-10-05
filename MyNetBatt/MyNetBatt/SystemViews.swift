@@ -37,8 +37,7 @@ struct SystemDetailView: View {
                     SystemInfoRow(icon: "memorychip", color: .orange, title: "顯示卡 (GPU)", value: monitor.gpuModelStr)
                 }
                 .padding(16)
-                .background(Color.secondary.opacity(0.1))
-                .cornerRadius(12)
+                .cardSurface(cornerRadius: 12, fill: 0.1)
 
                 VStack(alignment: .leading, spacing: 10) {
                     HStack {
@@ -83,8 +82,7 @@ struct SystemDetailView: View {
                     }
                 }
                 .padding(16)
-                .background(Color.secondary.opacity(0.08))
-                .cornerRadius(12)
+                .cardSurface(cornerRadius: 12, fill: 0.08)
 
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
                     SystemCard(
@@ -207,8 +205,7 @@ struct SystemCard: View {
                 .tint(color)
         }
         .padding(16)
-        .background(Color.secondary.opacity(0.1))
-        .cornerRadius(12)
+        .cardSurface(cornerRadius: 12, fill: 0.1)
     }
 }
 
@@ -263,8 +260,7 @@ struct StorageVolumesCard: View {
             }
         }
         .padding(16)
-        .background(Color.secondary.opacity(0.08))
-        .cornerRadius(12)
+        .cardSurface(cornerRadius: 12, fill: 0.08)
         .alert("無法退出磁碟", isPresented: Binding(get: { ejectError != nil }, set: { if !$0 { ejectError = nil } })) {
             Button("好") { ejectError = nil }
         } message: {

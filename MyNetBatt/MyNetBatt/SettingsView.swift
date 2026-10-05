@@ -24,7 +24,7 @@ struct SettingsDetailView: View {
                 }
 
                 Toggle("玻璃質感", isOn: $monitor.glassStyle)
-                    .help("小視窗與懸浮視窗改用系統的玻璃材質，會透出後方的內容")
+                    .help("小視窗、懸浮視窗與監控中心改用系統的玻璃材質，會透出後方的內容")
 
                 LabeledContent("強調色") {
                     HStack(spacing: 8) {

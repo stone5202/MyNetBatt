@@ -122,11 +122,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    /// 玻璃質感時視窗本身要透明，內容區的材質才透得出後方的畫面。
+    private func applyGlass(to window: NSWindow) {
+        window.isOpaque = !monitor.glassStyle
+        window.backgroundColor = monitor.glassStyle ? .clear : .windowBackgroundColor
+        window.titlebarAppearsTransparent = monitor.glassStyle
+        window.invalidateShadow()
+    }
+
     private func applyAppearance() {
         let appearance = selectedAppearance
         netPopover.appearance = appearance
         batPopover.appearance = appearance
         settingsWindow?.appearance = appearance
+        if let settingsWindow { applyGlass(to: settingsWindow) }
         floatWindow.update(appearance: appearance)
     }
 
@@ -257,6 +266,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.center()
         window.setFrameAutosaveName("MyNetBattMainWindow")
         window.appearance = selectedAppearance
+        applyGlass(to: window)
         settingsWindowCloseObserver = NotificationCenter.default.addObserver(
             forName: NSWindow.willCloseNotification, object: window, queue: .main
         ) { [weak self] _ in

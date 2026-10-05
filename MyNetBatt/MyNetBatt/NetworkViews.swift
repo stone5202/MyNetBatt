@@ -31,8 +31,7 @@ struct NetworkDetailView: View {
                 }
                 .padding(16)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.secondary.opacity(0.08))
-                .cornerRadius(14)
+                .cardSurface(cornerRadius: 14, fill: 0.08)
 
                 Divider()
                 HStack(spacing: 20) {
@@ -85,7 +84,7 @@ struct NetworkConnectionInfoCard: View {
                 }
             }
         }
-        .padding(16).background(Color.secondary.opacity(0.08)).cornerRadius(14)
+        .padding(16).cardSurface(cornerRadius: 14, fill: 0.08)
     }
 }
 
@@ -145,8 +144,7 @@ struct NetworkSpeedCard: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, minHeight: 122, maxHeight: 122)
-        .background(Color.secondary.opacity(0.08))
-        .cornerRadius(14)
+        .cardSurface(cornerRadius: 14, fill: 0.08)
     }
 }
 
@@ -270,8 +268,7 @@ struct AppDataUsagePanel: View {
             }
         }
         .padding(16)
-        .background(Color.secondary.opacity(0.08))
-        .cornerRadius(14)
+        .cardSurface(cornerRadius: 14, fill: 0.08)
         .onChange(of: usageDays) { _, _ in showsAllApps = false }
     }
 }

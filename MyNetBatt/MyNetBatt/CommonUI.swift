@@ -137,6 +137,42 @@ extension View {
     }
 }
 
+/// 監控中心裡的卡片底色：一般是半透明的灰底，玻璃質感時改用玻璃材質。
+private struct CardSurface: ViewModifier {
+    @Environment(\.glassStyle) private var glassStyle
+    let cornerRadius: CGFloat
+    let fill: Double
+
+    func body(content: Content) -> some View {
+        if glassStyle {
+            content.glassEffect(.regular, in: .rect(cornerRadius: cornerRadius))
+        } else {
+            content.background(Color.secondary.opacity(fill)).cornerRadius(cornerRadius)
+        }
+    }
+}
+
+extension View {
+    func cardSurface(cornerRadius: CGFloat, fill: Double = 0.08) -> some View {
+        modifier(CardSurface(cornerRadius: cornerRadius, fill: fill))
+    }
+}
+
+/// 透出視窗後方內容的系統材質；固定為 active，視窗不在最前面時也不會變成不透明的灰底。
+struct BehindWindowMaterial: NSViewRepresentable {
+    var material: NSVisualEffectView.Material = .hudWindow
+
+    func makeNSView(context: Context) -> NSVisualEffectView {
+        let view = NSVisualEffectView()
+        view.material = material
+        view.blendingMode = .behindWindow
+        view.state = .active
+        return view
+    }
+
+    func updateNSView(_ nsView: NSVisualEffectView, context: Context) { nsView.material = material }
+}
+
 struct WidgetCard<Content: View>: View {
     @Environment(\.glassStyle) private var glassStyle
     let content: Content
@@ -164,6 +200,6 @@ struct InfoBox: View {
             if let icon = icon { Image(systemName: icon).foregroundColor(color).font(.system(size: 16)) }
             VStack(alignment: .leading, spacing: 2) { Text(title).font(.caption).foregroundColor(.secondary); Text(value).font(.system(size: 14, weight: .semibold, design: .rounded)).lineLimit(1).minimumScaleFactor(0.8) }
         }
-        .frame(maxWidth: .infinity, alignment: .leading).padding(8).background(Color.secondary.opacity(0.1)).cornerRadius(8)
+        .frame(maxWidth: .infinity, alignment: .leading).padding(8).cardSurface(cornerRadius: 8, fill: 0.1)
     }
 }

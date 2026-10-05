@@ -55,8 +55,12 @@ struct MainWindowView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .padding(monitor.mainWindowTab == "settings" ? 0 : 30)
+            // 玻璃質感時拿掉設定表單與內容區的不透明底色，露出視窗的玻璃材質。
+            .scrollContentBackground(monitor.glassStyle ? .hidden : .automatic)
+            .background { if monitor.glassStyle { BehindWindowMaterial().ignoresSafeArea() } }
         }
         .frame(minWidth: 850, minHeight: 650)
+        .environment(\.glassStyle, monitor.glassStyle)
         .tint(monitor.accentColor)
     }
 
