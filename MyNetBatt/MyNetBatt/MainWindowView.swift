@@ -57,7 +57,18 @@ struct MainWindowView: View {
             .padding(monitor.mainWindowTab == "settings" ? 0 : 30)
             // 玻璃質感時拿掉設定表單與內容區的不透明底色，露出視窗的玻璃材質。
             .scrollContentBackground(monitor.glassStyle ? .hidden : .automatic)
-            .background { if monitor.glassStyle { BehindWindowMaterial().ignoresSafeArea() } }
+            .background { if monitor.glassStyle { GlassWindowBackground().ignoresSafeArea() } }
+            // 玻璃質感時標題列是透明的：在標題列的位置再鋪一層材質，捲上去的內容才不會和視窗標題疊在一起。
+            .overlay(alignment: .top) {
+                if monitor.glassStyle {
+                    GeometryReader { geo in
+                        GlassWindowBackground()
+                            .frame(height: geo.safeAreaInsets.top)
+                            .offset(y: -geo.safeAreaInsets.top)
+                    }
+                    .allowsHitTesting(false)
+                }
+            }
         }
         .frame(minWidth: 850, minHeight: 650)
         .environment(\.glassStyle, monitor.glassStyle)
@@ -83,5 +94,23 @@ struct MainWindowView: View {
         .buttonStyle(.plain)
         .accessibilityLabel(title)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+}
+
+/// 監控中心在玻璃質感時的底：透出後方內容的系統材質，再壓一層底色讓文字好讀。
+/// 深色材質疊在亮色內容上會變成中灰，卡片外的文字（尤其設定頁沒有卡片襯底）不夠清楚；
+/// 四個分頁用同一個程度，切換時背景才一致。
+private struct GlassWindowBackground: View {
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        ZStack {
+            BehindWindowMaterial()
+            if colorScheme == .dark {
+                Color.black.opacity(0.62)
+            } else {
+                Color.white.opacity(0.5)
+            }
+        }
     }
 }
