@@ -149,8 +149,20 @@ struct SettingsDetailView: View {
                 Text("低電量的門檻為上方「選單列－電池」的「低電量提醒」。")
             }
 
-            Section("資料") {
+            Section {
+                Picker("數據用量顯示", selection: $monitor.usageGrouping) {
+                    Text("僅 App").tag(0)
+                    Text("App 與程序").tag(1)
+                }
+                .pickerStyle(.segmented)
                 Toggle("暫停記錄 App 數據用量", isOn: $monitor.usageTrackingPaused)
+            } header: {
+                Text("數據用量")
+            } footer: {
+                Text("Helper 等附屬程序的流量會算在所屬的 App 上。選「僅 App」時，系統服務與指令列工具合併顯示為「其他程序」。")
+            }
+
+            Section("資料") {
 
                 LabeledContent("累計上傳／下載量") {
                     Button("重置…", role: .destructive) { confirmsTotalsReset = true }

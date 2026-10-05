@@ -56,6 +56,8 @@ final class SystemMonitor {
     var popBatShowChart: Bool = storedSetting("popBatShowChart", true) { didSet { UserDefaults.standard.set(popBatShowChart, forKey: "popBatShowChart") } }
 
     /// 暫停時仍顯示即時網速，但不再把用量累計進每日／每月紀錄。
+    /// 數據用量的顯示方式：0 = 只列出 App，其餘程序合併成一列；1 = App 與程序都列出。
+    var usageGrouping: Int = storedSetting("usageGrouping", 0) { didSet { UserDefaults.standard.set(usageGrouping, forKey: "usageGrouping") } }
     var usageTrackingPaused: Bool = storedSetting("usageTrackingPaused", false) { didSet { UserDefaults.standard.set(usageTrackingPaused, forKey: "usageTrackingPaused") } }
 
     /// 監控中心目前選取的分頁；選單列項目與齒輪按鈕可指定要打開的分頁。
@@ -195,6 +197,9 @@ final class SystemMonitor {
     /// 合計與兩者相加的差額在畫面上顯示為「未分類」。
     var appUsageSplit: [String: [String: [UInt64]]] = [:]
     var appUsageMonthlySplit: [String: [String: [UInt64]]] = [:]
+    /// 用量紀錄裡哪些名稱是 App，以及它的 .app 路徑；用來分辨 App 與程序，並讓沒在執行的 App 也有圖示。
+    var appUsageBundlePaths: [String: String] = [:]
+    static let otherProcessesName = "其他程序"
     /// 未連上 Wi‑Fi 時為 nil。
     var wifiInfo: WiFiInfo?
     @ObservationIgnored var wifiLocationAuthorizer: WiFiLocationAuthorizer?
@@ -281,6 +286,9 @@ final class SystemMonitor {
            let decoded = try? JSONDecoder().decode([String: [String: [UInt64]]].self, from: data) {
             appUsageMonthlySplit = decoded
         }
+
+        appUsageBundlePaths = (UserDefaults.standard.dictionary(forKey: "appUsageBundlePathsV1") as? [String: String] ?? [:])
+            .filter { AppOwnerResolver.isUserFacing($0.value) }
 
         if let data = UserDefaults.standard.data(forKey: "batteryHealthLogV1"),
            let decoded = try? JSONDecoder().decode([BatteryHealthEntry].self, from: data) {

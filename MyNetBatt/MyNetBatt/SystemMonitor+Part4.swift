@@ -40,7 +40,7 @@ extension SystemMonitor {
                 "-P", "-L", "1", "-x", "-n", "-J", "bytes_in,bytes_out"
             ])
 
-            var current: [String: (name: String, pid: Int?, incoming: UInt64, outgoing: UInt64)] = [:]
+            var current: [String: (name: String, pid: Int?, incoming: UInt64, outgoing: UInt64, owner: AppOwnerResolver.Owner?)] = [:]
 
             for rawLine in output.components(separatedBy: .newlines) {
                 let line = rawLine.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -81,8 +81,11 @@ extension SystemMonitor {
                 processName = processName.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard !processName.isEmpty else { continue }
 
-                current[nameField] = (processName, pid, incomingPair.1, outgoingPair.1)
+                // Helper、XPC 服務等算在所屬的 App 上；不屬於任何 App 的維持程序名稱。
+                let owner = pid.flatMap { AppOwnerResolver.shared.owner(pid: $0, processName: processName) }
+                current[nameField] = (owner?.name ?? processName, pid, incomingPair.1, outgoingPair.1, owner)
             }
+            AppOwnerResolver.shared.retain(pids: Set(current.values.compactMap(\.pid)))
 
             let currentSnapshot = current
             let outputIsEmpty = output.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -91,9 +94,15 @@ extension SystemMonitor {
                 let now = Date()
                 let hadPreviousSample = self.lastAppNetworkSampleTime != nil
                 let interval = max(0.25, now.timeIntervalSince(self.lastAppNetworkSampleTime ?? now))
-                var result: [AppNetworkUsage] = []
+                // 同一個 App 的多個程序合併成一列。
+                var grouped: [String: AppNetworkUsage] = [:]
+                var bundlePathsChanged = false
 
                 for (key, sample) in currentSnapshot {
+                    if let owner = sample.owner, self.appUsageBundlePaths[owner.name] != owner.bundlePath {
+                        self.appUsageBundlePaths[owner.name] = owner.bundlePath
+                        bundlePathsChanged = true
+                    }
                     let previous = self.lastAppNetworkBytes[key]
                     let inDiff = previous.map { sample.incoming >= $0.incoming ? sample.incoming - $0.incoming : 0 } ?? 0
                     let outDiff = previous.map { sample.outgoing >= $0.outgoing ? sample.outgoing - $0.outgoing : 0 } ?? 0
@@ -114,15 +123,22 @@ extension SystemMonitor {
                         }
                     }
 
-                    result.append(AppNetworkUsage(
-                        id: key,
+                    let groupKey = sample.owner.map { "app:\($0.name)" } ?? key
+                    let existing = grouped[groupKey]
+                    grouped[groupKey] = AppNetworkUsage(
+                        id: groupKey,
                         name: sample.name,
-                        pid: sample.pid,
-                        downloadSpeed: Double(inDiff) / interval,
-                        uploadSpeed: Double(outDiff) / interval,
-                        totalDownload: sample.incoming,
-                        totalUpload: sample.outgoing
-                    ))
+                        pid: existing?.pid ?? sample.pid,
+                        downloadSpeed: (existing?.downloadSpeed ?? 0) + Double(inDiff) / interval,
+                        uploadSpeed: (existing?.uploadSpeed ?? 0) + Double(outDiff) / interval,
+                        totalDownload: (existing?.totalDownload ?? 0) + sample.incoming,
+                        totalUpload: (existing?.totalUpload ?? 0) + sample.outgoing,
+                        bundlePath: sample.owner?.bundlePath
+                    )
+                }
+                let result = Array(grouped.values)
+                if bundlePathsChanged {
+                    UserDefaults.standard.set(self.appUsageBundlePaths, forKey: "appUsageBundlePathsV1")
                 }
 
                 self.lastAppNetworkBytes = currentSnapshot.mapValues { (incoming: $0.incoming, outgoing: $0.outgoing) }

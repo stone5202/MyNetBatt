@@ -174,7 +174,8 @@ struct AppDataUsagePanel: View {
         let upload = everything.reduce(UInt64(0)) { $0 + $1.upload }
         let download = everything.reduce(UInt64(0)) { $0 + $1.download }
         let unknown = total > upload + download ? total - upload - download : 0
-        let maxBytes = max(allItems.first?.bytes ?? 1, 1)
+        // 「其他程序」固定排在最後，最大值不一定是第一列。
+        let maxBytes = max(allItems.map(\.bytes).max() ?? 1, 1)
 
         VStack(alignment: .leading, spacing: 14) {
             HStack {
@@ -221,11 +222,11 @@ struct AppDataUsagePanel: View {
                 Text("尚未累積到 App 網路用量；程式執行後會自動記錄。")
                     .foregroundStyle(.secondary).frame(maxWidth: .infinity, minHeight: 80, alignment: .center)
             } else {
-                Text("\(allItems.count) 個 App / 程序").font(.headline)
+                Text(monitor.usageGrouping == 0 ? "\(allItems.filter { $0.bundlePath != nil }.count) 個 App" : "\(allItems.count) 個 App / 程序").font(.headline)
                 VStack(spacing: 0) {
                     ForEach(items) { item in
                         HStack(spacing: 12) {
-                            AppIconView(pid: item.pid, name: item.name)
+                            AppIconView(pid: item.pid, name: item.name, bundlePath: item.bundlePath)
                             VStack(alignment: .leading, spacing: 5) {
                                 HStack {
                                     Text(item.name).lineLimit(1)
@@ -312,7 +313,7 @@ struct ActiveNetworkAppsList: View {
     var speedWidth: CGFloat = 92
 
     var body: some View {
-        let apps = Array(monitor.appNetworkUsages.filter(\.isActive).prefix(maxRows))
+        let apps = Array(monitor.displayedNetworkUsages.filter(\.isActive).prefix(maxRows))
         if apps.isEmpty {
             Text("目前沒有 App 正在使用網路")
                 .font(.caption)
@@ -321,7 +322,7 @@ struct ActiveNetworkAppsList: View {
         } else {
             ForEach(apps) { app in
                 HStack(spacing: 10) {
-                    AppIconView(pid: app.pid, name: app.name, size: iconSize)
+                    AppIconView(pid: app.pid, name: app.name, bundlePath: app.bundlePath, size: iconSize)
                     Text(app.name).font(iconSize < 30 ? .caption : .body).lineLimit(1)
                     Spacer(minLength: 8)
                     Text("↑ \(monitor.formatSpeedForUI(app.uploadSpeed))")
@@ -340,10 +341,17 @@ struct ActiveNetworkAppsList: View {
 struct AppIconView: View {
     let pid: Int?
     let name: String
+    /// 已知所屬 App 時直接用它的圖示，App 沒在執行也找得到。
+    var bundlePath: String? = nil
     var size: CGFloat = 38
 
     var icon: NSImage? {
         let workspace = NSWorkspace.shared
+
+        if let bundlePath {
+            return FileManager.default.fileExists(atPath: bundlePath) ? workspace.icon(forFile: bundlePath) : nil
+        }
+        if name == SystemMonitor.otherProcessesName { return nil }
 
         if let pid,
            let app = NSRunningApplication(processIdentifier: pid_t(pid)) {

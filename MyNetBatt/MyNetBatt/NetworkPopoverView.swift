@@ -133,7 +133,7 @@ private struct CompactAppUsageList: View {
             } else {
                 ForEach(items) { item in
                     HStack(spacing: 9) {
-                        AppIconView(pid: item.pid, name: item.name, size: 26)
+                        AppIconView(pid: item.pid, name: item.name, bundlePath: item.bundlePath, size: 26)
                         Text(item.name)
                             .font(.caption)
                             .lineLimit(1)

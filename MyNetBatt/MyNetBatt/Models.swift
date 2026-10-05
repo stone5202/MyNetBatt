@@ -36,6 +36,8 @@ struct AppNetworkUsage: Identifiable {
     let uploadSpeed: Double
     let totalDownload: UInt64
     let totalUpload: UInt64
+    /// 屬於某個 App 時是它的 .app 路徑；系統服務、指令列工具等為 nil。
+    var bundlePath: String? = nil
 
     var isActive: Bool { downloadSpeed + uploadSpeed > 1024 }
 }
@@ -48,6 +50,7 @@ struct AppDataUsageItem: Identifiable {
     /// 已知的上傳、下載量；舊版紀錄沒有區分方向，兩者相加可能小於 bytes。
     var upload: UInt64 = 0
     var download: UInt64 = 0
+    var bundlePath: String? = nil
 }
 
 /// 用量長條圖的一段：某一天（或某個月）某個方向的用量。

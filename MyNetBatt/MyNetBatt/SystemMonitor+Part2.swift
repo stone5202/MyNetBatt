@@ -87,9 +87,16 @@ extension SystemMonitor {
         var totals: [String: UInt64] = [:]
         var uploads: [String: UInt64] = [:]
         var downloads: [String: UInt64] = [:]
+        // 舊版把 Helper 記成獨立的程序（如「Microsoft Edge Helper」）；所屬 App 已知時併回去。
+        func canonical(_ name: String) -> String {
+            guard appUsageBundlePaths[name] == nil, let range = name.range(of: " Helper") else { return name }
+            let base = String(name[..<range.lowerBound])
+            return appUsageBundlePaths[base] != nil ? base : name
+        }
         func add(_ usage: [String: UInt64], _ split: [String: [UInt64]]) {
-            for (name, bytes) in usage { totals[name, default: 0] += bytes }
+            for (name, bytes) in usage { totals[canonical(name), default: 0] += bytes }
             for (name, pair) in split where pair.count == 2 {
+                let name = canonical(name)
                 uploads[name, default: 0] += pair[0]
                 downloads[name, default: 0] += pair[1]
             }
@@ -113,13 +120,44 @@ extension SystemMonitor {
             }
         }
 
-        return totals.map { name, bytes in
+        let items = totals.map { name, bytes in
             let pid = appNetworkUsages.first(where: { $0.name == name })?.pid
             return AppDataUsageItem(
                 id: name, name: name, bytes: bytes, pid: pid,
-                upload: uploads[name] ?? 0, download: downloads[name] ?? 0
+                upload: uploads[name] ?? 0, download: downloads[name] ?? 0,
+                bundlePath: appUsageBundlePaths[name]
             )
         }.filter { $0.bytes > 0 }.sorted { $0.bytes > $1.bytes }
+        guard usageGrouping == 0 else { return items }
+
+        // 只列 App：其餘程序合併成最後一列，總計才不會少算。
+        var apps = items.filter { $0.bundlePath != nil }
+        let others = items.filter { $0.bundlePath == nil }
+        if !others.isEmpty {
+            apps.append(AppDataUsageItem(
+                id: Self.otherProcessesName, name: Self.otherProcessesName,
+                bytes: others.reduce(0) { $0 + $1.bytes }, pid: nil,
+                upload: others.reduce(0) { $0 + $1.upload }, download: others.reduce(0) { $0 + $1.download }
+            ))
+        }
+        return apps
+    }
+
+    /// 「正在使用網路」清單用：依顯示方式把不屬於 App 的程序合併成一列。
+    var displayedNetworkUsages: [AppNetworkUsage] {
+        guard usageGrouping == 0 else { return appNetworkUsages }
+        var apps = appNetworkUsages.filter { $0.bundlePath != nil }
+        let others = appNetworkUsages.filter { $0.bundlePath == nil }
+        if !others.isEmpty {
+            apps.append(AppNetworkUsage(
+                id: Self.otherProcessesName, name: Self.otherProcessesName, pid: nil,
+                downloadSpeed: others.reduce(0) { $0 + $1.downloadSpeed },
+                uploadSpeed: others.reduce(0) { $0 + $1.uploadSpeed },
+                totalDownload: others.reduce(0) { $0 + $1.totalDownload },
+                totalUpload: others.reduce(0) { $0 + $1.totalUpload }
+            ))
+        }
+        return apps.sorted { ($0.downloadSpeed + $0.uploadSpeed) > ($1.downloadSpeed + $1.uploadSpeed) }
     }
 
     /// 用量長條圖的資料：週、月為每日一根，年為每月一根；每根依下載、上傳、未分類堆疊。
