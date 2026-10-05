@@ -117,16 +117,42 @@ struct CopyButton: View {
     }
 }
 
+private struct GlassStyleKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
+extension EnvironmentValues {
+    /// 小視窗內的卡片是否改用玻璃材質；由小視窗的根畫面依設定帶入。
+    var glassStyle: Bool {
+        get { self[GlassStyleKey.self] }
+        set { self[GlassStyleKey.self] = newValue }
+    }
+}
+
+extension View {
+    /// 小視窗的底色：玻璃質感時不鋪底色，讓系統的小視窗材質透出來。
+    @ViewBuilder
+    func popoverBackground(glass: Bool) -> some View {
+        if glass { self } else { background(Color(NSColor.windowBackgroundColor)) }
+    }
+}
+
 struct WidgetCard<Content: View>: View {
+    @Environment(\.glassStyle) private var glassStyle
     let content: Content
     init(@ViewBuilder content: () -> Content) { self.content = content() }
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) { content }
-        .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(NSColor.controlBackgroundColor))
-        .cornerRadius(16)
-        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+        let card = VStack(alignment: .leading, spacing: 8) { content }
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        if glassStyle {
+            card.glassEffect(.regular, in: .rect(cornerRadius: 16))
+        } else {
+            card
+                .background(Color(NSColor.controlBackgroundColor))
+                .cornerRadius(16)
+                .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+        }
     }
 }
 

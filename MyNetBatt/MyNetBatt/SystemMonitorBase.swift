@@ -67,6 +67,8 @@ final class SystemMonitor {
     @ObservationIgnored let appearanceChanged = PassthroughSubject<Void, Never>()
     /// 0 = 自動、1 = 淺色、2 = 深色
     var appearanceMode: Int = storedSetting("appearanceMode", 0) { didSet { UserDefaults.standard.set(appearanceMode, forKey: "appearanceMode"); appearanceChanged.send() } }
+    /// 小視窗與懸浮視窗改用系統的玻璃材質（Liquid Glass），會透出後方的內容。
+    var glassStyle: Bool = storedSetting("glassStyle", false) { didSet { UserDefaults.standard.set(glassStyle, forKey: "glassStyle") } }
     var accentColorIndex: Int = storedSetting("accentColorIndex", 0) { didSet { UserDefaults.standard.set(accentColorIndex, forKey: "accentColorIndex") } }
 
     // MARK: 懸浮視窗

@@ -12,12 +12,19 @@ struct SettingsDetailView: View {
     var body: some View {
         Form {
             Section("外觀") {
-                Picker("主題", selection: $monitor.appearanceMode) {
-                    Text("自動").tag(0)
-                    Text("淺色").tag(1)
-                    Text("深色").tag(2)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("主題")
+                    HStack(spacing: 18) {
+                        // appearanceMode：0 自動、1 淺色、2 深色。
+                        ForEach([(1, "淺色"), (2, "深色"), (0, "自動")], id: \.0) { mode, title in
+                            ThemeOptionButton(monitor: monitor, mode: mode, title: title)
+                        }
+                        Spacer(minLength: 0)
+                    }
                 }
-                .pickerStyle(.segmented)
+
+                Toggle("玻璃質感", isOn: $monitor.glassStyle)
+                    .help("小視窗與懸浮視窗改用系統的玻璃材質，會透出後方的內容")
 
                 LabeledContent("強調色") {
                     HStack(spacing: 8) {
@@ -105,15 +112,17 @@ struct SettingsDetailView: View {
                     Text("大").tag(2)
                 }
                 .pickerStyle(.segmented)
-                LabeledContent("不透明度") {
+                LabeledContent("背景不透明度") {
                     HStack {
-                        Slider(value: $monitor.floatOpacity, in: 0.3...1.0)
+                        Slider(value: $monitor.floatOpacity, in: 0...1.0)
                         Text("\(Int((monitor.floatOpacity * 100).rounded()))%")
                             .monospacedDigit()
                             .frame(width: 44, alignment: .trailing)
                     }
                 }
                 Toggle("模糊背景", isOn: $monitor.floatBlur)
+                    .disabled(monitor.glassStyle)
+                    .help(monitor.glassStyle ? "已開啟「外觀」的玻璃質感，懸浮視窗使用玻璃材質" : "")
                 Toggle("邊框", isOn: $monitor.floatBorder)
                 Toggle("陰影", isOn: $monitor.floatShadow)
                 Toggle("顯示網速", isOn: $monitor.floatShowNet)
@@ -232,5 +241,76 @@ private struct NetSpeedStyleRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+    }
+}
+
+/// 主題的一個選項：桌面上浮著一個小視窗的縮圖，下方是名稱；「自動」左半淺色、右半深色。
+private struct ThemeOptionButton: View {
+    @Bindable var monitor: SystemMonitor
+    let mode: Int
+    let title: String
+
+    private static let size = CGSize(width: 96, height: 62)
+
+    var body: some View {
+        let selected = monitor.appearanceMode == mode
+        Button {
+            monitor.appearanceMode = mode
+        } label: {
+            VStack(spacing: 6) {
+                thumbnail
+                    .frame(width: Self.size.width, height: Self.size.height)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(selected ? monitor.accentColor : Color.primary.opacity(0.12), lineWidth: selected ? 2.5 : 1))
+                Text(title)
+                    .font(.callout.weight(selected ? .semibold : .regular))
+                    .foregroundStyle(selected ? .primary : .secondary)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(title)
+        .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+
+    @ViewBuilder
+    private var thumbnail: some View {
+        switch mode {
+        case 1: scene(dark: false)
+        case 2: scene(dark: true)
+        default:
+            ZStack {
+                scene(dark: false)
+                scene(dark: true)
+                    .mask(alignment: .trailing) { Rectangle().frame(width: Self.size.width / 2) }
+                Rectangle().fill(Color.white.opacity(0.9)).frame(width: 1)
+            }
+        }
+    }
+
+    /// 桌面、選單列，以及右下方露出一角的小視窗。
+    private func scene(dark: Bool) -> some View {
+        let panel = dark ? Color(red: 0.15, green: 0.17, blue: 0.21) : Color(white: 0.97)
+        let line = dark ? Color.white.opacity(0.75) : Color.black.opacity(0.7)
+        return ZStack(alignment: .topLeading) {
+            LinearGradient(
+                colors: dark ? [Color(red: 0.16, green: 0.30, blue: 0.52), Color(red: 0.10, green: 0.19, blue: 0.36)]
+                             : [Color(red: 0.42, green: 0.70, blue: 0.95), Color(red: 0.25, green: 0.52, blue: 0.86)],
+                startPoint: .top, endPoint: .bottom
+            )
+            Rectangle().fill(Color.white.opacity(dark ? 0.10 : 0.28)).frame(height: 9)
+            VStack(alignment: .leading, spacing: 4) {
+                Capsule().fill(monitor.accentColor).frame(width: 16, height: 3)
+                Capsule().fill(line).frame(width: 30, height: 5)
+                Capsule().fill(line.opacity(0.35)).frame(width: 22, height: 3)
+                Spacer(minLength: 0)
+            }
+            .padding(8)
+            .frame(width: 66, height: 46, alignment: .topLeading)
+            .background(panel, in: RoundedRectangle(cornerRadius: 7))
+            .shadow(color: .black.opacity(0.25), radius: 3, y: 1)
+            .offset(x: 18, y: 20)
+        }
+        .frame(width: Self.size.width, height: Self.size.height)
     }
 }

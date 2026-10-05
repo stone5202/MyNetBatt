@@ -17,12 +17,10 @@ final class FloatWindowController {
     func update(appearance: NSAppearance?) {
         guard monitor.showFloatWindow else { close(); return }
         let panel = self.panel ?? makePanel()
-        panel.alphaValue = monitor.floatOpacity
         panel.appearance = appearance
-        if panel.hasShadow != monitor.floatShadow {
-            panel.hasShadow = monitor.floatShadow
-            panel.invalidateShadow()
-        }
+        panel.hasShadow = monitor.floatShadow
+        // 不透明度只作用在背景（FloatWindowView），文字與圖示維持不變；陰影依背景的透明程度重算。
+        panel.invalidateShadow()
         panel.orderFrontRegardless()
     }
 
@@ -132,11 +130,16 @@ struct FloatWindowView: View {
         .padding(.horizontal, 12 * scale)
         .padding(.vertical, 7 * scale)
         .background {
-            if monitor.floatBlur {
-                VisualEffectBackground()
-            } else {
-                Color(NSColor.windowBackgroundColor)
+            Group {
+                if monitor.glassStyle {
+                    Color.clear.glassEffect(.regular, in: shape)
+                } else if monitor.floatBlur {
+                    VisualEffectBackground()
+                } else {
+                    Color(NSColor.windowBackgroundColor)
+                }
             }
+            .opacity(monitor.floatOpacity)
         }
         .clipShape(shape)
         .overlay { if monitor.floatBorder { shape.strokeBorder(Color.primary.opacity(0.18), lineWidth: 1) } }

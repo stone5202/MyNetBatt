@@ -99,7 +99,8 @@ struct NetworkPopoverView: View {
                     } label: { Image(systemName: "gearshape.fill").foregroundStyle(.secondary) }.buttonStyle(.plain)
                 }
             }.padding(16)
-        }.background(Color(NSColor.windowBackgroundColor))
+        }.popoverBackground(glass: monitor.glassStyle)
+        .environment(\.glassStyle, monitor.glassStyle)
         .tint(monitor.accentColor)
     }
 }

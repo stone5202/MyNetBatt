@@ -279,6 +279,7 @@ struct BatteryPopoverView: View {
             }
         }
         .padding(16)
-        .background(Color(NSColor.windowBackgroundColor))
+        .popoverBackground(glass: monitor.glassStyle)
+        .environment(\.glassStyle, monitor.glassStyle)
     }
 }
