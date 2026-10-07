@@ -4,6 +4,12 @@
 
 This document summarizes the major changes in each MyNetBatt release. Versions before 3.0 were uploaded by replacing earlier copies, so their original per-version Git history can no longer be fully recovered. Changes from 1.0 through 2.x are therefore consolidated from the source code that can still be verified, without attributing uncertain details to individual releases.
 
+## [3.8.1] - 2026-10-07
+
+### Fixes
+
+- In the dark theme, with the glass frost slider at its clearest, the monitor window no longer turns mid-grey over bright content: a darker tint is kept at the clear end so white text stays readable. The default position looks the same as before.
+
 ## [3.8] - 2026-10-07
 
 ### New features
