@@ -57,12 +57,12 @@ struct MainWindowView: View {
             .padding(monitor.mainWindowTab == "settings" ? 0 : 30)
             // 玻璃質感時拿掉設定表單與內容區的不透明底色，露出視窗的玻璃材質。
             .scrollContentBackground(monitor.glassStyle ? .hidden : .automatic)
-            .background { if monitor.glassStyle { GlassWindowBackground().ignoresSafeArea() } }
+            .background { if monitor.glassStyle { GlassWindowBackground(frost: monitor.glassFrost).ignoresSafeArea() } }
             // 玻璃質感時標題列是透明的：在標題列的位置再鋪一層材質，捲上去的內容才不會和視窗標題疊在一起。
             .overlay(alignment: .top) {
                 if monitor.glassStyle {
                     GeometryReader { geo in
-                        GlassWindowBackground()
+                        GlassWindowBackground(frost: monitor.glassFrost)
                             .frame(height: geo.safeAreaInsets.top)
                             .offset(y: -geo.safeAreaInsets.top)
                     }
@@ -101,14 +101,16 @@ struct MainWindowView: View {
 /// 四個分頁用同一個程度，切換時背景才一致。
 private struct GlassWindowBackground: View {
     @Environment(\.colorScheme) private var colorScheme
+    /// 設定的霧化程度（0～1）；預設 0.6 時深色疊黑 62%、淺色疊白 50%。
+    let frost: Double
 
     var body: some View {
         ZStack {
             BehindWindowMaterial()
             if colorScheme == .dark {
-                Color.black.opacity(0.62)
+                Color.black.opacity(0.2 + 0.7 * frost)
             } else {
-                Color.white.opacity(0.5)
+                Color.white.opacity(0.14 + 0.6 * frost)
             }
         }
     }

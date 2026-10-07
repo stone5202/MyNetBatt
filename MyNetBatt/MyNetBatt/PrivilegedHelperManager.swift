@@ -117,6 +117,13 @@ final class PrivilegedHelperManager: ObservableObject {
     private func performRegistration() async {
         defer { refreshRegistrationState() }
 
+        // 從下載資料夾或磁碟映像直接開啟時，macOS 會把 App 放到每次都不同的暫存路徑執行，
+        // 在那裡註冊的 Helper 下次就找不到執行檔。
+        guard !Bundle.main.bundlePath.contains("/AppTranslocation/") else {
+            lastError = "請先把 MyNetBatt 移到「應用程式」資料夾並重新開啟，再啟用 Helper。"
+            return
+        }
+
         if hasLegacyInstall {
             helperLog.notice("Removing legacy helper install")
             if let error = await removeLegacyInstall() {
@@ -275,9 +282,12 @@ final class PrivilegedHelperManager: ObservableObject {
                 if success {
                     // 先採用 Helper 已確認的結果，系統通知會再同步一次。
                     isLowPowerModeEnabled = enabled
+                } else if await systemReportsLowPowerMode(enabled) {
+                    // Helper 回報失敗，但系統狀態確實已經改變（例如 Helper 讀不懂該機型的 pmset 輸出）。
+                    isLowPowerModeEnabled = enabled
                 } else {
-                    needsRepair = true
-                    lastError = errorText ?? "低耗電模式切換失敗。請修復 Helper 後再試一次。"
+                    // Helper 有回應，重新註冊也無濟於事，所以不顯示「修復 Helper」。
+                    lastError = errorText ?? "低耗電模式切換失敗。"
                 }
             } catch {
                 helperLog.error("Low power mode request failed: \(error.localizedDescription, privacy: .public)")
@@ -286,6 +296,15 @@ final class PrivilegedHelperManager: ObservableObject {
                 lastError = "無法使用 Privileged Helper：\(error.localizedDescription)\n請按「修復 Helper」重新註冊目前 App 內的 Helper。"
             }
         }
+    }
+
+    /// 以系統回報的狀態為準，最多等一秒讓 pmset 的變更生效。
+    private func systemReportsLowPowerMode(_ enabled: Bool) async -> Bool {
+        for _ in 0..<5 {
+            if ProcessInfo.processInfo.isLowPowerModeEnabled == enabled { return true }
+            try? await Task.sleep(for: .milliseconds(200))
+        }
+        return ProcessInfo.processInfo.isLowPowerModeEnabled == enabled
     }
 
     // MARK: - Helper 版本

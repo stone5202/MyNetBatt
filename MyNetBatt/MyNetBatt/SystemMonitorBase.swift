@@ -69,6 +69,8 @@ final class SystemMonitor {
     var appearanceMode: Int = storedSetting("appearanceMode", 0) { didSet { UserDefaults.standard.set(appearanceMode, forKey: "appearanceMode"); appearanceChanged.send() } }
     /// 小視窗、懸浮視窗與監控中心改用系統的玻璃材質（Liquid Glass），會透出後方的內容。
     var glassStyle: Bool = storedSetting("glassStyle", false) { didSet { UserDefaults.standard.set(glassStyle, forKey: "glassStyle"); appearanceChanged.send() } }
+    /// 玻璃質感的霧化程度：0 最通透、1 最霧（接近不透明）。只改變壓在模糊材質上的底色濃度，後方內容始終是模糊的。
+    var glassFrost: Double = storedSetting("glassFrost", 0.6) { didSet { UserDefaults.standard.set(glassFrost, forKey: "glassFrost") } }
     var accentColorIndex: Int = storedSetting("accentColorIndex", 0) { didSet { UserDefaults.standard.set(accentColorIndex, forKey: "accentColorIndex") } }
 
     // MARK: 懸浮視窗
@@ -385,6 +387,11 @@ final class SystemMonitor {
             return String(format: "%.1f°F", fahrenheit)
         }
         return String(format: "%.1f°C", batTempDouble)
+    }
+
+    /// 溫度刻度條兩端的標示（25～45°C），跟著溫度單位換算。
+    var tempScaleLabels: (low: String, high: String) {
+        tempDisplayInFahrenheit ? ("77", "113°F") : ("25", "45°C")
     }
 
     /// 網卡、路由及部分 IOKit 資料會在睡眠期間失效；喚醒後清掉舊基準並分段重抓。

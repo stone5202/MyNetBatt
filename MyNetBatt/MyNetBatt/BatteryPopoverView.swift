@@ -92,15 +92,15 @@ struct BatteryPopoverView: View {
             }
             .fixedSize(horizontal: false, vertical: true)
             
-            // 第二～四排：六個資訊卡固定相同高度、相同間距與主資訊字級
+            // 第二～四排：六個資訊卡固定相同高度、相同間距與主資訊字級；圖示靠左，文字對整張卡片置中後再往右偏 10pt（左邊有圖示，正中央看起來會右邊偏空）
             HStack(spacing: 12) {
                 WidgetCard {
-                    HStack(spacing: 10) {
+                    ZStack(alignment: .leading) {
                         Image(systemName: "hourglass")
                             .foregroundColor(.blue)
                             .font(.title2)
                             .frame(width: 28)
-                        VStack(alignment: .leading, spacing: 3) {
+                        VStack(spacing: 3) {
                             Text(monitor.batTimeRemain)
                                 .font(.title3.bold())
                                 .monospacedDigit()
@@ -111,19 +111,20 @@ struct BatteryPopoverView: View {
                                 .foregroundColor(.secondary)
                                 .lineLimit(1)
                         }
-                        Spacer(minLength: 0)
+                        .frame(maxWidth: .infinity)
+                        .padding(.leading, 36).padding(.trailing, 16)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
                 }
                 .frame(maxWidth: .infinity, minHeight: 70, maxHeight: 70)
 
                 WidgetCard {
-                    HStack(spacing: 10) {
+                    ZStack(alignment: .leading) {
                         Image(systemName: "powerplug.fill")
                             .foregroundColor(.green)
                             .font(.title2)
                             .frame(width: 28)
-                        VStack(alignment: .leading, spacing: 3) {
+                        VStack(spacing: 3) {
                             Text(monitor.batWatts)
                                 .font(.title3.bold())
                                 .monospacedDigit()
@@ -134,7 +135,8 @@ struct BatteryPopoverView: View {
                                 .foregroundColor(.secondary)
                                 .lineLimit(1)
                         }
-                        Spacer(minLength: 0)
+                        .frame(maxWidth: .infinity)
+                        .padding(.leading, 36).padding(.trailing, 16)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
                 }
@@ -143,12 +145,12 @@ struct BatteryPopoverView: View {
 
             HStack(spacing: 12) {
                 WidgetCard {
-                    HStack(spacing: 10) {
+                    ZStack(alignment: .leading) {
                         Image(systemName: "arrow.3.trianglepath")
                             .foregroundColor(.blue)
                             .font(.title2)
                             .frame(width: 28)
-                        VStack(alignment: .leading, spacing: 3) {
+                        VStack(spacing: 3) {
                             Text(monitor.batCycle)
                                 .font(.title3.bold())
                                 .monospacedDigit()
@@ -158,19 +160,20 @@ struct BatteryPopoverView: View {
                                 .foregroundColor(.secondary)
                                 .lineLimit(1)
                         }
-                        Spacer(minLength: 0)
+                        .frame(maxWidth: .infinity)
+                        .padding(.leading, 36).padding(.trailing, 16)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
                 }
                 .frame(maxWidth: .infinity, minHeight: 70, maxHeight: 70)
 
                 WidgetCard {
-                    HStack(spacing: 10) {
+                    ZStack(alignment: .leading) {
                         Image(systemName: "heart.fill")
                             .foregroundColor(.red)
                             .font(.title2)
                             .frame(width: 28)
-                        VStack(alignment: .leading, spacing: 3) {
+                        VStack(spacing: 3) {
                             Text(monitor.batHealth)
                                 .font(.title3.bold())
                                 .monospacedDigit()
@@ -180,7 +183,8 @@ struct BatteryPopoverView: View {
                                 .foregroundColor(.secondary)
                                 .lineLimit(1)
                         }
-                        Spacer(minLength: 0)
+                        .frame(maxWidth: .infinity)
+                        .padding(.leading, 36).padding(.trailing, 16)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
                 }
@@ -192,27 +196,31 @@ struct BatteryPopoverView: View {
                     monitor.toggleTemperatureUnit()
                 } label: {
                     WidgetCard {
-                        HStack(spacing: 10) {
+                        ZStack(alignment: .leading) {
                             Image(systemName: "thermometer.medium")
                                 .foregroundStyle(.orange)
                                 .font(.title2)
                                 .frame(width: 28)
-                            VStack(alignment: .leading, spacing: 3) {
+                            VStack(spacing: 3) {
                                 Text(monitor.batTempDisplay)
                                     .font(.title3.bold())
                                     .monospacedDigit()
                                     .lineLimit(1)
+                                    .padding(.leading, 36).padding(.trailing, 16)
                                 HStack(spacing: 4) {
-                                    Text("25")
+                                    // 兩端標示給固定寬度，切換 °C／°F 時刻度條長度不變。
+                                    Text(monitor.tempScaleLabels.low).frame(width: 12, alignment: .trailing)
                                     TemperatureScaleBar(celsius: monitor.batTempDouble > 0 ? monitor.batTempDouble : nil, height: 5)
-                                    Text("45°C")
+                                    Text(monitor.tempScaleLabels.high).frame(width: 28, alignment: .leading)
                                 }
                                 .font(.system(size: 9, weight: .semibold))
                                 .foregroundStyle(.secondary)
                                 .lineLimit(1)
                                 .fixedSize(horizontal: false, vertical: true)
+                                // 刻度條不置中：從圖示右邊一路排到卡片右緣，右側才不會空一塊。
+                                .padding(.leading, 34)
                             }
-                            Spacer(minLength: 0)
+                            .frame(maxWidth: .infinity)
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
                         .contentShape(Rectangle())
@@ -226,12 +234,12 @@ struct BatteryPopoverView: View {
                     helper.setLowPowerMode(!helper.isLowPowerModeEnabled)
                 } label: {
                     WidgetCard {
-                        HStack(spacing: 10) {
+                        ZStack(alignment: .leading) {
                             Image(systemName: helper.isLowPowerModeEnabled ? "leaf.fill" : "leaf")
                                 .foregroundStyle(helper.isLowPowerModeEnabled ? Color.green : Color.secondary)
                                 .font(.title2)
                                 .frame(width: 28)
-                            VStack(alignment: .leading, spacing: 3) {
+                            VStack(spacing: 3) {
                                 Text(helper.isLowPowerModeEnabled ? "已開啟" : "已關閉")
                                     .font(.title3.bold())
                                     .lineLimit(1)
@@ -241,7 +249,8 @@ struct BatteryPopoverView: View {
                                     .lineLimit(1)
                                     .minimumScaleFactor(0.72)
                             }
-                            Spacer(minLength: 0)
+                            .frame(maxWidth: .infinity)
+                            .padding(.leading, 36).padding(.trailing, 16)
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
                         .contentShape(Rectangle())
@@ -279,7 +288,7 @@ struct BatteryPopoverView: View {
             }
         }
         .padding(16)
-        .popoverBackground(glass: monitor.glassStyle)
+        .popoverBackground(glass: monitor.glassStyle, frost: monitor.glassFrost)
         .environment(\.glassStyle, monitor.glassStyle)
     }
 }

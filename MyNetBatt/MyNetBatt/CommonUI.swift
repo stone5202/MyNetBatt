@@ -56,9 +56,9 @@ struct BatteryTemperatureGaugeView: View {
                 Spacer()
             }
             HStack(spacing: 8) {
-                Text("25").font(.caption2).bold()
+                Text(monitor.tempScaleLabels.low).font(.caption2).bold().frame(width: 16, alignment: .trailing)
                 TemperatureScaleBar(celsius: celsius)
-                Text("45°C").font(.caption2).bold()
+                Text(monitor.tempScaleLabels.high).font(.caption2).bold().frame(width: 36, alignment: .leading)
             }
             Text("電池溫度").font(.caption).foregroundStyle(.secondary)
         }
@@ -130,10 +130,14 @@ extension EnvironmentValues {
 }
 
 extension View {
-    /// 小視窗的底色：玻璃質感時不鋪底色，讓系統的小視窗材質透出來。
+    /// 小視窗的底色：玻璃質感時讓系統的小視窗材質透出來，霧化程度調高（超過預設的 0.6）才逐漸壓上底色。
     @ViewBuilder
-    func popoverBackground(glass: Bool) -> some View {
-        if glass { self } else { background(Color(NSColor.windowBackgroundColor)) }
+    func popoverBackground(glass: Bool, frost: Double) -> some View {
+        if glass {
+            background(Color(NSColor.windowBackgroundColor).opacity(max(0, frost - 0.6) / 0.4 * 0.85))
+        } else {
+            background(Color(NSColor.windowBackgroundColor))
+        }
     }
 }
 

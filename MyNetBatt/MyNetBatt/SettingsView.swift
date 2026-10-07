@@ -11,32 +11,53 @@ struct SettingsDetailView: View {
 
     var body: some View {
         Form {
-            Section("外觀") {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("主題")
-                    HStack(spacing: 18) {
+            Section {
+                LabeledContent("外觀") {
+                    HStack(spacing: 14) {
                         // appearanceMode：0 自動、1 淺色、2 深色。
                         ForEach([(1, "淺色"), (2, "深色"), (0, "自動")], id: \.0) { mode, title in
                             ThemeOptionButton(monitor: monitor, mode: mode, title: title)
                         }
-                        Spacer(minLength: 0)
                     }
                 }
 
-                Toggle("玻璃質感", isOn: $monitor.glassStyle)
-                    .help("小視窗、懸浮視窗與監控中心改用系統的玻璃材質，會透出後方的內容")
+                HStack(alignment: .top, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("玻璃質感")
+                        Toggle("玻璃質感", isOn: $monitor.glassStyle)
+                            .labelsHidden()
+                            .toggleStyle(.switch)
+                            .controlSize(.small)
+                    }
+                    Spacer(minLength: 0)
+                    VStack(spacing: 10) {
+                        GlassStylePreview(glass: monitor.glassStyle, frost: monitor.glassFrost)
+                        HStack(spacing: 8) {
+                            Image(systemName: "square.on.square.dashed")
+                            Slider(value: $monitor.glassFrost, in: 0...1).labelsHidden()
+                            Image(systemName: "square.fill.on.square.fill")
+                        }
+                        .foregroundStyle(.secondary)
+                        .disabled(!monitor.glassStyle)
+                        .help("霧化程度：往左較通透，往右較霧；後方內容始終是模糊的")
+                    }
+                    .frame(width: 290)
+                }
+                .help("小視窗、懸浮視窗與監控中心改用系統的玻璃材質，會透出後方的內容")
+            }
 
-                LabeledContent("強調色") {
-                    HStack(spacing: 8) {
+            Section("主題") {
+                LabeledContent("顏色") {
+                    HStack(spacing: 12) {
                         ForEach(SystemMonitor.accentPalette.indices, id: \.self) { index in
-                            Circle()
-                                .fill(SystemMonitor.accentPalette[index].color)
-                                .frame(width: 18, height: 18)
-                                .overlay(Circle().stroke(Color.primary.opacity(0.6), lineWidth: monitor.accentColorIndex == index ? 2 : 0).padding(-3))
-                                .onTapGesture { monitor.accentColorIndex = index }
-                                .help(SystemMonitor.accentPalette[index].name)
+                            let item = SystemMonitor.accentPalette[index]
+                            ColorSwatch(color: item.color, name: item.name, ring: item.color, selected: monitor.accentColorIndex == index) {
+                                monitor.accentColorIndex = index
+                            }
                         }
                     }
+                    // 留出選取色名稱的高度。
+                    .padding(.bottom, 18)
                 }
             }
 
@@ -64,14 +85,11 @@ struct SettingsDetailView: View {
                 Toggle("百分比", isOn: $monitor.showBatText)
                 Toggle("電池圖示使用系統尺寸", isOn: $monitor.batIconLarge)
                 LabeledContent("圖示顏色") {
-                    HStack(spacing: 8) {
+                    HStack(spacing: 12) {
                         ForEach(SystemMonitor.batteryColorOptions.indices, id: \.self) { index in
-                            Circle()
-                                .fill(SystemMonitor.batteryColorOptions[index])
-                                .frame(width: 18, height: 18)
-                                .overlay(Circle().stroke(Color.gray.opacity(0.3), lineWidth: 1))
-                                .overlay(Circle().stroke(monitor.accentColor, lineWidth: monitor.selectedColorIndex == index ? 2 : 0).padding(-3))
-                                .onTapGesture { monitor.selectedColorIndex = index }
+                            ColorSwatch(color: SystemMonitor.batteryColorOptions[index], name: nil, ring: monitor.accentColor, selected: monitor.selectedColorIndex == index) {
+                                monitor.selectedColorIndex = index
+                            }
                         }
                     }
                 }
@@ -215,6 +233,7 @@ struct SettingsDetailView: View {
             }
         }
         .formStyle(.grouped)
+        .toggleStyle(SettingsSwitchStyle())
     }
 }
 
@@ -235,8 +254,10 @@ private struct NetSpeedStyleRow: View {
                     .background(Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 6))
                 Text(NetSpeedLabel.styleNames[style]).foregroundStyle(selected ? .primary : .secondary)
                 Spacer(minLength: 0)
+                // 大小比照右側的開關，和其他列的控制項對齊。
                 Image(systemName: selected ? "checkmark.circle.fill" : "circle")
-                    .foregroundStyle(selected ? monitor.accentColor : Color.secondary.opacity(0.5))
+                    .font(.system(size: 20))
+                    .foregroundStyle(selected ? monitor.accentColor : Color.secondary.opacity(0.4))
             }
             .contentShape(Rectangle())
         }
@@ -244,24 +265,27 @@ private struct NetSpeedStyleRow: View {
     }
 }
 
-/// 主題的一個選項：桌面上浮著一個小視窗的縮圖，下方是名稱；「自動」左半淺色、右半深色。
+/// 外觀的一個選項：仿系統設定的縮圖（桌布、選單列、選取色與一個視窗），下方是名稱；「自動」左半淺色、右半深色。
 private struct ThemeOptionButton: View {
     @Bindable var monitor: SystemMonitor
     let mode: Int
     let title: String
 
-    private static let size = CGSize(width: 96, height: 62)
+    private static let size = CGSize(width: 76, height: 50)
 
     var body: some View {
         let selected = monitor.appearanceMode == mode
         Button {
             monitor.appearanceMode = mode
         } label: {
-            VStack(spacing: 6) {
+            VStack(spacing: 5) {
                 thumbnail
                     .frame(width: Self.size.width, height: Self.size.height)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                    .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(selected ? monitor.accentColor : Color.primary.opacity(0.12), lineWidth: selected ? 2.5 : 1))
+                    .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 7, style: .continuous).strokeBorder(Color.primary.opacity(0.12), lineWidth: 0.5))
+                    // 選取框和縮圖之間留一圈空隙，和系統設定一樣。
+                    .padding(3)
+                    .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(monitor.accentColor, lineWidth: selected ? 3 : 0))
                 Text(title)
                     .font(.callout.weight(selected ? .semibold : .regular))
                     .foregroundStyle(selected ? .primary : .secondary)
@@ -283,34 +307,148 @@ private struct ThemeOptionButton: View {
                 scene(dark: false)
                 scene(dark: true)
                     .mask(alignment: .trailing) { Rectangle().frame(width: Self.size.width / 2) }
-                Rectangle().fill(Color.white.opacity(0.9)).frame(width: 1)
             }
         }
     }
 
-    /// 桌面、選單列，以及右下方露出一角的小視窗。
+    /// 桌布、選單列、左上的選取色塊，以及右下方露出一角、帶紅黃綠按鈕的視窗。
     private func scene(dark: Bool) -> some View {
-        let panel = dark ? Color(red: 0.15, green: 0.17, blue: 0.21) : Color(white: 0.97)
-        let line = dark ? Color.white.opacity(0.75) : Color.black.opacity(0.7)
+        let panel = dark ? Color(red: 0.13, green: 0.14, blue: 0.18) : Color(white: 0.96)
         return ZStack(alignment: .topLeading) {
             LinearGradient(
-                colors: dark ? [Color(red: 0.16, green: 0.30, blue: 0.52), Color(red: 0.10, green: 0.19, blue: 0.36)]
-                             : [Color(red: 0.42, green: 0.70, blue: 0.95), Color(red: 0.25, green: 0.52, blue: 0.86)],
-                startPoint: .top, endPoint: .bottom
+                colors: dark ? [Color(red: 0.20, green: 0.16, blue: 0.62), Color(red: 0.06, green: 0.10, blue: 0.42)]
+                             : [Color(red: 0.55, green: 0.80, blue: 0.98), Color(red: 0.16, green: 0.42, blue: 0.90)],
+                startPoint: .topLeading, endPoint: .bottomTrailing
             )
-            Rectangle().fill(Color.white.opacity(dark ? 0.10 : 0.28)).frame(height: 9)
-            VStack(alignment: .leading, spacing: 4) {
-                Capsule().fill(monitor.accentColor).frame(width: 16, height: 3)
-                Capsule().fill(line).frame(width: 30, height: 5)
-                Capsule().fill(line.opacity(0.35)).frame(width: 22, height: 3)
-                Spacer(minLength: 0)
+            // 桌布上的斜向光帶。
+            Capsule()
+                .fill(Color.white.opacity(dark ? 0.12 : 0.35))
+                .frame(width: 130, height: 12)
+                .rotationEffect(.degrees(-32))
+                .offset(x: -20, y: 26)
+            Rectangle().fill(dark ? Color.black.opacity(0.35) : Color.white.opacity(0.55)).frame(height: 6)
+            RoundedRectangle(cornerRadius: 3, style: .continuous)
+                .fill(monitor.accentColor)
+                .frame(width: 34, height: 9)
+                .shadow(color: .black.opacity(0.2), radius: 1, y: 0.5)
+                .offset(x: 6, y: 12)
+            HStack(spacing: 3) {
+                ForEach([Color.red, Color.yellow, Color.green], id: \.self) { color in
+                    Circle().fill(color).frame(width: 5, height: 5)
+                }
             }
-            .padding(8)
-            .frame(width: 66, height: 46, alignment: .topLeading)
-            .background(panel, in: RoundedRectangle(cornerRadius: 7))
-            .shadow(color: .black.opacity(0.25), radius: 3, y: 1)
-            .offset(x: 18, y: 20)
+            .padding(.leading, 7)
+            .frame(width: 50, height: 30, alignment: .leading)
+            .background(panel, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+            .shadow(color: .black.opacity(0.3), radius: 3, y: 1)
+            .offset(x: Self.size.width - 40, y: Self.size.height - 22)
         }
         .frame(width: Self.size.width, height: Self.size.height)
+    }
+}
+
+/// 玻璃質感的預覽：風景上浮著一排工具列按鈕，開啟時按鈕是透出後方的玻璃，關閉時是不透明的底色。
+private struct GlassStylePreview: View {
+    let glass: Bool
+    let frost: Double
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        ZStack(alignment: .top) {
+            LinearGradient(
+                colors: [Color(red: 0.36, green: 0.62, blue: 0.93), Color(red: 0.70, green: 0.85, blue: 0.97)],
+                startPoint: .top, endPoint: .bottom
+            )
+            Circle().fill(Color.white.opacity(0.85)).frame(width: 46, height: 46).offset(x: -70, y: 34)
+            Circle().fill(Color.white.opacity(0.75)).frame(width: 60, height: 60).offset(x: -34, y: 40)
+            Ellipse().fill(Color(red: 0.24, green: 0.50, blue: 0.20)).frame(width: 260, height: 90).offset(x: -90, y: 62)
+            Ellipse().fill(Color(red: 0.36, green: 0.62, blue: 0.26)).frame(width: 280, height: 80).offset(x: 80, y: 78)
+
+            HStack(spacing: 8) {
+                pill {
+                    Image(systemName: "square.and.arrow.up")
+                    Image(systemName: "ellipsis")
+                }
+                pill { Image(systemName: "square.on.square") }
+                pill {
+                    Image(systemName: "magnifyingglass")
+                    Text("搜尋").foregroundStyle(.secondary)
+                    Spacer(minLength: 0)
+                }
+            }
+            .font(.system(size: 12, weight: .medium))
+            .padding(10)
+        }
+        .frame(width: 290, height: 104)
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Color.primary.opacity(0.1), lineWidth: 0.5))
+        .animation(.easeInOut(duration: 0.2), value: glass)
+        .accessibilityHidden(true)
+    }
+
+    /// 這裡用材質而不用 glassEffect：設定頁上出現玻璃元件時，系統會把整頁背景提亮。
+    private func pill<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        HStack(spacing: 10) { content() }
+            .padding(.horizontal, 11)
+            .frame(height: 30)
+            .background {
+                if glass {
+                    // 和監控中心同一種做法：模糊不變，只改變壓在上面的底色濃度。
+                    Capsule().fill(.ultraThinMaterial)
+                    Capsule().fill((colorScheme == .dark ? Color.black : Color.white).opacity(frost * 0.75))
+                } else {
+                    Capsule().fill(Color(nsColor: .controlBackgroundColor))
+                }
+            }
+            .overlay(Capsule().strokeBorder(Color.white.opacity(glass ? 0.5 : 0.15), lineWidth: 0.5))
+            .shadow(color: .black.opacity(0.15), radius: 3, y: 1)
+    }
+}
+
+/// 顏色選項的圓點：選取時外圍多一圈環，有名稱時顯示在下方（和系統設定的「顏色」相同）。
+private struct ColorSwatch: View {
+    let color: Color
+    let name: String?
+    let ring: Color
+    let selected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Circle()
+                .fill(color)
+                .frame(width: 20, height: 20)
+                .overlay(Circle().strokeBorder(Color.primary.opacity(0.15), lineWidth: 0.5))
+                .padding(3)
+                .overlay(Circle().strokeBorder(ring, lineWidth: selected ? 2.5 : 0))
+                .overlay(alignment: .bottom) {
+                    if selected, let name {
+                        Text(name)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize()
+                            .offset(y: 17)
+                    }
+                }
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .help(name ?? "")
+        .accessibilityLabel(name ?? "顏色")
+        .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+}
+
+/// 設定頁的開關：標題在左、小尺寸的開關靠右，和系統設定一致。
+private struct SettingsSwitchStyle: ToggleStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        LabeledContent {
+            Toggle(isOn: configuration.$isOn) { EmptyView() }
+                .labelsHidden()
+                .toggleStyle(.switch)
+                .controlSize(.small)
+        } label: {
+            configuration.label
+        }
     }
 }

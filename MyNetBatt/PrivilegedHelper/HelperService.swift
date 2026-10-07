@@ -38,7 +38,11 @@ final class HelperService: NSObject, MyNetBattPrivilegedHelperProtocol {
     func setLowPowerMode(_ enabled: Bool, withReply reply: @escaping (Bool, String?) -> Void) {
         defer { scheduleIdleExit() }
         let value = enabled ? "1" : "0"
-        let result = Self.runCommand("/usr/bin/pmset", ["-a", "lowpowermode", value])
+        var result = Self.runCommand("/usr/bin/pmset", ["-a", "lowpowermode", value])
+        if result.exitCode != 0 {
+            // 支援高效能模式的機型把這個設定叫做 powermode（0 自動、1 低耗電、2 高效能）。
+            result = Self.runCommand("/usr/bin/pmset", ["-a", "powermode", value])
+        }
 
         guard result.exitCode == 0 else {
             let detail = result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -46,8 +50,9 @@ final class HelperService: NSObject, MyNetBattPrivilegedHelperProtocol {
             return
         }
 
+        // pmset 的輸出格式因機型而異，讀不回來不代表失敗；主程式會再以 ProcessInfo 確認實際狀態。
         guard let actual = Self.readLowPowerMode() else {
-            reply(false, "已執行 pmset，但無法重新讀取狀態。")
+            reply(true, nil)
             return
         }
 
@@ -78,7 +83,8 @@ final class HelperService: NSObject, MyNetBattPrivilegedHelperProtocol {
     }
 
     private static func parseLowPowerMode(from text: String) -> Bool? {
-        let pattern = #"(?m)^\s*lowpowermode\s+(\d+)"#
+        // 支援高效能模式的機型列出的是 powermode，1 同樣代表低耗電。
+        let pattern = #"(?m)^\s*(?:low)?powermode\s+(\d+)"#
         guard let regex = try? NSRegularExpression(pattern: pattern),
               let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
               match.numberOfRanges > 1,
