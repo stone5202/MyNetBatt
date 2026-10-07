@@ -101,14 +101,16 @@ struct MainWindowView: View {
 /// 四個分頁用同一個程度，切換時背景才一致。
 private struct GlassWindowBackground: View {
     @Environment(\.colorScheme) private var colorScheme
-    /// 設定的霧化程度（0～1）；預設 0.6 時深色疊黑 62%、淺色疊白 50%。
+    /// 設定的霧化程度（0～1）；預設 0.6 時深色疊黑 62%、淺色疊白 50%。深色的範圍是 45%～90%。
     let frost: Double
 
     var body: some View {
         ZStack {
             BehindWindowMaterial()
             if colorScheme == .dark {
-                Color.black.opacity(0.2 + 0.7 * frost)
+                // 深色材質疊在亮色內容上會變成中灰，白字看不清楚，所以最通透時也保留 45% 的黑；
+                // 0.6 以下變化較緩，預設值的外觀不變。
+                Color.black.opacity(frost < 0.6 ? 0.45 + 0.17 * frost / 0.6 : 0.62 + 0.28 * (frost - 0.6) / 0.4)
             } else {
                 Color.white.opacity(0.14 + 0.6 * frost)
             }
