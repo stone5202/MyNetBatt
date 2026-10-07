@@ -4,6 +4,26 @@
 
 This document summarizes the major changes in each MyNetBatt release. Versions before 3.0 were uploaded by replacing earlier copies, so their original per-version Git history can no longer be fully recovered. Changes from 1.0 through 2.x are therefore consolidated from the source code that can still be verified, without attributing uncertain details to individual releases.
 
+## [3.8] - 2026-10-07
+
+### New features
+
+- The glass style gains a frost slider: it adjusts how frosted the monitor window looks, clearer to the left and more frosted to the right. Content behind the window always stays blurred and never shows through sharply. The popovers also become more frosted as the slider goes up.
+- The glass style setting now has a preview, so the effect of the switch and the slider is visible right away.
+
+### Improvements
+
+- The appearance settings follow the layout of macOS System Settings: the three appearance thumbnails are redrawn and aligned to the right, the accent colour moves to a new Theme section where the selected colour gets a ring and shows its name, and the battery icon colour uses the same swatches.
+- Switches on the Settings tab are now small, right-aligned switches, and the check mark for the network speed style is larger so it lines up with the other controls.
+- Text in the six info cards of the battery popover is centred, with the icons kept on the left.
+
+### Fixes
+
+- With the temperature unit set to °F, the labels at both ends of the temperature bar in the battery popover are converted as well (77–113°F), and the bar keeps the same length in either unit.
+- On Macs that support High Power Mode, toggling Low Power Mode no longer asks to repair the helper every time: the power setting has a different name on these Macs, so the helper changed the mode but could not read it back and reported a failure. Both names are now recognised and the state reported by the system is used.
+- When the helper responds but the change fails, the Repair Helper button, which could not help in that case, is no longer shown.
+- When the app is opened directly from the Downloads folder or a disk image, enabling the helper first asks you to move the app to the Applications folder, so the helper is not registered at a temporary path where it cannot be found later.
+
 ## [3.7.3] - 2026-10-05
 
 ### Fixes
