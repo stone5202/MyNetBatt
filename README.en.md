@@ -38,6 +38,18 @@ For release highlights and fixes, see the [changelog](CHANGELOG.en.md) or [GitHu
   Menu bar items · Settings
 </p>
 
+<p align="center">
+  <img src="docs/screenshots/monitor.webp" width="80%" alt="MyNetBatt monitor window battery tab with power supply details, the 48-hour battery chart and the sleep drain record">
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/widget.webp" width="60%" alt="MyNetBatt small and medium desktop widgets">
+</p>
+
+<p align="center">
+  Monitor window battery tab · Desktop widgets
+</p>
+
 ## Project status
 
 MyNetBatt is under active development and maintenance. Its complete source code is available under the MIT License, and community bug reports, feature suggestions, and pull requests are welcome.

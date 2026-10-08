@@ -38,6 +38,18 @@ MyNetBatt 是一款原生 macOS 選單列系統監控工具，將電池、網路
   Menu bar items · Settings
 </p>
 
+<p align="center">
+  <img src="docs/screenshots/monitor.webp" width="80%" alt="MyNetBatt monitor window battery tab with power supply details, the 48-hour battery chart and the sleep drain record">
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/widget.webp" width="60%" alt="MyNetBatt small and medium desktop widgets">
+</p>
+
+<p align="center">
+  Monitor window battery tab · Desktop widgets
+</p>
+
 ## 開發狀態
 
 MyNetBatt 目前持續開發與維護中，專案完整原始碼以 MIT License 公開，歡迎社群回報問題、提出功能建議或提交 pull request。
