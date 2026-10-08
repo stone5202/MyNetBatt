@@ -10,7 +10,7 @@
 
 MyNetBatt 是一款原生 macOS 選單列系統監控工具，將電池、網路與系統效能資訊集中在簡潔的 SwiftUI 介面中。
 
-> 目前版本：3.9.1 · 介面語言：繁體中文
+> 目前版本：4.0 · 介面語言：繁體中文
 
 各版本的功能更新與修正請參閱 [更新紀錄](CHANGELOG.md) 或 [GitHub Releases](https://github.com/stone5202/MyNetBatt/releases)。更新紀錄也提供[英文版本](CHANGELOG.en.md)。
 
@@ -39,7 +39,7 @@ MyNetBatt 是一款原生 macOS 選單列系統監控工具，將電池、網路
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/monitor.webp" width="80%" alt="MyNetBatt monitor window battery tab with power supply details, the 48-hour battery chart and the sleep drain record">
+  <img src="docs/screenshots/monitor.webp" width="80%" alt="MyNetBatt monitor window battery tab with power supply details and the charger and cable card">
 </p>
 
 <p align="center">
@@ -66,6 +66,7 @@ MyNetBatt 目前持續開發與維護中，專案完整原始碼以 MIT License 
 - 可另外在選單列顯示 CPU、記憶體與儲存空間使用率
 - 電池電量、充電狀態、健康度、循環次數、溫度、功率與充電耗時；48 小時電量圖依電源狀態上色，並標出充電／用電區段
 - 接上電源時顯示充電器瓦數、實際輸入功率、系統耗電、充電器電壓電流與轉換損耗
+- 充電器與線材診斷：列出充電器的各組電壓／電流檔位與目前使用的檔位，讀取線材 e‑marker 的額定功率與速度，並指出線材是否限制了充電速度
 - 記錄上一次使用電池睡眠的時間長度與耗電量
 - 每天記錄電池健康度與循環次數，可依 30 天、90 天、1 年或全部檢視趨勢與逐日紀錄
 - 低電量、充滿、電池高溫、健康度下降、耗電暴增（會指出 CPU 用量最高的 App）與睡眠耗電偏高通知
@@ -78,7 +79,7 @@ MyNetBatt 目前持續開發與維護中，專案完整原始碼以 MIT License 
 - 永遠置頂的懸浮視窗，可用全域快捷鍵開關，背景不透明度可調整
 - 可自訂網路與電池小視窗要顯示的區塊
 - CPU、GPU、記憶體（含記憶體壓力）、Swap 與儲存空間監控，可直接退出外接磁碟
-- Thunderbolt、USB4 與 USB 裝置資訊
+- Thunderbolt、USB4 與 USB 裝置資訊；各個 USB‑C／MagSafe 連接埠接了什麼裝置，以及線材的類型、速度、額定功率與製造商
 - 主題（自動／淺色／深色）、玻璃質感與強調色
 - 睡眠喚醒後自動重新整理監控資料
 - 支援登入時自動啟動

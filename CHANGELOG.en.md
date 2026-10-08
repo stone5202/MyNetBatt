@@ -4,6 +4,22 @@
 
 This document summarizes the major changes in each MyNetBatt release. Versions before 3.0 were uploaded by replacing earlier copies, so their original per-version Git history can no longer be fully recovered. Changes from 1.0 through 2.x are therefore consolidated from the source code that can still be verified, without attributing uncertain details to individual releases.
 
+## [4.0] - 2026-10-08
+
+### New features
+
+- Charger and cable diagnosis: while plugged in, the battery tab of the monitor window has a new "Charger and cable" card that says in one sentence whether the charger or the cable is the bottleneck. When the cable is rated below the charger, it tells you a different cable would charge faster.
+- Charger profiles: lists every voltage and current combination the charger advertises and highlights the one in use.
+- Cable information: reads the voltage and current rating, power capacity, and data speed reported by the cable's e-marker chip. Basic cables without a chip and MagSafe cables do not provide this information.
+- Ports and cables: the system tab of the monitor window has a new card listing what is connected to each USB-C and MagSafe port, and whether each cable is active or passive, along with its speed, power rating, and manufacturer.
+
+### Improvements
+
+- New app icon: it keeps the white plate, green battery, and red line, now at the standard macOS icon size and without the text that was unreadable at small sizes.
+- Interface details: cards use continuous rounded corners with a hairline border; the icons on the battery tab's info cards sit in tinted squares so the text lines up across cards; usage bars throughout the app share one capsule style with a gradient and animate when the value changes.
+- Charts: the network speed, CPU, GPU, and health lines are thicker and smoothed; the battery history and today's usage bars have a gradient.
+- The sidebar of the monitor window highlights rows on hover, and the battery percentage animates when it changes.
+
 ## [3.9.1] - 2026-10-08
 
 ### Fixes
