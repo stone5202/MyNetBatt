@@ -6,6 +6,7 @@ import Charts
 import ServiceManagement
 import Darwin
 import UserNotifications
+import WidgetKit
 
 // MARK: - 系統控制核心
 class AppDelegate: NSObject, NSApplicationDelegate {
@@ -34,6 +35,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         NSApp.setActivationPolicy(.accessory)
+        restartWidgetAfterUpdate()
 
         setupPopovers()
         setupStatusBar()
@@ -83,6 +85,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         
         updateStatusBarWidths()
+    }
+
+    /// App 更新後，舊版的小工具程序可能還在執行；系統會因為版本與磁碟上的 App 不符而拒絕更新小工具，
+    /// 小工具就會一片空白。版本改變後第一次啟動時結束舊程序，系統會改用新版重新載入。
+    private func restartWidgetAfterUpdate() {
+        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? ""
+        guard !build.isEmpty, UserDefaults.standard.string(forKey: "lastLaunchedBuild") != build else { return }
+        UserDefaults.standard.set(build, forKey: "lastLaunchedBuild")
+        Task.detached(priority: .utility) {
+            let process = Process()
+            process.executableURL = URL(fileURLWithPath: "/usr/bin/pkill")
+            process.arguments = ["-x", "MyNetBattWidget"]
+            try? process.run()
+            process.waitUntilExit()
+            WidgetCenter.shared.reloadAllTimelines()
+        }
     }
 
     /// 只保留最早啟動的實例；同時啟動時以 PID 決定，確保恰好留下一個。
