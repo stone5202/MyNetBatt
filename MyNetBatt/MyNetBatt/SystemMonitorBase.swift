@@ -186,6 +186,9 @@ final class SystemMonitor {
     var powerInText: String = "--"
     var systemLoadText: String = "--"
     var adapterDetailText: String = ""
+    /// 充電器宣告的各組檔位，以及各連接埠接了什麼裝置、什麼線材。
+    var chargerProfiles: [ChargerProfile] = []
+    var portInfos: [PortInfo] = []
 
     /// 充電中顯示本次充電的進度，結束後保留上一次充電的起訖電量與耗時。
     var chargeSessionText: String = storedSetting("lastChargeSummary", "")
@@ -466,6 +469,7 @@ final class SystemMonitor {
             }
             self.fetchBatteryHealthInfo()
             self.fetchThunderboltDevices()
+            self.fetchPortInfo()
         }
     }
 

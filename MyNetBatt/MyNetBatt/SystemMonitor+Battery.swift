@@ -188,6 +188,7 @@ extension SystemMonitor {
                 fAdapterDetail = parts.joined(separator: "，")
             }
             let supply = (rating: fAdapterRating, powerIn: fPowerIn, load: fSystemLoad, detail: fAdapterDetail)
+            let fProfiles = tempPlugged ? SystemReaders.chargerProfiles(from: adapter) : []
 
             await MainActor.run {
                 self.assignIfChanged(\.batteryStatus, fStatus)
@@ -201,7 +202,10 @@ extension SystemMonitor {
                 if let fCycle, !fCycle.isEmpty { self.batCycle = fCycle }
                 self.assignIfChanged(\.batteryIcon, fIcon)
                 self.assignIfChanged(\.isCharging, isChg)
+                let plugChanged = self.isPluggedIn != isPlugged
                 self.assignIfChanged(\.isPluggedIn, isPlugged)
+                self.assignIfChanged(\.chargerProfiles, fProfiles)
+                if plugChanged { self.refreshPortInfoAfterPlugChange() }
                 self.batterySignedWatts = fSignedWatts
                 self.assignIfChanged(\.adapterRating, supply.rating)
                 self.assignIfChanged(\.powerInText, supply.powerIn)

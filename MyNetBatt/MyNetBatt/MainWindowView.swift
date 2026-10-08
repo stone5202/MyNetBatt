@@ -75,8 +75,21 @@ struct MainWindowView: View {
     }
 
     private func sidebarRow(_ title: String, icon: String, tab: String) -> some View {
+        SidebarRow(monitor: monitor, title: title, icon: icon, tab: tab)
+    }
+}
+
+/// 側邊欄的一列：選取時填滿 App 的強調色，滑鼠移過時先給一層淡底。
+private struct SidebarRow: View {
+    @Bindable var monitor: SystemMonitor
+    let title: String
+    let icon: String
+    let tab: String
+    @State private var hovering = false
+
+    var body: some View {
         let isSelected = monitor.mainWindowTab == tab
-        return Button { monitor.mainWindowTab = tab } label: {
+        Button { monitor.mainWindowTab = tab } label: {
             HStack(spacing: 8) {
                 Image(systemName: icon)
                     .foregroundStyle(isSelected ? monitor.accentContrastColor : monitor.accentColor)
@@ -87,10 +100,15 @@ struct MainWindowView: View {
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 7)
-            .background(isSelected ? monitor.accentColor : Color.clear, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .background(
+                isSelected ? monitor.accentColor : (hovering ? Color.secondary.opacity(0.12) : Color.clear),
+                in: RoundedRectangle(cornerRadius: 8, style: .continuous)
+            )
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .onHover { hovering = $0 }
+        .animation(.easeOut(duration: 0.12), value: hovering)
         .accessibilityLabel(title)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }

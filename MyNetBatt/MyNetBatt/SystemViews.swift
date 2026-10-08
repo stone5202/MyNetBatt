@@ -84,6 +84,8 @@ struct SystemDetailView: View {
                 .padding(16)
                 .cardSurface(cornerRadius: 12, fill: 0.08)
 
+                PortsCard(monitor: monitor)
+
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
                     SystemCard(
                         icon: "speedometer",
@@ -128,8 +130,10 @@ struct SystemDetailView: View {
                     ForEach(monitor.cpuHistory) { data in
                         LineMark(x: .value("時間", data.time), y: .value("使用率", data.value))
                             .foregroundStyle(.purple)
-                            .interpolationMethod(.catmullRom)
+                            .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
+                            .interpolationMethod(.monotone)
                         AreaMark(x: .value("時間", data.time), y: .value("使用率", data.value))
+                            .interpolationMethod(.monotone)
                             .foregroundStyle(
                                 LinearGradient(
                                     gradient: Gradient(colors: [.purple.opacity(0.35), .clear]),
@@ -151,8 +155,10 @@ struct SystemDetailView: View {
                     ForEach(monitor.gpuHistory) { data in
                         LineMark(x: .value("時間", data.time), y: .value("使用率", data.value))
                             .foregroundStyle(.green)
-                            .interpolationMethod(.catmullRom)
+                            .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
+                            .interpolationMethod(.monotone)
                         AreaMark(x: .value("時間", data.time), y: .value("使用率", data.value))
+                            .interpolationMethod(.monotone)
                             .foregroundStyle(
                                 LinearGradient(
                                     gradient: Gradient(colors: [.green.opacity(0.30), .clear]),
@@ -171,6 +177,61 @@ struct SystemDetailView: View {
     }
 }
 
+/// 每個內建連接埠接了什麼裝置，以及線材 e‑marker 回報的速度與額定功率。
+struct PortsCard: View {
+    @Bindable var monitor: SystemMonitor
+
+    var body: some View {
+        let connected = monitor.portInfos.filter(\.isConnected).count
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Label("連接埠與線材", systemImage: "cable.connector").font(.headline)
+                Spacer()
+                Text(connected == 0 ? "沒有連接埠在使用" : "\(connected) 個連接埠使用中")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            if monitor.portInfos.isEmpty {
+                Text("這台 Mac 沒有回報連接埠資訊").foregroundStyle(.secondary).padding(.vertical, 6)
+            } else {
+                ForEach(monitor.portInfos) { port in
+                    HStack(alignment: .top, spacing: 10) {
+                        Image(systemName: port.isMagSafe ? "magsafe.batterypack" : "cable.connector")
+                            .foregroundStyle(port.isConnected ? Color.blue : Color.secondary)
+                            .frame(width: 24)
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(port.name).bold()
+                            if port.isConnected {
+                                Text(port.partner.isEmpty ? "已連接" : "已連接：\(port.partner)")
+                                    .font(.caption).foregroundStyle(.secondary)
+                                if let cable = port.cable {
+                                    Text("\(cable.kindText)線材 · \(cable.speed) · 額定 \(cable.ratingText)")
+                                        .font(.caption).monospacedDigit()
+                                    if !cable.vendor.isEmpty {
+                                        Text("線材製造商：\(cable.vendor)").font(.caption2).foregroundStyle(.secondary)
+                                    }
+                                } else if !port.isMagSafe {
+                                    Text("線材沒有 e‑marker 晶片或目前讀不到（基本線材最高 3 A／60 W）")
+                                        .font(.caption2).foregroundStyle(.secondary)
+                                }
+                            } else {
+                                Text("未連接").font(.caption).foregroundStyle(.secondary)
+                            }
+                        }
+                        Spacer()
+                    }
+                    .padding(.vertical, 4)
+                    if port.id != monitor.portInfos.last?.id { Divider() }
+                }
+            }
+        }
+        .padding(16)
+        .cardSurface(cornerRadius: 12, fill: 0.08)
+        .onAppear { monitor.fetchPortInfo() }
+    }
+}
+
 struct SystemCard: View {
     let icon: String
     let title: String
@@ -182,7 +243,7 @@ struct SystemCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Image(systemName: icon).foregroundStyle(color)
+                Image(systemName: icon).foregroundStyle(color).frame(width: 22)
                 Text(title).font(.headline)
                 Spacer()
             }
@@ -201,8 +262,7 @@ struct SystemCard: View {
                     .monospacedDigit()
             }
 
-            ProgressView(value: max(0, min(100, progress)), total: 100.0)
-                .tint(color)
+            MeterBar(value: progress, color: color)
         }
         .padding(16)
         .cardSurface(cornerRadius: 12, fill: 0.1)
@@ -304,8 +364,7 @@ struct StorageVolumeRow: View {
                 .font(.subheadline.weight(.semibold)).monospacedDigit()
             Text("可用 \(free)")
                 .font(.caption).foregroundStyle(.secondary).monospacedDigit()
-            ProgressView(value: max(0, min(100, pct)), total: 100)
-                .tint(.cyan)
+            MeterBar(value: pct, color: .cyan)
         }
     }
 }

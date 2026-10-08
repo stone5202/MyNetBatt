@@ -66,7 +66,7 @@ struct NetworkPopoverView: View {
                             Text("%").font(.title3.bold()).foregroundStyle(.secondary)
                         }
                         Text("\(monitor.diskFreeStr) 可用（共 \(monitor.diskTotalStr)）").font(.caption).foregroundStyle(.secondary)
-                        ProgressView(value: monitor.diskUsagePct, total: 100).tint(.cyan)
+                        MeterBar(value: monitor.diskUsagePct, color: .cyan)
                     }
                 }
 
@@ -164,8 +164,8 @@ private struct HourlyUsageColumn: View {
                     // 用量再小也保留一點高度，才看得出該小時有流量。
                     let height = value > 0 ? max(Double(value) / peak, 0.08) : 0.12
                     RectangleMark(xStart: .value("起", Double(hour) + 0.14), xEnd: .value("迄", Double(hour) + 0.86), yStart: .value(title, 0), yEnd: .value(title, height))
-                        .foregroundStyle(value > 0 ? AnyShapeStyle(color) : AnyShapeStyle(Color.secondary.opacity(0.18)))
-                        .cornerRadius(1.5)
+                        .foregroundStyle(value > 0 ? AnyShapeStyle(LinearGradient(colors: [color, color.opacity(0.7)], startPoint: .top, endPoint: .bottom)) : AnyShapeStyle(Color.secondary.opacity(0.18)))
+                        .cornerRadius(2)
                 }
             }
             .chartXScale(domain: 0...24)
@@ -198,7 +198,9 @@ struct NetworkLiveRow: View {
             Chart {
                 ForEach(history) { d in
                     LineMark(x: .value("t", d.time), y: .value(title, upload ? d.uploadSpeed : d.downloadSpeed)).foregroundStyle(color)
+                        .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round)).interpolationMethod(.monotone)
                     AreaMark(x: .value("t", d.time), y: .value(title, upload ? d.uploadSpeed : d.downloadSpeed)).foregroundStyle(LinearGradient(colors: [color.opacity(0.35), .clear], startPoint: .top, endPoint: .bottom))
+                        .interpolationMethod(.monotone)
                 }
             }.chartXAxis(.hidden).chartYAxis(.hidden).frame(width: 130, height: 50)
         }

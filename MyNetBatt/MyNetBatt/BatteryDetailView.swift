@@ -41,6 +41,8 @@ struct BatteryDetailView: View {
                     Text("\(monitor.batPct)%")
                         .font(.system(size: 40, weight: .bold).monospacedDigit())
                         .foregroundStyle(monitor.isLowBatteryWarning ? Color.red : Color.primary)
+                        .contentTransition(.numericText())
+                        .animation(.snappy, value: monitor.batPct)
                     Text(monitor.batteryPowerSource).font(.title3).foregroundColor(.secondary)
                 }
                 Spacer()
@@ -69,6 +71,8 @@ struct BatteryDetailView: View {
                     .monospacedDigit()
             }
             
+            if monitor.isPluggedIn { ChargerCableCard(monitor: monitor) }
+
             if !monitor.chargeSessionText.isEmpty {
                 Label(monitor.chargeSessionText, systemImage: "bolt.badge.clock")
                     .font(.callout)
@@ -95,7 +99,7 @@ struct BatteryDetailView: View {
                 }
                 .padding(10)
                 .background(Color.orange.opacity(0.08))
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             }
             
             Text("電量變化趨勢").font(.title3.bold()).foregroundColor(.secondary).padding(.top, 16)
@@ -270,6 +274,7 @@ struct BatteryHealthLogSection: View {
                 let lowest = points.map(\.health).min() ?? 100
                 Chart(points) { point in
                     LineMark(x: .value("日期", point.date), y: .value("健康度", point.health))
+                        .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
                         .interpolationMethod(.monotone)
                     PointMark(x: .value("日期", point.date), y: .value("健康度", point.health))
                         .symbolSize(points.count > 60 ? 0 : 18)
@@ -317,7 +322,7 @@ struct BatteryHealthLogSection: View {
                         if point.id != visible.last?.id { Divider() }
                     }
                 }
-                .background(Color.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
+                .cardSurface(cornerRadius: 10)
 
                 if rows.count > Self.collapsedRows {
                     Button(showsAllRows ? "只顯示最近 \(Self.collapsedRows) 天" : "顯示全部 \(rows.count) 天") { showsAllRows.toggle() }
@@ -333,5 +338,62 @@ struct BatteryHealthLogSection: View {
     private static func changeText(_ change: Int, unit: String) -> String {
         guard change != 0 else { return "" }
         return "（\(change > 0 ? "+" : "−")\(abs(change))\(unit)）"
+    }
+}
+
+/// 接上電源時顯示：充電器與線材誰是瓶頸的結論、充電器的各組檔位，以及線材額定規格。
+struct ChargerCableCard: View {
+    @Bindable var monitor: SystemMonitor
+
+    var body: some View {
+        if let verdict = monitor.chargingVerdict {
+            VStack(alignment: .leading, spacing: 12) {
+                Label("充電器與線材", systemImage: "cable.connector").font(.headline)
+
+                HStack(alignment: .top, spacing: 8) {
+                    Image(systemName: verdict.limited ? "exclamationmark.triangle.fill" : "checkmark.circle.fill")
+                        .foregroundStyle(verdict.limited ? Color.orange : Color.green)
+                    Text(verdict.text).font(.callout).fixedSize(horizontal: false, vertical: true)
+                }
+
+                if !monitor.chargerProfiles.isEmpty {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("充電器檔位").font(.caption).foregroundStyle(.secondary)
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 92), spacing: 8)], alignment: .leading, spacing: 8) {
+                            ForEach(monitor.chargerProfiles) { profile in
+                                VStack(spacing: 2) {
+                                    Text(Self.trim(profile.volts) + " V").font(.system(size: 14, weight: .semibold, design: .rounded))
+                                    Text("\(Self.trim(profile.amps)) A · \(Self.trim(profile.watts)) W").font(.caption2)
+                                        .foregroundStyle(profile.isActive ? monitor.accentContrastColor.opacity(0.85) : Color.secondary)
+                                }
+                                .monospacedDigit()
+                                .foregroundStyle(profile.isActive ? monitor.accentContrastColor : Color.primary)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 6)
+                                .background(profile.isActive ? monitor.accentColor : Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                                .help(profile.isActive ? "目前使用的檔位" : "")
+                                .accessibilityLabel("\(Self.trim(profile.volts)) 伏特 \(Self.trim(profile.amps)) 安培\(profile.isActive ? "，目前使用" : "")")
+                            }
+                        }
+                    }
+                }
+
+                if let cable = monitor.poweringPort?.cable {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("線材").font(.caption).foregroundStyle(.secondary)
+                        Text("額定 \(cable.ratingText) · \(cable.speed)")
+                            .font(.system(size: 14, weight: .semibold, design: .rounded)).monospacedDigit()
+                    }
+                }
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .cardSurface(cornerRadius: 14)
+        }
+    }
+
+    /// 整數不帶小數點，其餘保留到小數兩位（例如 5、2.25）。
+    private static func trim(_ value: Double) -> String {
+        value == value.rounded() ? String(Int(value)) : String(format: "%.2f", value).replacingOccurrences(of: "0+$", with: "", options: .regularExpression)
     }
 }

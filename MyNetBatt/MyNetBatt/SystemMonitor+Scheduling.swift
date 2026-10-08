@@ -219,7 +219,7 @@ extension SystemMonitor {
         if visible {
             let wasHidden = batteryViewers.isEmpty
             batteryViewers.insert(source)
-            if wasHidden { fetchDynamicBatteryInfo() }
+            if wasHidden { fetchDynamicBatteryInfo(); fetchPortInfo() }
         } else {
             batteryViewers.remove(source)
         }
@@ -248,6 +248,7 @@ extension SystemMonitor {
         Task {
             while !Task.isCancelled {
                 fetchThunderboltDevices()
+                fetchPortInfo()
                 // 插拔由 DeviceChangeObserver 即時觸發，這裡只是低頻率的保底更新。
                 try? await Task.sleep(nanoseconds: 300_000_000_000)
             }
@@ -261,6 +262,7 @@ extension SystemMonitor {
             try? await Task.sleep(for: .seconds(1.5))
             guard !Task.isCancelled else { return }
             self?.fetchThunderboltDevices()
+            self?.refreshPortInfoAfterPlugChange()
         }
     }
 

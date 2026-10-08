@@ -132,7 +132,7 @@ struct BatteryHistoryChart: View {
                         yEnd: .value("電量", bucket.level ?? 100)
                     )
                     .foregroundStyle(Self.barStyle(bucket))
-                    .cornerRadius(1)
+                    .cornerRadius(1.5)
                 }
                 ForEach(timeline.segments) { segment in
                     RectangleMark(
@@ -184,12 +184,14 @@ struct BatteryHistoryChart: View {
     private static func barStyle(_ bucket: BatteryTimeline.Bucket) -> AnyShapeStyle {
         guard bucket.level != nil else { return AnyShapeStyle(Color.secondary.opacity(0.12)) }
         guard let plugged = bucket.plugged else { return AnyShapeStyle(Color.secondary.opacity(0.45)) }
-        return AnyShapeStyle(plugged ? pluggedColor : batteryColor)
+        // 由上往下略淡，長條排在一起時比較有層次。
+        let color = plugged ? pluggedColor : batteryColor
+        return AnyShapeStyle(LinearGradient(colors: [color, color.opacity(0.72)], startPoint: .top, endPoint: .bottom))
     }
 
     private func legend(_ title: String, _ color: Color) -> some View {
         HStack(spacing: 3) {
-            RoundedRectangle(cornerRadius: 2).fill(color).frame(width: 10, height: 5)
+            Capsule().fill(color).frame(width: 10, height: 5)
             Text(title).foregroundStyle(.secondary)
         }
     }

@@ -129,6 +129,8 @@ struct NetworkSpeedCard: View {
                         y: .value(title, upload ? item.uploadSpeed : item.downloadSpeed)
                     )
                     .foregroundStyle(color)
+                    .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
+                    .interpolationMethod(.monotone)
                     AreaMark(
                         x: .value("時間", item.time),
                         y: .value(title, upload ? item.uploadSpeed : item.downloadSpeed)
@@ -136,6 +138,7 @@ struct NetworkSpeedCard: View {
                     .foregroundStyle(
                         LinearGradient(colors: [color.opacity(0.35), .clear], startPoint: .top, endPoint: .bottom)
                     )
+                    .interpolationMethod(.monotone)
                 }
             }
             .chartXAxis(.hidden)
@@ -235,11 +238,7 @@ struct AppDataUsagePanel: View {
                                     }
                                     Text(monitor.formatBytesForUI(item.bytes)).foregroundStyle(.secondary).monospacedDigit()
                                 }
-                                GeometryReader { geo in
-                                    Capsule().fill(Color.secondary.opacity(0.15)).overlay(alignment: .leading) {
-                                        Capsule().fill(monitor.accentColor).frame(width: geo.size.width * CGFloat(Double(item.bytes) / Double(maxBytes)))
-                                    }
-                                }.frame(height: 6)
+                                MeterBar(value: Double(item.bytes), total: Double(maxBytes), color: monitor.accentColor)
                             }
                         }
                         .padding(.leading, 12)
@@ -285,6 +284,7 @@ struct UsageHistoryChart: View {
         Chart(points) { point in
             BarMark(x: .value("日期", point.date, unit: unit), y: .value("用量", point.bytes))
                 .foregroundStyle(by: .value("類型", point.kind))
+                .cornerRadius(2)
         }
         .chartForegroundStyleScale(
             domain: hasUnknown ? ["下載", "上傳", "未分類"] : ["下載", "上傳"],
@@ -403,7 +403,6 @@ struct AppIconView: View {
             }
         }
         .frame(width: size, height: size)
-        .background(Color.secondary.opacity(0.08))
-        .cornerRadius(size * 0.24)
+        .background(Color.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: size * 0.24, style: .continuous))
     }
 }

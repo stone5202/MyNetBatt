@@ -25,6 +25,8 @@ struct BatteryPopoverView: View {
                                 .font(.system(size: 52, weight: .bold, design: .rounded))
                                 .lineLimit(1).minimumScaleFactor(0.5)
                                 .foregroundStyle(monitor.isLowBatteryWarning ? Color.red : Color.primary)
+                                .contentTransition(.numericText())
+                                .animation(.snappy, value: monitor.batPct)
                             Text(" %")
                                 .font(.system(size: 24, weight: .bold, design: .rounded))
                                 .foregroundColor(.secondary)
@@ -32,10 +34,8 @@ struct BatteryPopoverView: View {
                         Text("剩餘電量").font(.caption).foregroundColor(.secondary)
                         
                         Spacer()
-                        ProgressView(value: Double(monitor.batPct), total: 100.0)
-                            .tint(monitor.displayedBatteryColor)
-                            .scaleEffect(x: 1, y: 1.5, anchor: .center)
-                            .padding(.bottom, 8)
+                        MeterBar(value: Double(monitor.batPct), color: monitor.displayedBatteryColor, height: 9)
+                            .padding(.bottom, 6)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 }
@@ -65,6 +65,7 @@ struct BatteryPopoverView: View {
                                     .overlay(
                                         Circle().stroke(monitor.accentColor, lineWidth: monitor.selectedColorIndex == index ? 2 : 0).padding(-2)
                                     )
+                                    .animation(.easeOut(duration: 0.15), value: monitor.selectedColorIndex)
                                     .onTapGesture { monitor.selectedColorIndex = index }
                             }
                         }

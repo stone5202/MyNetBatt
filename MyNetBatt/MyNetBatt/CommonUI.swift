@@ -64,8 +64,7 @@ struct BatteryTemperatureGaugeView: View {
         }
         .padding(compact ? 8 : 0)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(compact ? Color.secondary.opacity(0.1) : Color.clear)
-        .cornerRadius(compact ? 8 : 0)
+        .background(compact ? Color.secondary.opacity(0.1) : Color.clear, in: RoundedRectangle(cornerRadius: compact ? 8 : 0, style: .continuous))
     }
 }
 
@@ -146,7 +145,36 @@ extension View {
     /// 這裡不用 glassEffect：頁面上只要有玻璃卡片，系統就會把整頁的背景提亮，
     /// 有卡片的分頁會比設定頁淡一截；玻璃卡片只用在小視窗（WidgetCard）。
     func cardSurface(cornerRadius: CGFloat, fill: Double = 0.08) -> some View {
-        background(Color.secondary.opacity(fill)).cornerRadius(cornerRadius)
+        let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+        // 細邊線只是讓卡片邊緣清楚一點，不影響底色（四個分頁的底色要一致）。
+        return background(Color.secondary.opacity(fill), in: shape)
+            .overlay(shape.strokeBorder(Color.primary.opacity(0.06), lineWidth: 0.5))
+            .clipShape(shape)
+    }
+}
+
+/// 膠囊形的用量條：和系統的線性進度條同樣高度，填色帶一點由淺到深的漸層，數值改變時平滑過渡。
+struct MeterBar: View {
+    let value: Double
+    var total: Double = 100
+    var color: Color = .accentColor
+    var height: CGFloat = 6
+
+    var body: some View {
+        let fraction = total > 0 ? max(0, min(1, value / total)) : 0
+        GeometryReader { geo in
+            Capsule().fill(Color.secondary.opacity(0.16))
+                .overlay(alignment: .leading) {
+                    Capsule()
+                        .fill(LinearGradient(colors: [color.opacity(0.72), color], startPoint: .leading, endPoint: .trailing))
+                        // 有數值時至少留一個圓頭的寬度，才不會被膠囊裁成看不見。
+                        .frame(width: fraction > 0 ? max(height, geo.size.width * fraction) : 0)
+                }
+                .animation(.easeOut(duration: 0.35), value: fraction)
+        }
+        .frame(height: height)
+        .accessibilityElement()
+        .accessibilityValue(Text("\(Int((fraction * 100).rounded()))%"))
     }
 }
 
@@ -176,10 +204,12 @@ struct WidgetCard<Content: View>: View {
         if glassStyle {
             card.glassEffect(.regular, in: .rect(cornerRadius: 16))
         } else {
+            let shape = RoundedRectangle(cornerRadius: 16, style: .continuous)
             card
-                .background(Color(NSColor.controlBackgroundColor))
-                .cornerRadius(16)
-                .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+                .background(Color(NSColor.controlBackgroundColor), in: shape)
+                .overlay(shape.strokeBorder(Color.primary.opacity(0.05), lineWidth: 0.5))
+                .shadow(color: Color.black.opacity(0.04), radius: 1, x: 0, y: 0.5)
+                .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 3)
         }
     }
 }
@@ -188,10 +218,15 @@ struct WidgetCard<Content: View>: View {
 struct InfoBox: View {
     let title: String; let value: String; var icon: String? = nil; var color: Color = .secondary
     var body: some View {
-        HStack {
-            if let icon = icon { Image(systemName: icon).foregroundColor(color).font(.system(size: 16)) }
-            VStack(alignment: .leading, spacing: 2) { Text(title).font(.caption).foregroundColor(.secondary); Text(value).font(.system(size: 14, weight: .semibold, design: .rounded)).lineLimit(1).minimumScaleFactor(0.8) }
+        HStack(spacing: 10) {
+            // 圖示放在同色的淺底方塊裡並固定寬度，各張卡片的文字才會對齊同一條線。
+            if let icon = icon {
+                Image(systemName: icon).foregroundColor(color).font(.system(size: 14, weight: .semibold))
+                    .frame(width: 28, height: 28)
+                    .background(color.opacity(0.15), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+            }
+            VStack(alignment: .leading, spacing: 2) { Text(title).font(.caption).foregroundColor(.secondary); Text(value).font(.system(size: 14, weight: .semibold, design: .rounded)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.8) }
         }
-        .frame(maxWidth: .infinity, alignment: .leading).padding(8).cardSurface(cornerRadius: 8, fill: 0.1)
+        .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 10).padding(.vertical, 9).cardSurface(cornerRadius: 10, fill: 0.1)
     }
 }
