@@ -4,6 +4,12 @@
 
 This document summarizes the major changes in each MyNetBatt release. Versions before 3.0 were uploaded by replacing earlier copies, so their original per-version Git history can no longer be fully recovered. Changes from 1.0 through 2.x are therefore consolidated from the source code that can still be verified, without attributing uncertain details to individual releases.
 
+## [3.9.1] - 2026-10-08
+
+### Fixes
+
+- The desktop and Notification Center widgets no longer go blank after updating the app: when the previous version's widget process was still running, the system refused to refresh the widget. MyNetBatt now makes the widget reload with the new version the first time it launches after an update.
+
 ## [3.9] - 2026-10-08
 
 ### New features

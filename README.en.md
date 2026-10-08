@@ -10,7 +10,7 @@
 
 MyNetBatt is a native macOS menu bar system monitor that brings battery, network, and system performance information together in a clean SwiftUI interface.
 
-> Current version: 3.9 · Interface language: Traditional Chinese
+> Current version: 3.9.1 · Interface language: Traditional Chinese
 
 For release highlights and fixes, see the [changelog](CHANGELOG.en.md) or [GitHub Releases](https://github.com/stone5202/MyNetBatt/releases). The changelog is also available in [Traditional Chinese](CHANGELOG.md).
 
