@@ -53,13 +53,16 @@ MyNetBatt is under active development and maintenance. Its complete source code 
 - Battery icon, percentage, real-time network speed, and traffic chart in the menu bar; six network speed styles (two lines, single line, upload only, download only, combined, speed with today's usage) picked from live previews in Settings
 - Optional CPU, memory, and storage usage items in the menu bar
 - Battery level, charging state, health, cycle count, temperature, power, and charge duration; the 48-hour chart is coloured by power source and marks charging and on-battery periods
+- While plugged in: adapter wattage, actual input power, system load, adapter voltage and current, and conversion loss
+- Records the duration and battery drain of the most recent sleep on battery
 - Daily log of battery health and cycle count, viewable over 30 days, 90 days, 1 year, or all time with a day-by-day list
-- Low battery and fully charged notifications
-- macOS Low Power Mode control through a signed Privileged Helper
+- Notifications for low battery, full charge, high battery temperature, health drop, power surge (naming the app using the most CPU), and high drain during sleep
+- macOS Low Power Mode control through a signed Privileged Helper; it can turn on automatically when the battery falls to a threshold and off again when power is connected
 - Upload and download speeds, average speed, cumulative traffic, today's hourly usage, interface, local IP, gateway, DNS, and public IP details
 - Wi-Fi channel, signal strength, transmit rate, and security
 - Daily, weekly, monthly, and yearly network usage per app (helpers and other child processes count towards the app that owns them, and other processes can optionally be listed separately), with upload and download counted separately and a history chart; tracking can be paused
 - Live list of apps currently using the network
+- Desktop and Notification Center widget (small and medium): battery level, charging state, health, and the last 24 hours of battery level
 - Always-on-top float window that can be toggled with a global shortcut, with adjustable background opacity
 - Configurable sections in the network and battery popovers
 - CPU, GPU, memory (including memory pressure), swap, and storage monitoring, with an eject button for external volumes
@@ -89,12 +92,13 @@ MyNetBatt is under active development and maintenance. Its complete source code 
    open MyNetBatt/MyNetBatt.xcodeproj
    ```
 
-3. Select your Development Team for the `MyNetBatt` and `MyNetBattPrivilegedHelper` targets.
+3. Select your Development Team for the `MyNetBatt`, `MyNetBattPrivilegedHelper`, and `MyNetBattWidget` targets.
 4. If you use your own signing identity and bundle identifier, update all of the following together:
 
    - `PRODUCT_BUNDLE_IDENTIFIER` and `DEVELOPMENT_TEAM` in the Xcode project
    - `MyNetBatt/MyNetBatt/PrivilegedHelperProtocol.swift`
    - `MyNetBatt/PrivilegedHelper/HelperProtocol.swift`
+   - The App Group (`<Team ID>.com.stone5202.MyNetBatt`) in both `WidgetSnapshot.swift` files and both `.entitlements` files
 
 5. Select the `MyNetBatt` scheme, then build and run.
 
@@ -131,6 +135,7 @@ The helper exposes only methods for reading and changing Low Power Mode. It does
 MyNetBatt/
 ├── MyNetBatt/                 # Main SwiftUI views and system monitoring
 ├── PrivilegedHelper/          # Low Power Mode XPC helper
+├── MyNetBattWidget/           # Desktop widget (WidgetKit extension)
 └── MyNetBatt.xcodeproj/       # Xcode project
 docs/
 ├── PRIVILEGED_HELPER_SETUP.md

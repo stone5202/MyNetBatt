@@ -74,7 +74,7 @@ Helper 的 `getVersion` 會回傳 `CFBundleVersion`（`CURRENT_PROJECT_VERSION`�
 資料流：
 
 ```text
-BatteryDetailView / BatteryPopoverView
+BatteryDetailView / BatteryPopoverView / 低耗電模式自動化
     ↓
 PrivilegedHelperManager
     ↓
@@ -83,7 +83,21 @@ NSXPCConnection(options: .privileged)
 com.stone5202.MyNetBatt.PrivilegedHelper
     ↓
 /usr/bin/pmset -a lowpowermode 1 / 0
+（失敗時改用 /usr/bin/pmset -a powermode 1 / 0）
 ```
+
+### lowpowermode 與 powermode
+
+`pmset` 的設定名稱因機型而異：
+
+- 多數機型使用 `lowpowermode`（0 關閉、1 開啟）。
+- 支援高效能模式的機型（例如 16 吋 MacBook Pro）使用 `powermode`（0 自動、1 低耗電、2 高效能）。
+
+Helper 先執行 `pmset -a lowpowermode`，失敗時改用 `pmset -a powermode`；讀回狀態時兩種名稱都能辨識。`pmset -g custom` 的輸出格式也因機型而異，因此讀不回狀態不視為失敗，主程式會再以 `ProcessInfo.isLowPowerModeEnabled` 確認系統的實際狀態。關閉低耗電模式時寫入 0，所以在支援高效能模式的機型上會回到「自動」，不會切到高效能。
+
+### 低耗電模式自動化
+
+設定頁的「低耗電模式自動化」打開後，主程式在使用電池且電量降到門檻時呼叫同一個 `setLowPowerMode(true)`，接上電源後再呼叫 `setLowPowerMode(false)`。只有由自動化開啟的低耗電模式才會被自動關閉，使用者自己開啟的不受影響。自動化不會主動註冊 Helper，Helper 尚未啟用時不會有任何動作。
 
 
 ## 安全限制

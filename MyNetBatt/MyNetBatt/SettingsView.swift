@@ -4,6 +4,7 @@ import AppKit
 // MARK: - 設定頁
 struct SettingsDetailView: View {
     @Bindable var monitor: SystemMonitor
+    @ObservedObject private var helper = PrivilegedHelperManager.shared
     @State private var confirmsUsageReset = false
     @State private var confirmsBatteryReset = false
     @State private var confirmsHealthReset = false
@@ -93,9 +94,6 @@ struct SettingsDetailView: View {
                         }
                     }
                 }
-                Stepper(value: $monitor.lowBatteryThreshold, in: 5...50, step: 5) {
-                    LabeledContent("低電量提醒") { Text("\(monitor.lowBatteryThreshold)%").monospacedDigit() }
-                }
                 Picker("溫度單位", selection: $monitor.tempDisplayInFahrenheit) {
                     Text("°C").tag(false)
                     Text("°F").tag(true)
@@ -159,8 +157,44 @@ struct SettingsDetailView: View {
             }
 
             Section {
-                Toggle("低電量通知（剩餘 \(monitor.lowBatteryThreshold)% 時）", isOn: $monitor.notifyLowBattery)
+                Toggle("電量偏低時自動開啟", isOn: $monitor.autoLowPowerMode)
+                LabeledContent("開啟門檻") {
+                    HStack(spacing: 8) {
+                        Text("\(monitor.autoLowPowerThreshold)%").monospacedDigit()
+                        Stepper("開啟門檻", value: $monitor.autoLowPowerThreshold, in: 10...80, step: 5).labelsHidden()
+                    }
+                }
+                .disabled(!monitor.autoLowPowerMode)
+                if monitor.autoLowPowerMode, helper.registrationState != .enabled {
+                    Label("尚未啟用 Helper，請先到「電池」頁切換一次低耗電模式完成啟用。", systemImage: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.orange)
+                }
+            } header: {
+                Text("低耗電模式自動化")
+            } footer: {
+                Text("使用電池且電量降到門檻時開啟低耗電模式；接上電源後，會關閉由這個功能開啟的低耗電模式。")
+            }
+
+            Section {
+                Toggle("低電量通知", isOn: $monitor.notifyLowBattery)
+                LabeledContent("低電量門檻") {
+                    HStack(spacing: 8) {
+                        Text("\(monitor.lowBatteryThreshold)%").monospacedDigit()
+                        Stepper("低電量門檻", value: $monitor.lowBatteryThreshold, in: 5...50, step: 5).labelsHidden()
+                    }
+                }
                 Toggle("充滿通知", isOn: $monitor.notifyFullyCharged)
+                Toggle("電池高溫通知（\(monitor.highTemperatureLabel) 以上）", isOn: $monitor.notifyHighTemperature)
+                Toggle("健康度下降通知", isOn: $monitor.notifyHealthDrop)
+                Toggle("耗電暴增通知（使用電池時持續一分鐘）", isOn: $monitor.notifyPowerSurge)
+                LabeledContent("耗電暴增門檻") {
+                    HStack(spacing: 8) {
+                        Text("\(monitor.powerSurgeThreshold) W").monospacedDigit()
+                        Stepper("耗電暴增門檻", value: $monitor.powerSurgeThreshold, in: 10...80, step: 5).labelsHidden()
+                    }
+                }
+                .disabled(!monitor.notifyPowerSurge)
+                Toggle("睡眠耗電偏高通知", isOn: $monitor.notifySleepDrain)
                 Toggle("播放提示音", isOn: $monitor.notificationSound)
                 if monitor.notificationPermissionDenied {
                     HStack {
@@ -173,7 +207,7 @@ struct SettingsDetailView: View {
             } header: {
                 Text("通知")
             } footer: {
-                Text("低電量的門檻為上方「選單列－電池」的「低電量提醒」。")
+                Text("電量降到低電量門檻時，選單列的電池圖示會變成紅色；打開「低電量通知」會另外跳出通知。")
             }
 
             Section {

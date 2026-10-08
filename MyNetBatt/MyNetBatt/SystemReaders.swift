@@ -1,6 +1,7 @@
 import Foundation
 import Darwin
 import IOKit
+import IOKit.ps
 
 /// 直接透過 sysctl、Mach、IOKit 讀取監控資料，取代每次輪詢都 spawn 子程序
 /// （sysctl、vm_stat、netstat、ioreg），降低監控工具本身的耗電。
@@ -226,5 +227,28 @@ final class DeviceChangeObserver {
             IOObjectRelease(entry)
             entry = IOIteratorNext(iterator)
         }
+    }
+}
+
+/// 監聽電源狀態變化（插拔電源、充電狀態改變），讓電池資料可以立即更新而不必頻繁輪詢。
+final class PowerSourceObserver {
+    private var runLoopSource: CFRunLoopSource?
+    private let onChange: () -> Void
+
+    init(onChange: @escaping () -> Void) {
+        self.onChange = onChange
+        let context = Unmanaged.passUnretained(self).toOpaque()
+        guard let source = IOPSNotificationCreateRunLoopSource({ refcon in
+            guard let refcon else { return }
+            MainActor.assumeIsolated {
+                Unmanaged<PowerSourceObserver>.fromOpaque(refcon).takeUnretainedValue().onChange()
+            }
+        }, context)?.takeRetainedValue() else { return }
+        runLoopSource = source
+        CFRunLoopAddSource(CFRunLoopGetMain(), source, .defaultMode)
+    }
+
+    deinit {
+        if let runLoopSource { CFRunLoopRemoveSource(CFRunLoopGetMain(), runLoopSource, .defaultMode) }
     }
 }

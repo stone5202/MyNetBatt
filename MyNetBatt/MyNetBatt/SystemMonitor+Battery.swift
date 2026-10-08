@@ -8,6 +8,7 @@ import Darwin
 
 extension SystemMonitor {
     func fetchDynamicBatteryInfo() {
+        lastBatterySampleTime = Date()
         runExclusive("dynamicBattery") {
             // 直接讀 IOKit 屬性，取代每 1.5 秒 spawn 一次 ioreg 並對整段文字做 regex。
             let batteryProperties = SystemReaders.smartBatteryPropertySets()
@@ -164,6 +165,29 @@ extension SystemMonitor {
             let fTempD = foundTempDouble
             let isChg = tempCharging
             let isPlugged = tempPlugged
+            let fSignedWatts = signedBatteryWatts
+
+            // 供電細節：這些鍵在別的子字典裡有同名項目（例如 BatteryPower、Current），所以先取出各自的字典再讀。
+            let telemetry = SystemReaders.lookup("PowerTelemetryData", in: batteryProperties) as? [String: Any] ?? [:]
+            let adapter = SystemReaders.lookup("AdapterDetails", in: batteryProperties) as? [String: Any] ?? [:]
+            func milli(_ dict: [String: Any], _ key: String) -> Double? {
+                guard let value = (dict[key] as? NSNumber)?.doubleValue, value > 0 else { return nil }
+                return value / 1000.0
+            }
+            var fAdapterRating = "--", fPowerIn = "--", fSystemLoad = "--", fAdapterDetail = ""
+            if tempPlugged {
+                if let rated = (adapter["Watts"] as? NSNumber)?.intValue, rated > 0 { fAdapterRating = "\(rated) W" }
+                if let powerIn = milli(telemetry, "SystemPowerIn") { fPowerIn = String(format: "%.1f W", powerIn) }
+                if let load = milli(telemetry, "SystemLoad") { fSystemLoad = String(format: "%.1f W", load) }
+                var parts: [String] = []
+                if let name = adapter["Name"] as? String, !name.isEmpty { parts.append(name) }
+                if let volts = milli(adapter, "AdapterVoltage"), let amps = milli(adapter, "Current") {
+                    parts.append(String(format: "%.1f V／%.2f A", volts, amps))
+                }
+                if let loss = milli(telemetry, "AdapterEfficiencyLoss") { parts.append(String(format: "轉換損耗 %.1f W", loss)) }
+                fAdapterDetail = parts.joined(separator: "，")
+            }
+            let supply = (rating: fAdapterRating, powerIn: fPowerIn, load: fSystemLoad, detail: fAdapterDetail)
 
             await MainActor.run {
                 self.assignIfChanged(\.batteryStatus, fStatus)
@@ -178,7 +202,14 @@ extension SystemMonitor {
                 self.assignIfChanged(\.batteryIcon, fIcon)
                 self.assignIfChanged(\.isCharging, isChg)
                 self.assignIfChanged(\.isPluggedIn, isPlugged)
+                self.batterySignedWatts = fSignedWatts
+                self.assignIfChanged(\.adapterRating, supply.rating)
+                self.assignIfChanged(\.powerInText, supply.powerIn)
+                self.assignIfChanged(\.systemLoadText, supply.load)
+                self.assignIfChanged(\.adapterDetailText, supply.detail)
                 self.evaluateBatteryNotifications()
+                self.evaluateAutoLowPowerMode()
+                self.finishSleepRecordIfNeeded()
                 self.updateChargeSession()
 
                 let now = Date()
@@ -191,6 +222,7 @@ extension SystemMonitor {
                 }
                 if self.batteryHistory.count > 2880 { self.batteryHistory.removeFirst() }
                 self.saveBatteryHistory()
+                self.publishWidgetSnapshot()
             }
         }
     }
@@ -235,5 +267,65 @@ extension SystemMonitor {
         if let encoded = try? JSONEncoder().encode(batteryHistory) {
             UserDefaults.standard.set(encoded, forKey: "batteryHistory")
         }
+    }
+
+    func fetchBatteryHealthInfo() {
+        runExclusive("batteryHealth") {
+            // Keep macOS Maximum Capacity as the single source of truth.
+            // AppleRawMaxCapacity is a fluctuating gauge value and can differ
+            // by several percentage points from the health shown by macOS.
+            let output = self.runCommand("/usr/sbin/system_profiler", ["SPPowerDataType"])
+            var cycle: String?
+            var health: String?
+
+            for line in output.components(separatedBy: .newlines) {
+                if line.contains("Cycle Count:") {
+                    let value = line.components(separatedBy: ":").last?.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if let value, !value.isEmpty { cycle = value }
+                }
+
+                if line.contains("Maximum Capacity:") {
+                    let value = line.components(separatedBy: ":").last?.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if let value, !value.isEmpty { health = value }
+                }
+            }
+
+            let finalCycle = cycle
+            let finalHealth = health
+
+            await MainActor.run {
+                if let finalCycle { self.batCycle = finalCycle }
+                if let finalHealth { self.batHealth = finalHealth }
+                self.recordBatteryHealth()
+            }
+        }
+    }
+
+    /// 把今天的健康度與循環次數記進長期紀錄；同一天只保留最新的一筆。
+    func recordBatteryHealth() {
+        guard let health = Int(batHealth.trimmingCharacters(in: CharacterSet(charactersIn: "% "))),
+              (1...150).contains(health), let cycles = Int(batCycle) else { return }
+        notifyHealthDropIfNeeded(health)
+        let entry = BatteryHealthEntry(day: Self.dayKeyFormatter.string(from: Date()), health: health, cycles: cycles)
+        if batteryHealthLog.last?.day == entry.day {
+            guard batteryHealthLog.last != entry else { return }
+            batteryHealthLog[batteryHealthLog.count - 1] = entry
+        } else {
+            batteryHealthLog.append(entry)
+        }
+        if batteryHealthLog.count > 730 { batteryHealthLog.removeFirst(batteryHealthLog.count - 730) }
+        saveBatteryHealthLog()
+    }
+
+    func saveBatteryHealthLog() {
+        if let encoded = try? JSONEncoder().encode(batteryHealthLog) {
+            UserDefaults.standard.set(encoded, forKey: "batteryHealthLogV1")
+        }
+    }
+
+    func resetBatteryHealthLog() {
+        batteryHealthLog.removeAll()
+        saveBatteryHealthLog()
+        recordBatteryHealth()
     }
 }

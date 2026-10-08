@@ -197,12 +197,31 @@ extension SystemMonitor {
         appDataUsageItems(days: days).reduce(0) { $0 + $1.bytes }
     }
 
+    static let batteryVisibleInterval: TimeInterval = 1.5
+    /// 電池的電流、電量大約 30～60 秒才更新一次，沒有畫面在看時不需要每 1.5 秒讀一次。
+    static let batteryBackgroundInterval: TimeInterval = 10
+
     func startDetailedBatteryMonitor() {
+        // 插拔電源由系統通知立即更新，不必等下一輪取樣。
+        powerSourceObserver = PowerSourceObserver { [weak self] in self?.fetchDynamicBatteryInfo() }
         Task {
             while !Task.isCancelled {
-                fetchDynamicBatteryInfo()
+                let interval = batteryViewers.isEmpty ? Self.batteryBackgroundInterval : Self.batteryVisibleInterval
+                let elapsed = lastBatterySampleTime.map { Date().timeIntervalSince($0) } ?? .infinity
+                if elapsed >= interval - 0.2 { fetchDynamicBatteryInfo() }
                 try? await Task.sleep(nanoseconds: 1_500_000_000)
             }
+        }
+    }
+
+    /// 電池小視窗或監控中心的電池頁開著時，恢復每 1.5 秒取樣。
+    func setBatteryDetailVisible(_ visible: Bool, source: String) {
+        if visible {
+            let wasHidden = batteryViewers.isEmpty
+            batteryViewers.insert(source)
+            if wasHidden { fetchDynamicBatteryInfo() }
+        } else {
+            batteryViewers.remove(source)
         }
     }
 

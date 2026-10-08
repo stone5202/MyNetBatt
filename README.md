@@ -53,13 +53,16 @@ MyNetBatt 目前持續開發與維護中，專案完整原始碼以 MIT License 
 - 選單列顯示電池圖示、電量百分比、即時網路速度與流量圖表；網速有六種樣式（兩行、單行、僅上傳、僅下載、合計、速度＋今日用量），在設定頁以即時預覽選取
 - 可另外在選單列顯示 CPU、記憶體與儲存空間使用率
 - 電池電量、充電狀態、健康度、循環次數、溫度、功率與充電耗時；48 小時電量圖依電源狀態上色，並標出充電／用電區段
+- 接上電源時顯示充電器瓦數、實際輸入功率、系統耗電、充電器電壓電流與轉換損耗
+- 記錄上一次使用電池睡眠的時間長度與耗電量
 - 每天記錄電池健康度與循環次數，可依 30 天、90 天、1 年或全部檢視趨勢與逐日紀錄
-- 低電量與充滿通知
-- 透過受簽章的 Privileged Helper 切換 macOS 低耗電模式
+- 低電量、充滿、電池高溫、健康度下降、耗電暴增（會指出 CPU 用量最高的 App）與睡眠耗電偏高通知
+- 透過受簽章的 Privileged Helper 切換 macOS 低耗電模式；可設定電量降到門檻時自動開啟、接上電源後自動關閉
 - 網路上下載速度、平均速度、累計流量、今日每小時用量、介面、區域 IP、閘道、DNS 與公網 IP
 - Wi‑Fi 頻道、訊號強度、傳輸率與安全性
 - 每個 App 的日、週、月、年網路用量統計（Helper 等附屬程序算在所屬的 App 上，可選擇是否另外列出其他程序），上傳與下載分開計算，並提供歷史長條圖；可暫停記錄
 - 即時列出正在使用網路的 App
+- 桌面與通知中心小工具（小、中兩種尺寸）：電量、充電狀態、健康度與過去 24 小時的電量變化
 - 永遠置頂的懸浮視窗，可用全域快捷鍵開關，背景不透明度可調整
 - 可自訂網路與電池小視窗要顯示的區塊
 - CPU、GPU、記憶體（含記憶體壓力）、Swap 與儲存空間監控，可直接退出外接磁碟
@@ -89,12 +92,13 @@ MyNetBatt 目前持續開發與維護中，專案完整原始碼以 MIT License 
    open MyNetBatt/MyNetBatt.xcodeproj
    ```
 
-3. 在 `MyNetBatt` 與 `MyNetBattPrivilegedHelper` targets 選擇你的 Development Team。
+3. 在 `MyNetBatt`、`MyNetBattPrivilegedHelper` 與 `MyNetBattWidget` targets 選擇你的 Development Team。
 4. 如需使用自己的簽章與 bundle identifier，請同步更新：
 
    - Xcode project 的 `PRODUCT_BUNDLE_IDENTIFIER` 與 `DEVELOPMENT_TEAM`
    - `MyNetBatt/MyNetBatt/PrivilegedHelperProtocol.swift`
    - `MyNetBatt/PrivilegedHelper/HelperProtocol.swift`
+   - 兩份 `WidgetSnapshot.swift` 與兩個 `.entitlements` 裡的 App Group（`<Team ID>.com.stone5202.MyNetBatt`）
 
 5. 選擇 `MyNetBatt` scheme 後 Build & Run。
 
@@ -131,6 +135,7 @@ Helper 只公開讀取及切換低耗電模式的方法，不接受任意 shell 
 MyNetBatt/
 ├── MyNetBatt/                 # 主程式 SwiftUI views 與系統監控
 ├── PrivilegedHelper/          # 低耗電模式 XPC helper
+├── MyNetBattWidget/           # 桌面小工具（WidgetKit extension）
 └── MyNetBatt.xcodeproj/       # Xcode project
 docs/
 ├── PRIVILEGED_HELPER_SETUP.md

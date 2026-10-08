@@ -71,6 +71,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             name: NSWorkspace.didWakeNotification,
             object: nil
         )
+        workspaceCenter.addObserver(
+            self,
+            selector: #selector(systemWillSleep),
+            name: NSWorkspace.willSleepNotification,
+            object: nil
+        )
         // 掛載、卸除或重新命名磁碟時立即更新儲存空間清單。
         for name in [NSWorkspace.didMountNotification, NSWorkspace.didUnmountNotification, NSWorkspace.didRenameVolumeNotification] {
             workspaceCenter.addObserver(self, selector: #selector(volumesDidChange), name: name, object: nil)
@@ -102,6 +108,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func volumesDidChange() {
         monitor.fetchStorageInfo()
+    }
+
+    @objc private func systemWillSleep() {
+        monitor.handleSystemWillSleep()
     }
 
     @objc private func systemDidWake() {
@@ -163,8 +173,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         batPopover = NSPopover()
         batPopover.behavior = .transient
         batPopover.contentSize = NSSize(width: 360, height: 590)
+        // 電池小視窗打開期間加快電池取樣。
+        NotificationCenter.default.publisher(for: NSPopover.willShowNotification, object: batPopover)
+            .sink { [weak self] _ in self?.monitor.setBatteryDetailVisible(true, source: "popover") }
+            .store(in: &cancellables)
         NotificationCenter.default.publisher(for: NSPopover.didCloseNotification, object: batPopover)
-            .sink { [weak self] _ in self?.batPopover.contentViewController = nil }
+            .sink { [weak self] _ in
+                self?.monitor.setBatteryDetailVisible(false, source: "popover")
+                self?.batPopover.contentViewController = nil
+            }
             .store(in: &cancellables)
     }
 
@@ -279,6 +296,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 }
                 self.settingsWindowCloseObserver = nil
                 self.settingsWindow = nil
+                // 視窗直接關閉時，電池頁的 onDisappear 不一定會被呼叫。
+                self.monitor.setBatteryDetailVisible(false, source: "mainWindow")
             }
         }
         settingsWindow = window

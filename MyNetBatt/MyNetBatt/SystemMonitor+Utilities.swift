@@ -106,7 +106,7 @@ extension SystemMonitor {
         }
     }
 
-    // Per-App 網路用量由 startPerAppNetworkMonitor()（Part2）以 nettop 取樣：網路頁面打開時每 2 秒，關著時每 60 秒。
+    // Per-App 網路用量由 startPerAppNetworkMonitor()（SystemMonitor+Scheduling.swift）以 nettop 取樣：網路頁面打開時每 2 秒，關著時每 60 秒。
 }
 
 /// 保存上一輪的 CPU tick；取樣在背景執行緒進行，因此以 lock 保護。

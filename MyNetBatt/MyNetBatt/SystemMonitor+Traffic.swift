@@ -7,65 +7,6 @@ import ServiceManagement
 import Darwin
 
 extension SystemMonitor {
-    func fetchBatteryHealthInfo() {
-        runExclusive("batteryHealth") {
-            // Keep macOS Maximum Capacity as the single source of truth.
-            // AppleRawMaxCapacity is a fluctuating gauge value and can differ
-            // by several percentage points from the health shown by macOS.
-            let output = self.runCommand("/usr/sbin/system_profiler", ["SPPowerDataType"])
-            var cycle: String?
-            var health: String?
-
-            for line in output.components(separatedBy: .newlines) {
-                if line.contains("Cycle Count:") {
-                    let value = line.components(separatedBy: ":").last?.trimmingCharacters(in: .whitespacesAndNewlines)
-                    if let value, !value.isEmpty { cycle = value }
-                }
-
-                if line.contains("Maximum Capacity:") {
-                    let value = line.components(separatedBy: ":").last?.trimmingCharacters(in: .whitespacesAndNewlines)
-                    if let value, !value.isEmpty { health = value }
-                }
-            }
-
-            let finalCycle = cycle
-            let finalHealth = health
-
-            await MainActor.run {
-                if let finalCycle { self.batCycle = finalCycle }
-                if let finalHealth { self.batHealth = finalHealth }
-                self.recordBatteryHealth()
-            }
-        }
-    }
-
-    /// 把今天的健康度與循環次數記進長期紀錄；同一天只保留最新的一筆。
-    func recordBatteryHealth() {
-        guard let health = Int(batHealth.trimmingCharacters(in: CharacterSet(charactersIn: "% "))),
-              (1...150).contains(health), let cycles = Int(batCycle) else { return }
-        let entry = BatteryHealthEntry(day: Self.dayKeyFormatter.string(from: Date()), health: health, cycles: cycles)
-        if batteryHealthLog.last?.day == entry.day {
-            guard batteryHealthLog.last != entry else { return }
-            batteryHealthLog[batteryHealthLog.count - 1] = entry
-        } else {
-            batteryHealthLog.append(entry)
-        }
-        if batteryHealthLog.count > 730 { batteryHealthLog.removeFirst(batteryHealthLog.count - 730) }
-        saveBatteryHealthLog()
-    }
-
-    func saveBatteryHealthLog() {
-        if let encoded = try? JSONEncoder().encode(batteryHealthLog) {
-            UserDefaults.standard.set(encoded, forKey: "batteryHealthLogV1")
-        }
-    }
-
-    func resetBatteryHealthLog() {
-        batteryHealthLog.removeAll()
-        saveBatteryHealthLog()
-        recordBatteryHealth()
-    }
-
     /// 把累計上傳／下載量歸零重新計算（到下次重開機為止）。
     func resetTrafficTotals() {
         guard lastInBytes > 0 || lastOutBytes > 0 else { return }

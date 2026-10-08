@@ -55,6 +55,18 @@ struct BatteryDetailView: View {
                 InfoBox(title: "循環次數", value: monitor.batCycle, icon: "arrow.3.trianglepath", color: .purple)
                 InfoBox(title: "電池溫度", value: monitor.batTempDisplay, icon: "thermometer.medium", color: .orange)
                 InfoBox(title: monitor.batteryPowerTitle, value: monitor.batWatts, icon: "bolt.fill", color: .yellow)
+                if monitor.isPluggedIn {
+                    InfoBox(title: "充電器", value: monitor.adapterRating, icon: "powerplug.portrait.fill", color: .teal)
+                    InfoBox(title: "輸入功率", value: monitor.powerInText, icon: "arrow.down.to.line", color: .mint)
+                    InfoBox(title: "系統耗電", value: monitor.systemLoadText, icon: "cpu", color: .indigo)
+                }
+            }
+
+            if monitor.isPluggedIn, !monitor.adapterDetailText.isEmpty {
+                Label(monitor.adapterDetailText, systemImage: "powerplug")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .monospacedDigit()
             }
             
             if !monitor.chargeSessionText.isEmpty {
@@ -87,16 +99,14 @@ struct BatteryDetailView: View {
             }
             
             Text("電量變化趨勢").font(.title3.bold()).foregroundColor(.secondary).padding(.top, 16)
-            // 顏色整張圖只算一次，不要在每個資料點（最多 2880 點）重複計算。
-            let chartColor = monitor.displayedBatteryColor
-            Chart {
-                ForEach(monitor.batteryHistory) { data in
-                    LineMark(x: .value("時間", data.time), y: .value("電量", data.level))
-                        .interpolationMethod(.monotone)
-                }
-                .foregroundStyle(chartColor)
+            BatteryHistoryChart(history: monitor.batteryHistory, height: 150)
+
+            if !monitor.sleepSummaryText.isEmpty {
+                Label(monitor.sleepSummaryText, systemImage: "moon.zzz")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .monospacedDigit()
             }
-            .frame(height: 150).chartYScale(domain: 0...100).chartXAxis(.hidden)
 
             BatteryHealthLogSection(monitor: monitor)
 
@@ -111,6 +121,8 @@ struct BatteryDetailView: View {
         }
         .padding(24)
         }
+        .onAppear { monitor.setBatteryDetailVisible(true, source: "mainWindow") }
+        .onDisappear { monitor.setBatteryDetailVisible(false, source: "mainWindow") }
         .task {
             helper.refreshRegistrationState()
             helper.refreshLowPowerMode()

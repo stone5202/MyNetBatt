@@ -94,12 +94,39 @@ final class SystemMonitor {
     var notifyFullyCharged: Bool = storedSetting("notifyFullyCharged", false) {
         didSet { UserDefaults.standard.set(notifyFullyCharged, forKey: "notifyFullyCharged"); if notifyFullyCharged { ensureNotificationPermission() } }
     }
+    var notifyHighTemperature: Bool = storedSetting("notifyHighTemperature", false) {
+        didSet { UserDefaults.standard.set(notifyHighTemperature, forKey: "notifyHighTemperature"); if notifyHighTemperature { ensureNotificationPermission() } }
+    }
+    var notifyHealthDrop: Bool = storedSetting("notifyHealthDrop", false) {
+        didSet { UserDefaults.standard.set(notifyHealthDrop, forKey: "notifyHealthDrop"); if notifyHealthDrop { ensureNotificationPermission() } }
+    }
+    var notifyPowerSurge: Bool = storedSetting("notifyPowerSurge", false) {
+        didSet { UserDefaults.standard.set(notifyPowerSurge, forKey: "notifyPowerSurge"); if notifyPowerSurge { ensureNotificationPermission() } }
+    }
+    /// 耗電暴增通知的放電功率門檻（瓦）。各機型滿載功率差很多（14 吋 M1 Pro 的 CPU 全核心負載約 20 W），所以讓使用者自己調。
+    var powerSurgeThreshold: Int = storedSetting("powerSurgeThreshold", 15) { didSet { UserDefaults.standard.set(powerSurgeThreshold, forKey: "powerSurgeThreshold") } }
+    var notifySleepDrain: Bool = storedSetting("notifySleepDrain", false) {
+        didSet { UserDefaults.standard.set(notifySleepDrain, forKey: "notifySleepDrain"); if notifySleepDrain { ensureNotificationPermission() } }
+    }
     var notificationSound: Bool = storedSetting("notificationSound", true) { didSet { UserDefaults.standard.set(notificationSound, forKey: "notificationSound") } }
     /// 使用者在系統設定拒絕通知時為 true，設定頁據此顯示提示。
     var notificationPermissionDenied = false
     @ObservationIgnored var lowBatteryNotified = false
     @ObservationIgnored var fullChargeNotified = false
     @ObservationIgnored var hasBatteryNotificationBaseline = false
+    @ObservationIgnored var highTemperatureNotified = false
+    /// 放電功率開始超過門檻的時間；降回門檻以下時清除。
+    @ObservationIgnored var powerSurgeStart: Date?
+    @ObservationIgnored var powerSurgeNotified = false
+
+    // MARK: 低耗電模式自動化
+    /// 使用電池且電量降到門檻時自動開啟低耗電模式，接上電源後再關閉（只關閉由這個功能開啟的）。
+    var autoLowPowerMode: Bool = storedSetting("autoLowPowerMode", false) { didSet { UserDefaults.standard.set(autoLowPowerMode, forKey: "autoLowPowerMode") } }
+    var autoLowPowerThreshold: Int = storedSetting("autoLowPowerThreshold", 20) { didSet { UserDefaults.standard.set(autoLowPowerThreshold, forKey: "autoLowPowerThreshold") } }
+    /// 低耗電模式目前是由自動化開啟的；App 重新啟動後仍要記得，接上電源時才會關閉。
+    @ObservationIgnored var autoLowPowerEngaged: Bool = storedSetting("autoLowPowerEngaged", false) { didSet { UserDefaults.standard.set(autoLowPowerEngaged, forKey: "autoLowPowerEngaged") } }
+    /// 這次降到門檻以下已經處理過；使用者之後手動關閉時不再重新開啟。
+    @ObservationIgnored var autoLowPowerHandled = false
 
     var isAutoStartEnabled: Bool = SMAppService.mainApp.status == .enabled {
         didSet {
@@ -154,10 +181,24 @@ final class SystemMonitor {
     var batSourceType: String = "--"
     var batTimeRemain: String = "--"
 
+    // 接上電源時的供電細節：充電器額定瓦數、實際輸入功率、系統耗電，以及充電器名稱／電壓電流／轉換損耗。
+    var adapterRating: String = "--"
+    var powerInText: String = "--"
+    var systemLoadText: String = "--"
+    var adapterDetailText: String = ""
+
     /// 充電中顯示本次充電的進度，結束後保留上一次充電的起訖電量與耗時。
     var chargeSessionText: String = storedSetting("lastChargeSummary", "")
     @ObservationIgnored var chargeSessionStart: Date?
     @ObservationIgnored var chargeSessionStartLevel = 0
+    /// 電池端的即時功率（瓦）：放電為負、充電為正。
+    @ObservationIgnored var batterySignedWatts = 0.0
+
+    /// 上一次使用電池睡眠的時間長度與電量變化。
+    var sleepSummaryText: String = storedSetting("lastSleepSummary", "")
+    @ObservationIgnored var sleepStart: (time: Date, level: Int, plugged: Bool)?
+    /// 喚醒的時間；之後第一筆夠新的電池取樣用來結算睡眠期間的耗電。
+    @ObservationIgnored var pendingWakeTime: Date?
 
     /// 每天一筆的健康度與循環次數，用來看電池長期衰退的趨勢；最多保留兩年。
     var batteryHealthLog: [BatteryHealthEntry] = []
@@ -244,6 +285,12 @@ final class SystemMonitor {
     @ObservationIgnored var lastPublicIPCheck: Date?
     @ObservationIgnored var lastPublicIPNetworkKey = ""
     @ObservationIgnored var deviceChangeObserver: DeviceChangeObserver?
+    @ObservationIgnored var powerSourceObserver: PowerSourceObserver?
+    /// 目前正在顯示電池詳細數值的畫面（電池小視窗、監控中心電池頁）；有任何一個時加快電池取樣。
+    @ObservationIgnored var batteryViewers = Set<String>()
+    @ObservationIgnored var lastBatterySampleTime: Date?
+    @ObservationIgnored var lastWidgetSnapshotKey = ""
+    @ObservationIgnored var lastWidgetSnapshotTime: Date?
     @ObservationIgnored var deviceRefreshTask: Task<Void, Never>?
     @ObservationIgnored var networkPathMonitor: NWPathMonitor?
     @ObservationIgnored var networkRefreshTask: Task<Void, Never>?
@@ -396,6 +443,7 @@ final class SystemMonitor {
 
     /// 網卡、路由及部分 IOKit 資料會在睡眠期間失效；喚醒後清掉舊基準並分段重抓。
     func handleSystemWake() {
+        if sleepStart != nil { pendingWakeTime = Date() }
         lastInBytes = 0
         lastOutBytes = 0
         lastAppNetworkBytes.removeAll()
