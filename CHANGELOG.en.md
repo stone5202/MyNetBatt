@@ -4,6 +4,22 @@
 
 This document summarizes the major changes in each MyNetBatt release. Versions before 3.0 were uploaded by replacing earlier copies, so their original per-version Git history can no longer be fully recovered. Changes from 1.0 through 2.x are therefore consolidated from the source code that can still be verified, without attributing uncertain details to individual releases.
 
+## [3.9] - 2026-10-08
+
+### New features
+
+- Desktop widget: a Battery widget for the desktop or Notification Center, in small and medium sizes. The small widget shows battery level, charging state, time remaining, and health; the medium widget adds the last 24 hours of battery level plus cycle count, temperature, and power. Battery level and charging state keep updating even when MyNetBatt is not running.
+- Low Power Mode automation: turns Low Power Mode on when running on battery and the level falls to a threshold (10–80%, 20% by default), and off again when power is connected. It only turns off Low Power Mode that it turned on itself; a mode you enabled manually is left alone. The helper must be enabled first.
+- Power supply details: while plugged in, the battery tab of the monitor window shows the adapter wattage, actual input power, and system load, along with the adapter voltage, current, and conversion loss.
+- Sleep drain record: after sleeping on battery for more than 10 minutes, the battery tab shows how long the last sleep lasted, the level before and after, and the drain per hour.
+- Four new notifications: high battery temperature (40°C and above), battery health drop, power surge (discharge power above a threshold for a full minute on battery, naming the app using the most CPU; the threshold is adjustable, 15 W by default), and high drain during sleep.
+
+### Improvements
+
+- The battery level chart in the monitor window now uses the same chart as the battery popover: coloured by power source, with charging and on-battery periods and a time axis.
+- The low battery threshold moves to the Notifications section of the settings, next to the low battery notification switch; threshold values are now right-aligned.
+- Battery data is read less often when neither the battery popover nor the battery tab of the monitor window is open, to save power; plugging in or unplugging still shows in the menu bar right away.
+
 ## [3.8.1] - 2026-10-07
 
 ### Fixes
