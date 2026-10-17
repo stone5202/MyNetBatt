@@ -6,6 +6,11 @@ import IOKit.ps
 struct MyNetBattWidgetBundle: WidgetBundle {
     var body: some Widget {
         BatteryWidget()
+        DataUsageWidget()
+        AppUsageWidget()
+        StorageWidget()
+        WiFiWidget()
+        PeripheralsWidget()
     }
 }
 
@@ -13,6 +18,7 @@ struct BatteryWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: WidgetSnapshot.widgetKind, provider: BatteryProvider()) { entry in
             BatteryWidgetView(entry: entry)
+                .widgetLanguage()
                 .containerBackground(.fill.tertiary, for: .widget)
         }
         .configurationDisplayName("電池")
@@ -89,7 +95,7 @@ struct BatteryWidgetView: View {
         return snapshot
     }
 
-    private var statusText: String {
+    private var statusText: LocalizedStringKey {
         entry.charging ? "充電中" : (entry.plugged ? "已接上電源" : "使用電池")
     }
 

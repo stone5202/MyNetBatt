@@ -89,13 +89,13 @@ extension SystemMonitor {
             let networkKey = [interface, localIP, gateway].joined(separator: "|")
             let (cachedPublicIP, shouldQueryPublicIP) = await MainActor.run { () -> (String, Bool) in
                 let cached = self.networkPublicIP
-                let hasValidCache = cached != "--" && cached != "無法取得"
+                let hasValidCache = cached != "--" && cached != String(localized: "無法取得")
                 let maxAge: TimeInterval = hasValidCache ? 600 : 120
                 let expired = self.lastPublicIPCheck.map { Date().timeIntervalSince($0) >= maxAge } ?? true
                 return (cached, forcePublicIP || networkKey != self.lastPublicIPNetworkKey || expired)
             }
 
-            var publicIP = "無法取得"
+            var publicIP = String(localized: "無法取得")
             if localIP != "--" {
                 if shouldQueryPublicIP {
                     let publicIPRaw = self.runCommand("/usr/bin/curl", ["-fsS", "--max-time", "2", "https://api.ipify.org"])
@@ -118,11 +118,20 @@ extension SystemMonitor {
             let isConnected = localIP != "--"
             await MainActor.run {
                 self.assignIfChanged(\.networkInterfaceName, fInterface)
+                #if DEBUG
+                // 截圖模式（只有 Debug 版）：README 截圖用示範位址，不露出真實的網路資訊。
+                let demo = ScreenshotMode.isOn
+                self.assignIfChanged(\.networkGateway, demo ? "192.168.1.1" : fGateway)
+                self.assignIfChanged(\.networkLocalIP, demo ? "192.168.1.20" : fLocalIP)
+                self.assignIfChanged(\.networkDNS, demo ? "192.168.1.1" : fDNS)
+                self.assignIfChanged(\.networkPublicIP, demo ? "203.0.113.24" : fPublicIP)
+                #else
                 self.assignIfChanged(\.networkGateway, fGateway)
                 self.assignIfChanged(\.networkLocalIP, fLocalIP)
                 self.assignIfChanged(\.networkDNS, fDNS)
                 self.assignIfChanged(\.networkPublicIP, fPublicIP)
-                self.assignIfChanged(\.networkDetailStatus, isConnected ? "已連線" : "未連線")
+                #endif
+                self.assignIfChanged(\.networkDetailStatus, isConnected ? String(localized: "已連線") : String(localized: "未連線"))
             }
         }
     }

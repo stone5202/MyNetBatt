@@ -23,8 +23,8 @@ nonisolated struct CableInfo: Equatable {
     /// 線材額定可承載的功率：支援 EPR 的 5 A 線為 240 W，其餘為 20 V × 額定電流。
     let watts: Int
 
-    var kindText: String { isActive ? "主動式" : "被動式" }
-    var ratingText: String { "\(maxVolts) V／\(amps) A (\(watts) W)" }
+    var kindText: String { isActive ? String(localized: "主動式") : String(localized: "被動式") }
+    var ratingText: String { String(localized: "\(maxVolts) V／\(amps) A (\(watts) W)") }
 }
 
 nonisolated struct PortInfo: Identifiable, Equatable {
@@ -83,7 +83,7 @@ nonisolated extension SystemReaders {
             let isMagSafe = type.hasPrefix("MagSafe")
             ports.append(PortInfo(
                 id: key,
-                name: isMagSafe ? type : "USB‑C 連接埠 \(number)",
+                name: isMagSafe ? type : String(localized: "USB‑C 連接埠 \(number)"),
                 isMagSafe: isMagSafe,
                 isConnected: dict["Active"] as? Bool ?? false,
                 partner: partners[key] ?? "",
@@ -111,7 +111,7 @@ nonisolated extension SystemReaders {
         return CableInfo(
             vendor: vendor > 0 ? vendorName(vendor) : "",
             isActive: productType == 4,
-            speed: speedIndex < speeds.count ? speeds[speedIndex] : "未知速度",
+            speed: speedIndex < speeds.count ? speeds[speedIndex] : String(localized: "未知速度"),
             maxVolts: maxVolts,
             amps: amps,
             watts: epr && amps == 5 ? 240 : amps * 20
@@ -127,7 +127,8 @@ nonisolated extension SystemReaders {
             0x1532: "Razer", 0x2188: "CalDigit", 0x0BDA: "Realtek", 0x2109: "VIA Labs", 0x0451: "Texas Instruments",
             0x04B4: "Cypress", 0x2E87: "Injoinic", 0x315C: "ConvenientPower"
         ]
-        return known[id] ?? String(format: "廠商代碼 0x%04X", id)
+        let hex = String(format: "0x%04X", id)
+        return known[id] ?? String(localized: "廠商代碼 \(hex)")
     }
 
     /// AdapterDetails 裡充電器宣告的各組檔位，依瓦數由小到大。
@@ -180,16 +181,16 @@ extension SystemMonitor {
         let charger = chargerMaxWatts
         guard let port = poweringPort else {
             return portInfos.filter(\.isConnected).count > 1
-                ? ("充電器最高可供 \(charger) W。有多個連接埠正在使用，各埠的線材規格請看「系統效能」分頁。", false)
-                : ("充電器最高可供 \(charger) W。", false)
+                ? (String(localized: "充電器最高可供 \(charger) W。有多個連接埠正在使用，各埠的線材規格請看「系統效能」分頁。"), false)
+                : (String(localized: "充電器最高可供 \(charger) W。"), false)
         }
-        if port.isMagSafe { return ("充電器最高可供 \(charger) W。MagSafe 線材不提供線材規格。", false) }
+        if port.isMagSafe { return (String(localized: "充電器最高可供 \(charger) W。MagSafe 線材不提供線材規格。"), false) }
         guard let cable = port.cable else {
-            return ("充電器最高可供 \(charger) W。這條線材沒有 e‑marker 晶片（或目前讀不到），依規格最高承載 3 A（60 W）。", false)
+            return (String(localized: "充電器最高可供 \(charger) W。這條線材沒有 e‑marker 晶片（或目前讀不到），依規格最高承載 3 A（60 W）。"), false)
         }
         if cable.watts < charger {
-            return ("線材限制了充電速度：充電器最高可供 \(charger) W，但這條線材額定只能承載 \(cable.watts) W，換一條線可以充得更快。", true)
+            return (String(localized: "線材限制了充電速度：充電器最高可供 \(charger) W，但這條線材額定只能承載 \(cable.watts) W，換一條線可以充得更快。"), true)
         }
-        return ("充電器與線材搭配良好：充電器最高可供 \(charger) W，線材額定可承載 \(cable.watts) W。", false)
+        return (String(localized: "充電器與線材搭配良好：充電器最高可供 \(charger) W，線材額定可承載 \(cable.watts) W。"), false)
     }
 }

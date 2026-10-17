@@ -111,7 +111,7 @@ struct CopyButton: View {
                 .foregroundStyle(copied ? Color.green : Color.secondary)
         }
         .buttonStyle(.plain)
-        .disabled(value == "--" || value == "無法取得")
+        .disabled(value == "--" || value == String(localized: "無法取得"))
         .help("複製")
     }
 }

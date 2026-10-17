@@ -64,6 +64,7 @@ extension SystemMonitor {
     func recordHourlyTraffic(upload: UInt64, download: UInt64, at now: Date) {
         let day = Self.dayKeyFormatter.string(from: now)
         if hourlyTraffic.day != day {
+            archiveDailyTraffic(hourlyTraffic)
             hourlyTraffic = HourlyTraffic(day: day)
             saveHourlyTraffic(force: true)
         }
@@ -75,6 +76,14 @@ extension SystemMonitor {
     }
 
     /// 最多每 5 分鐘寫入一次；App 結束時由 AppDelegate 強制寫入。
+    /// 換日時把那一天網卡的上傳／下載總量存起來（保留 35 天）。小工具的「最近 7 天」與「今天」
+    /// 都用網卡統計，同一天的數字在跨日後才不會因為改用 App 統計而變少。
+    func archiveDailyTraffic(_ traffic: HourlyTraffic) {
+        let cutoff = Calendar.current.date(byAdding: .day, value: -35, to: Date()).map { Self.dayKeyFormatter.string(from: $0) } ?? ""
+        dailyTraffic = TrafficSeries.archive(day: traffic.day, upload: traffic.upload, download: traffic.download, into: dailyTraffic, cutoffDay: cutoff)
+        UserDefaults.standard.set(dailyTraffic.mapValues { $0.map { NSNumber(value: $0) } }, forKey: "dailyTrafficV1")
+    }
+
     func saveHourlyTraffic(force: Bool = false) {
         let now = Date()
         if !force, let last = lastHourlyTrafficSave, now.timeIntervalSince(last) < 300 { return }

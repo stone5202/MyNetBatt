@@ -12,9 +12,9 @@ struct SystemDetailView: View {
 
     private var memoryPressureLabel: String {
         switch monitor.memoryPressureLevel {
-        case 4: return "嚴重"
-        case 2: return "警告"
-        default: return "正常"
+        case 4: return String(localized: "嚴重")
+        case 2: return String(localized: "警告")
+        default: return String(localized: "正常")
         }
     }
 
@@ -27,21 +27,102 @@ struct SystemDetailView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                Text("硬體與系統效能").font(.largeTitle.bold())
+        PageScroll {
+                PageHeader(title: "系統效能", subtitle: monitor.cpuModelStr, symbol: MainTab.system.symbol, color: MainTab.system.color)
+
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
+                    SystemCard(
+                        icon: "speedometer",
+                        title: String(localized: "CPU 負載"),
+                        value: String(format: "%.1f %%", monitor.currentCpuUsage),
+                        progress: monitor.currentCpuUsage,
+                        color: .purple
+                    )
+                    SystemCard(
+                        icon: "gauge.with.dots.needle.67percent",
+                        title: String(localized: "GPU 負載"),
+                        value: String(format: "%.1f %%", monitor.currentGpuUsage),
+                        progress: monitor.currentGpuUsage,
+                        color: .green
+                    )
+                    SystemCard(
+                        icon: "memorychip.fill",
+                        title: String(localized: "實體記憶體"),
+                        value: monitor.ramUsageStr,
+                        detail: String(localized: "記憶體壓力 \(Int(monitor.memoryPressurePct.rounded()))% · \(memoryPressureLabel)"),
+                        progress: monitor.ramUsagePct,
+                        color: memoryPressureColor
+                    )
+                    SystemCard(
+                        icon: "arrow.up.arrow.down.circle.fill",
+                        title: String(localized: "Swap 虛擬記憶體"),
+                        value: monitor.swapUsageStr,
+                        detail: String(localized: "已使用 \(Int(monitor.swapUsagePct.rounded()))%"),
+                        progress: monitor.swapUsagePct,
+                        color: .orange
+                    )
+                }
+
+                HStack(alignment: .top, spacing: 14) {
+                    Panel(title: "CPU 即時負載", symbol: "waveform.path.ecg", color: .purple) {
+                        Chart {
+                            ForEach(monitor.cpuHistory) { data in
+                                LineMark(x: .value("時間", data.time), y: .value("使用率", data.value))
+                                    .foregroundStyle(.purple)
+                                    .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
+                                    .interpolationMethod(.monotone)
+                                AreaMark(x: .value("時間", data.time), y: .value("使用率", data.value))
+                                    .interpolationMethod(.monotone)
+                                    .foregroundStyle(
+                                        LinearGradient(
+                                            gradient: Gradient(colors: [.purple.opacity(0.35), .clear]),
+                                            startPoint: .top,
+                                            endPoint: .bottom
+                                        )
+                                    )
+                            }
+                        }
+                        .frame(minHeight: 120)
+                        .chartYScale(domain: 0...100)
+                        .chartXAxis(.hidden)
+
+                    }
+                    Panel(title: "GPU 即時負載", symbol: "waveform.path.ecg", color: .green) {
+                        Chart {
+                            ForEach(monitor.gpuHistory) { data in
+                                LineMark(x: .value("時間", data.time), y: .value("使用率", data.value))
+                                    .foregroundStyle(.green)
+                                    .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
+                                    .interpolationMethod(.monotone)
+                                AreaMark(x: .value("時間", data.time), y: .value("使用率", data.value))
+                                    .interpolationMethod(.monotone)
+                                    .foregroundStyle(
+                                        LinearGradient(
+                                            gradient: Gradient(colors: [.green.opacity(0.30), .clear]),
+                                            startPoint: .top,
+                                            endPoint: .bottom
+                                        )
+                                    )
+                            }
+                        }
+                        .frame(minHeight: 120)
+                        .chartYScale(domain: 0...100)
+                        .chartXAxis(.hidden)
+                    }
+                }
 
                 VStack(spacing: 12) {
-                    SystemInfoRow(icon: "macbook", color: .gray, title: "Mac 型號", value: monitor.macModelStr)
-                    SystemInfoRow(icon: "cpu", color: .purple, title: "處理器 (CPU)", value: monitor.cpuModelStr)
-                    SystemInfoRow(icon: "memorychip", color: .orange, title: "顯示卡 (GPU)", value: monitor.gpuModelStr)
+                    SystemInfoRow(icon: "macbook", color: .gray, title: String(localized: "Mac 型號"), value: monitor.macModelStr)
+                    SystemInfoRow(icon: "cpu", color: .purple, title: String(localized: "處理器 (CPU)"), value: monitor.cpuModelStr)
+                    SystemInfoRow(icon: "memorychip", color: .orange, title: String(localized: "顯示卡 (GPU)"), value: monitor.gpuModelStr)
                 }
-                .padding(16)
-                .cardSurface(cornerRadius: 12, fill: 0.1)
+                .padding(Metrics.panelPadding)
+                .cardSurface(cornerRadius: Metrics.panelRadius)
 
                 VStack(alignment: .leading, spacing: 10) {
-                    HStack {
-                        Label("Thunderbolt / USB4 設備", systemImage: "bolt.horizontal.circle")
+                    HStack(spacing: 9) {
+                        IconChip(symbol: "bolt.horizontal.fill", color: .blue, size: 24)
+                        Text("Thunderbolt / USB4 設備")
                             .font(.headline)
                         Spacer()
                         Text(monitor.thunderboltStatus)
@@ -81,98 +162,10 @@ struct SystemDetailView: View {
                         }
                     }
                 }
-                .padding(16)
-                .cardSurface(cornerRadius: 12, fill: 0.08)
+                .padding(Metrics.panelPadding)
+                .cardSurface(cornerRadius: Metrics.panelRadius)
 
                 PortsCard(monitor: monitor)
-
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                    SystemCard(
-                        icon: "speedometer",
-                        title: "CPU 負載",
-                        value: String(format: "%.1f %%", monitor.currentCpuUsage),
-                        progress: monitor.currentCpuUsage,
-                        color: .purple
-                    )
-                    SystemCard(
-                        icon: "gauge.with.dots.needle.67percent",
-                        title: "GPU 負載",
-                        value: String(format: "%.1f %%", monitor.currentGpuUsage),
-                        progress: monitor.currentGpuUsage,
-                        color: .green
-                    )
-                    SystemCard(
-                        icon: "memorychip.fill",
-                        title: "實體記憶體",
-                        value: monitor.ramUsageStr,
-                        detail: String(format: "記憶體壓力 %.0f%% · %@", monitor.memoryPressurePct, memoryPressureLabel),
-                        progress: monitor.ramUsagePct,
-                        color: memoryPressureColor
-                    )
-                    SystemCard(
-                        icon: "arrow.up.arrow.down.circle.fill",
-                        title: "Swap 虛擬記憶體",
-                        value: monitor.swapUsageStr,
-                        detail: String(format: "已使用 %.0f%%", monitor.swapUsagePct),
-                        progress: monitor.swapUsagePct,
-                        color: .orange
-                    )
-                }
-
-                StorageVolumesCard(monitor: monitor)
-
-                Text("CPU 即時負載趨勢")
-                    .font(.headline)
-                    .foregroundStyle(.secondary)
-                    .padding(.top, 4)
-
-                Chart {
-                    ForEach(monitor.cpuHistory) { data in
-                        LineMark(x: .value("時間", data.time), y: .value("使用率", data.value))
-                            .foregroundStyle(.purple)
-                            .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
-                            .interpolationMethod(.monotone)
-                        AreaMark(x: .value("時間", data.time), y: .value("使用率", data.value))
-                            .interpolationMethod(.monotone)
-                            .foregroundStyle(
-                                LinearGradient(
-                                    gradient: Gradient(colors: [.purple.opacity(0.35), .clear]),
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                )
-                            )
-                    }
-                }
-                .frame(minHeight: 120)
-                .chartYScale(domain: 0...100)
-                .chartXAxis(.hidden)
-
-                Text("GPU 即時負載趨勢")
-                    .font(.headline)
-                    .foregroundStyle(.secondary)
-
-                Chart {
-                    ForEach(monitor.gpuHistory) { data in
-                        LineMark(x: .value("時間", data.time), y: .value("使用率", data.value))
-                            .foregroundStyle(.green)
-                            .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
-                            .interpolationMethod(.monotone)
-                        AreaMark(x: .value("時間", data.time), y: .value("使用率", data.value))
-                            .interpolationMethod(.monotone)
-                            .foregroundStyle(
-                                LinearGradient(
-                                    gradient: Gradient(colors: [.green.opacity(0.30), .clear]),
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                )
-                            )
-                    }
-                }
-                .frame(minHeight: 120)
-                .chartYScale(domain: 0...100)
-                .chartXAxis(.hidden)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 }
@@ -184,8 +177,9 @@ struct PortsCard: View {
     var body: some View {
         let connected = monitor.portInfos.filter(\.isConnected).count
         VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Label("連接埠與線材", systemImage: "cable.connector").font(.headline)
+            HStack(spacing: 9) {
+                IconChip(symbol: "cable.connector", color: .gray, size: 24)
+                Text("連接埠與線材").font(.headline)
                 Spacer()
                 Text(connected == 0 ? "沒有連接埠在使用" : "\(connected) 個連接埠使用中")
                     .font(.caption)
@@ -226,8 +220,8 @@ struct PortsCard: View {
                 }
             }
         }
-        .padding(16)
-        .cardSurface(cornerRadius: 12, fill: 0.08)
+        .padding(Metrics.panelPadding)
+        .cardSurface(cornerRadius: Metrics.panelRadius)
         .onAppear { monitor.fetchPortInfo() }
     }
 }
@@ -273,6 +267,20 @@ struct StorageVolumesCard: View {
     @Bindable var monitor: SystemMonitor
     @State private var ejectingID: String?
     @State private var ejectError: String?
+    @State private var ejectingAll = false
+
+    private var ejectableCount: Int { monitor.storageVolumes.filter(\.isEjectable).count }
+
+    private func ejectAll() {
+        ejectingAll = true
+        Task {
+            let failures = await monitor.ejectAllVolumes()
+            ejectingAll = false
+            if !failures.isEmpty {
+                ejectError = failures.map { String(localized: "\($0.name)：\($0.message)") }.joined(separator: "\n")
+            }
+        }
+    }
 
     private func eject(_ volume: StorageVolumeInfo) {
         ejectingID = volume.id
@@ -284,14 +292,28 @@ struct StorageVolumesCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            HStack {
-                Label("儲存空間", systemImage: "internaldrive.fill")
+            HStack(spacing: 9) {
+                IconChip(symbol: "internaldrive.fill", color: .indigo, size: 24)
+                Text("磁碟")
                     .font(.headline)
-                    .foregroundStyle(.primary)
                 Spacer()
                 Text(monitor.storageVolumes.count > 1 ? "\(monitor.storageVolumes.count) 個磁碟區" : "Macintosh HD")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                // 內建磁碟不能退出；只有一顆外接磁碟時用該列的退出按鈕即可，避免看起來像會連內建磁碟一起退出。
+                if ejectableCount > 1 {
+                    if ejectingAll {
+                        ProgressView().controlSize(.small)
+                    } else {
+                        Button {
+                            ejectAll()
+                        } label: {
+                            Label("全部退出", systemImage: "eject")
+                        }
+                        .controlSize(.small)
+                        .help("退出所有外接磁碟")
+                    }
+                }
             }
 
             if monitor.storageVolumes.isEmpty {
@@ -311,7 +333,7 @@ struct StorageVolumesCard: View {
                         free: monitor.formatStorageBytesForUI(volume.availableBytes),
                         total: monitor.formatStorageBytesForUI(volume.totalBytes),
                         pct: volume.usagePct,
-                        subtitle: volume.isInternal ? "內建磁碟" : volume.mountPath,
+                        subtitle: volume.isInternal ? String(localized: "內建磁碟") : volume.mountPath,
                         isEjecting: ejectingID == volume.id,
                         onEject: volume.isEjectable ? { eject(volume) } : nil
                     )
@@ -319,8 +341,8 @@ struct StorageVolumesCard: View {
                 }
             }
         }
-        .padding(16)
-        .cardSurface(cornerRadius: 12, fill: 0.08)
+        .padding(Metrics.panelPadding)
+        .cardSurface(cornerRadius: Metrics.panelRadius)
         .alert("無法退出磁碟", isPresented: Binding(get: { ejectError != nil }, set: { if !$0 { ejectError = nil } })) {
             Button("好") { ejectError = nil }
         } message: {
@@ -347,7 +369,7 @@ struct StorageVolumeRow: View {
                     Text(subtitle).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
                 }
                 Spacer()
-                Text(String(format: "%.1f%% 已使用", pct))
+                Text("\(String(format: "%.1f", pct))% 已使用")
                     .font(.caption).foregroundStyle(.secondary).monospacedDigit()
                 if let onEject {
                     if isEjecting {

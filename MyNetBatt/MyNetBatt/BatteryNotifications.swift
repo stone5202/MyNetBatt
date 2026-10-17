@@ -11,11 +11,22 @@ final class BatteryNotifier: NSObject, UNUserNotificationCenterDelegate {
         (try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound])) ?? false
     }
 
+    /// 可選的提示音（系統音效名稱）；空字串為系統預設的通知音。
+    static let soundChoices = ["", "Glass", "Ping", "Pop", "Purr", "Hero", "Funk", "Submarine", "Tink", "Blow", "Bottle", "Frog", "Morse", "Sosumi", "Basso"]
+
     func post(id: String, title: String, body: String, sound: Bool) {
         let content = UNMutableNotificationContent()
         content.title = title
         content.body = body
-        if sound { content.sound = .default }
+        // 通知只能播放 App 內附或 ~/Library/Sounds 的音效；選了系統音效時改由 App 自己播放。
+        let soundName = UserDefaults.standard.string(forKey: "notificationSoundName") ?? ""
+        if sound {
+            if soundName.isEmpty {
+                content.sound = .default
+            } else {
+                DispatchQueue.main.async { NSSound(named: NSSound.Name(soundName))?.play() }
+            }
+        }
         // 相同 id 的通知會互相取代，通知中心不會堆疊多則同類提醒。
         UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: id, content: content, trigger: nil))
     }
@@ -41,6 +52,7 @@ extension SystemMonitor {
                 notifyHealthDrop = false
                 notifyPowerSurge = false
                 notifySleepDrain = false
+                notifyPeripheralLow = false
             }
         }
     }
@@ -55,16 +67,19 @@ extension SystemMonitor {
     func evaluateBatteryNotifications() {
         defer { hasBatteryNotificationBaseline = true }
 
-        if !isLowBatteryWarning {
-            lowBatteryNotified = false
-        } else if !lowBatteryNotified {
-            lowBatteryNotified = true
-            if notifyLowBattery {
-                BatteryNotifier.shared.post(
-                    id: "lowBattery", title: "電量不足",
-                    body: "電量剩餘 \(batPct)%，請接上電源。", sound: notificationSound
-                )
-            }
+        // 低電量可設定多個提醒時機：每次放電經過一個門檻就提醒一次；接上電源或電量回升後重新計算。
+        // 通知關閉時不算已提醒（AlertPolicy），之後打開通知仍會提醒。
+        let low = AlertPolicy.lowBattery(
+            level: batPct, plugged: isPluggedIn, alertLevels: lowBatteryAlertLevels,
+            notified: lowBatteryNotifiedLevels, enabled: notifyLowBattery
+        )
+        lowBatteryNotifiedLevels = low.notified
+        if low.notify {
+            let critical = batPct <= 10
+            BatteryNotifier.shared.post(
+                id: "lowBattery", title: critical ? String(localized: "電量嚴重不足") : String(localized: "電量不足"),
+                body: String(localized: "電量剩餘 \(batPct)%，請接上電源。"), sound: notificationSound
+            )
         }
 
         // 充滿後電量可能在 99～100% 之間來回，降到 95% 以下或拔掉電源才重新計算。
@@ -74,8 +89,8 @@ extension SystemMonitor {
             // 啟動時就已經充滿的情況不通知。
             if notifyFullyCharged, hasBatteryNotificationBaseline {
                 BatteryNotifier.shared.post(
-                    id: "fullyCharged", title: "電量已充滿",
-                    body: "電池已充電至 100%。", sound: notificationSound
+                    id: "fullyCharged", title: String(localized: "電量已充滿"),
+                    body: String(localized: "電池已充電至 \(100)%。"), sound: notificationSound
                 )
             }
         }
@@ -87,8 +102,8 @@ extension SystemMonitor {
             highTemperatureNotified = true
             if notifyHighTemperature {
                 BatteryNotifier.shared.post(
-                    id: "highTemperature", title: "電池溫度偏高",
-                    body: "電池溫度已達 \(batTempDisplay)，建議降低負載或移到通風處。", sound: notificationSound
+                    id: "highTemperature", title: String(localized: "電池溫度偏高"),
+                    body: String(localized: "電池溫度已達 \(batTempDisplay)，建議降低負載或移到通風處。"), sound: notificationSound
                 )
             }
         }
@@ -103,14 +118,15 @@ extension SystemMonitor {
             if !powerSurgeNotified, Date().timeIntervalSince(start) >= 60 {
                 powerSurgeNotified = true
                 if notifyPowerSurge {
-                    let body = String(format: "電池放電功率已持續超過 %d W（目前 %.1f W）。", powerSurgeThreshold, dischargeWatts)
+                    let current = String(format: "%.1f", dischargeWatts)
+                    let body = String(localized: "電池放電功率已持續超過 \(powerSurgeThreshold) W（目前 \(current) W）。")
                     let sound = notificationSound
                     // 找出當下最吃 CPU 的 App 要執行 ps，放到背景做。
                     Task.detached { [self] in
-                        let culprit = self.topCPUConsumer().map { "CPU 用量最高的是「\($0.name)」（約 \($0.percent)%）。" }
+                        let culprit = self.topCPUConsumer().map { String(localized: "CPU 用量最高的是「\($0.name)」（約 \($0.percent)%）。") }
                         await BatteryNotifier.shared.post(
-                            id: "powerSurge", title: "耗電量偏高",
-                            body: body + (culprit ?? "電量會消耗得比較快。"), sound: sound
+                            id: "powerSurge", title: String(localized: "耗電量偏高"),
+                            body: body + (culprit ?? String(localized: "電量會消耗得比較快。")), sound: sound
                         )
                     }
                 }
@@ -155,8 +171,8 @@ extension SystemMonitor {
         defaults.set(health, forKey: "lowestSeenBatteryHealth")
         if notifyHealthDrop {
             BatteryNotifier.shared.post(
-                id: "healthDrop", title: "電池健康度下降",
-                body: "電池最大容量由 \(lowest)% 降為 \(health)%。", sound: notificationSound
+                id: "healthDrop", title: String(localized: "電池健康度下降"),
+                body: String(localized: "電池最大容量由 \(lowest)% 降為 \(health)%。"), sound: notificationSound
             )
         }
     }
@@ -200,20 +216,19 @@ extension SystemMonitor {
         guard !start.plugged, !isPluggedIn, duration >= 600 else { return }
 
         let minutes = Int(duration / 60)
-        let length = minutes >= 60 ? "\(minutes / 60) 小時 \(minutes % 60) 分" : "\(minutes) 分"
+        let length = minutes >= 60 ? String(localized: "\(minutes / 60) 小時 \(minutes % 60) 分") : String(localized: "\(minutes) 分")
         let drop = max(0, start.level - batPct)
         let perHour = Double(drop) / (duration / 3600)
-        let summary = String(
-            format: "上次睡眠（%@ 喚醒）：%@，%d%% → %d%%，每小時 %.1f%%",
-            Self.sleepWakeFormatter.string(from: wake), length, start.level, batPct, perHour
-        )
+        let wakeText = Self.sleepWakeFormatter.string(from: wake)
+        let rate = String(format: "%.1f", perHour)
+        let summary = String(localized: "上次睡眠（\(wakeText) 喚醒）：\(length)，\(start.level)% → \(batPct)%，每小時 \(rate)%")
         assignIfChanged(\.sleepSummaryText, summary)
         UserDefaults.standard.set(summary, forKey: "lastSleepSummary")
 
         if notifySleepDrain, drop >= 3, perHour >= 2 {
             BatteryNotifier.shared.post(
-                id: "sleepDrain", title: "睡眠期間耗電偏高",
-                body: "睡眠 \(length)，電量由 \(start.level)% 降到 \(batPct)%，可能有 App 或周邊裝置讓 Mac 無法進入深度睡眠。",
+                id: "sleepDrain", title: String(localized: "睡眠期間耗電偏高"),
+                body: String(localized: "睡眠 \(length)，電量由 \(start.level)% 降到 \(batPct)%，可能有 App 或周邊裝置讓 Mac 無法進入深度睡眠。"),
                 sound: notificationSound
             )
         }

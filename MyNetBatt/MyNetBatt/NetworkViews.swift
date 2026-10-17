@@ -11,38 +11,33 @@ struct NetworkDetailView: View {
     @Bindable var monitor: SystemMonitor
     @State private var usageDays = 1
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                Text("網路流量監控").font(.largeTitle.bold())
+        PageScroll {
+                PageHeader(
+                    title: "網路",
+                    subtitle: monitor.wifiInfo?.ssid ?? monitor.networkDetailStatus,
+                    symbol: MainTab.network.symbol, color: MainTab.network.color
+                )
 
                 NetworkConnectionInfoCard(monitor: monitor)
 
                 HStack(spacing: 16) {
-                    NetworkSpeedCard(title: "上傳", symbol: "arrow.up", value: monitor.upSpeedStr, total: monitor.totalUpStr, history: monitor.trafficHistory, upload: true, color: .pink)
-                    NetworkSpeedCard(title: "下載", symbol: "arrow.down", value: monitor.downSpeedStr, total: monitor.totalDownStr, history: monitor.trafficHistory, upload: false, color: .green)
+                    NetworkSpeedCard(title: String(localized: "上傳"), symbol: "arrow.up", value: monitor.upSpeedStr, total: monitor.totalUpStr, history: monitor.trafficHistory, upload: true, color: Palette.upload)
+                    NetworkSpeedCard(title: String(localized: "下載"), symbol: "arrow.down", value: monitor.downSpeedStr, total: monitor.totalDownStr, history: monitor.trafficHistory, upload: false, color: Palette.download)
                 }
 
                 AppDataUsagePanel(monitor: monitor, usageDays: $usageDays, maxRows: 50)
 
                 // 這份清單的列數每 2 秒都可能改變，放在用量面板之後，才不會把面板上下推動。
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("正在使用網路的 App").font(.title2.bold())
+                    HStack(spacing: 9) {
+                        IconChip(symbol: "arrow.up.arrow.down", color: .orange, size: 24)
+                        Text("正在使用網路的 App").font(.headline)
+                    }
                     ActiveNetworkAppsList(monitor: monitor)
                 }
-                .padding(16)
+                .padding(Metrics.panelPadding)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .cardSurface(cornerRadius: 14, fill: 0.08)
-
-                Divider()
-                HStack(spacing: 20) {
-                    Toggle("啟用網路模組", isOn: $monitor.showNetModule)
-                    Toggle("狀態列圖表", isOn: $monitor.showNetChart)
-                    Toggle("狀態列數字", isOn: $monitor.showNetSpeed)
-                    Spacer()
-                }
-                .toggleStyle(.switch).tint(.cyan)
-            }
-            .padding(24)
+                .cardSurface(cornerRadius: Metrics.panelRadius)
         }
         .onAppear { monitor.setPerAppUsageVisible(true, source: "mainWindow") }
         .onDisappear { monitor.setPerAppUsageVisible(false, source: "mainWindow") }
@@ -53,18 +48,19 @@ struct NetworkConnectionInfoCard: View {
     @Bindable var monitor: SystemMonitor
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Label("目前網路", systemImage: "wifi").font(.headline)
+            HStack(spacing: 9) {
+                IconChip(symbol: monitor.wifiInfo == nil ? "network" : "wifi", color: .blue, size: 24)
+                Text("目前網路").font(.headline)
                 Spacer()
                 Text(monitor.networkDetailStatus).font(.caption).foregroundStyle(.secondary)
                 Button { monitor.refreshNetworkDetails() } label: { Image(systemName: "arrow.clockwise") }.buttonStyle(.plain)
             }
             Divider()
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], alignment: .leading, spacing: 9) {
-                NetworkInfoPair(title: "介面", value: monitor.networkInterfaceName)
-                NetworkInfoPair(title: "本機 IP", value: monitor.networkLocalIP, copyable: true)
-                NetworkInfoPair(title: "預設閘道", value: monitor.networkGateway)
-                NetworkInfoPair(title: "公網 IP", value: monitor.networkPublicIP, copyable: true)
+                NetworkInfoPair(title: String(localized: "介面"), value: monitor.networkInterfaceName)
+                NetworkInfoPair(title: String(localized: "本機 IP"), value: monitor.networkLocalIP, copyable: true)
+                NetworkInfoPair(title: String(localized: "預設閘道"), value: monitor.networkGateway)
+                NetworkInfoPair(title: String(localized: "公網 IP"), value: monitor.networkPublicIP, copyable: true)
                 NetworkInfoPair(title: "DNS", value: monitor.networkDNS)
             }
             if let wifi = monitor.wifiInfo {
@@ -75,16 +71,16 @@ struct NetworkConnectionInfoCard: View {
                     if wifi.ssid == nil { WiFiNameAccessButton(monitor: monitor) }
                 }
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], alignment: .leading, spacing: 9) {
-                    NetworkInfoPair(title: "無線網路", value: wifi.ssid ?? "--")
-                    NetworkInfoPair(title: "頻道", value: wifi.channel)
-                    NetworkInfoPair(title: "訊號強度", value: wifi.rssiText)
-                    NetworkInfoPair(title: "傳輸率", value: wifi.transmitRateText)
-                    NetworkInfoPair(title: "安全性", value: wifi.security)
-                    NetworkInfoPair(title: "MAC 位址", value: wifi.macAddress, copyable: true)
+                    NetworkInfoPair(title: String(localized: "無線網路"), value: wifi.ssid ?? "--")
+                    NetworkInfoPair(title: String(localized: "頻道"), value: wifi.channel)
+                    NetworkInfoPair(title: String(localized: "訊號強度"), value: wifi.rssiText)
+                    NetworkInfoPair(title: String(localized: "傳輸率"), value: wifi.transmitRateText)
+                    NetworkInfoPair(title: String(localized: "安全性"), value: wifi.security)
+                    NetworkInfoPair(title: String(localized: "MAC 位址"), value: wifi.macAddress, copyable: true)
                 }
             }
         }
-        .padding(16).cardSurface(cornerRadius: 14, fill: 0.08)
+        .padding(Metrics.panelPadding).cardSurface(cornerRadius: Metrics.panelRadius)
     }
 }
 
@@ -145,9 +141,9 @@ struct NetworkSpeedCard: View {
             .chartYAxis(.hidden)
             .frame(width: 150, height: 58)
         }
-        .padding(16)
+        .padding(Metrics.panelPadding)
         .frame(maxWidth: .infinity, minHeight: 122, maxHeight: 122)
-        .cardSurface(cornerRadius: 14, fill: 0.08)
+        .cardSurface(cornerRadius: Metrics.panelRadius)
     }
 }
 
@@ -159,10 +155,10 @@ struct AppDataUsagePanel: View {
     private let collapsedCount = 5
     var periodTitle: String {
         switch usageDays {
-        case 1: return "今日總共"
-        case 7: return "近 7 日總共"
-        case 30: return "近 30 日總共"
-        default: return "近 12 個月總共"
+        case 1: return String(localized: "今日總共")
+        case 7: return String(localized: "近 7 日總共")
+        case 30: return String(localized: "近 30 日總共")
+        default: return String(localized: "近 12 個月總共")
         }
     }
 
@@ -179,8 +175,9 @@ struct AppDataUsagePanel: View {
         let maxBytes = max(allItems.map(\.bytes).max() ?? 1, 1)
 
         VStack(alignment: .leading, spacing: 14) {
-            HStack {
-                Text("數據用量").font(.title2.bold())
+            HStack(spacing: 9) {
+                IconChip(symbol: "chart.bar.xaxis", color: .teal, size: 24)
+                Text("數據用量").font(.headline)
                 if monitor.usageTrackingPaused {
                     Text("已暫停記錄").font(.caption.bold()).foregroundStyle(.orange)
                 }
@@ -194,7 +191,7 @@ struct AppDataUsagePanel: View {
                 .help(monitor.usageTrackingPaused ? "繼續記錄用量" : "暫停記錄用量")
                 .accessibilityLabel(monitor.usageTrackingPaused ? "繼續記錄用量" : "暫停記錄用量")
                 Picker("期間", selection: $usageDays) { Text("日").tag(1); Text("週").tag(7); Text("月").tag(30); Text("年").tag(365) }
-                    .pickerStyle(.segmented).frame(width: 240)
+                    .pickerStyle(.segmented).labelsHidden().fixedSize()
             }
             Text(monitor.appNetworkStatus)
                 .font(.caption)
@@ -266,8 +263,8 @@ struct AppDataUsagePanel: View {
                 }
             }
         }
-        .padding(16)
-        .cardSurface(cornerRadius: 14, fill: 0.08)
+        .padding(Metrics.panelPadding)
+        .cardSurface(cornerRadius: Metrics.panelRadius)
         .onChange(of: usageDays) { _, _ in showsAllApps = false }
     }
 }
@@ -279,7 +276,7 @@ struct UsageHistoryChart: View {
 
     var body: some View {
         let points = monitor.usageBarPoints(days: days)
-        let hasUnknown = points.contains { $0.kind == "未分類" }
+        let hasUnknown = points.contains { $0.kind == String(localized: "未分類") }
         let unit: Calendar.Component = days > 31 ? .month : .day
         Chart(points) { point in
             BarMark(x: .value("日期", point.date, unit: unit), y: .value("用量", point.bytes))
@@ -287,7 +284,7 @@ struct UsageHistoryChart: View {
                 .cornerRadius(2)
         }
         .chartForegroundStyleScale(
-            domain: hasUnknown ? ["下載", "上傳", "未分類"] : ["下載", "上傳"],
+            domain: hasUnknown ? [String(localized: "下載"), String(localized: "上傳"), String(localized: "未分類")] : [String(localized: "下載"), String(localized: "上傳")],
             range: hasUnknown ? [Color.green, Color.pink, Color.gray.opacity(0.5)] : [Color.green, Color.pink]
         )
         .chartYAxis {

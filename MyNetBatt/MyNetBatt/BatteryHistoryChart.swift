@@ -173,8 +173,8 @@ struct BatteryHistoryChart: View {
                         .monospacedDigit()
                 }
                 Spacer(minLength: 0)
-                legend("電池", Self.batteryColor)
-                legend("電源", Self.pluggedColor)
+                legend(String(localized: "電池"), Self.batteryColor)
+                legend(String(localized: "電源"), Self.pluggedColor)
             }
             .font(.caption2)
             .lineLimit(1)
@@ -198,9 +198,10 @@ struct BatteryHistoryChart: View {
 
     static func summary(of segment: BatteryTimeline.Segment) -> String {
         let minutes = max(0, Int(segment.lastSample.timeIntervalSince(segment.firstSample) / 60))
-        let duration = minutes >= 60 ? "\(minutes / 60) 小時 \(minutes % 60) 分" : "\(minutes) 分"
+        let duration = minutes >= 60 ? String(localized: "\(minutes / 60) 小時 \(minutes % 60) 分") : String(localized: "\(minutes) 分")
         let change = segment.lastLevel - segment.firstLevel
         let changeText = change > 0 ? "+\(change)%" : (change < 0 ? "−\(-change)%" : "±0%")
-        return "\(segment.plugged ? "接上電源" : "使用電池") \(duration) · \(changeText)"
+        let state = segment.plugged ? String(localized: "接上電源") : String(localized: "使用電池")
+        return "\(state) \(duration) · \(changeText)"
     }
 }

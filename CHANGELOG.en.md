@@ -4,21 +4,36 @@
 
 This document summarizes the major changes in each MyNetBatt release. Versions before 3.0 were uploaded by replacing earlier copies, so their original per-version Git history can no longer be fully recovered. Changes from 1.0 through 2.x are therefore consolidated from the source code that can still be verified, without attributing uncertain details to individual releases.
 
-## [4.0] - 2026-10-08
+## [4.0] - 2026-10-18
+
+A new look, redesigned from the ground up. Every part of the monitor window, from the sidebar to each page, has been redesigned, with a new Overview page, six desktop widgets and an English interface, while keeping the glass look.
+
+### Redesign
+
+- A brand-new monitor window: the new Overview page brings battery, network, system, storage, connection and accessories together, and each tile jumps to its page. The sidebar uses System Settings–style colored icons, every page has a consistent header, panels and value cards, and the window can be resized.
+- Settings are now grouped into General, Menu Bar, Windows, Notifications and Advanced.
+- Welcome tour on first launch: introduces the main features, lets you pick menu bar items, and sets up notifications, the Wi‑Fi name and Open at Login in one place. Updating from an earlier version shows What’s New instead.
+- About page: version, privacy notes (data stays on this Mac; the only outgoing connection is the public IP lookup) and support links.
+- English interface: the whole app and its widgets are available in English. Choose System, Traditional Chinese or English in Settings › General › Language.
+- New app icon: it keeps the white plate, green battery and red line, now at the standard macOS icon size.
 
 ### New features
 
-- Charger and cable diagnosis: while plugged in, the battery tab of the monitor window has a new "Charger and cable" card that says in one sentence whether the charger or the cable is the bottleneck. When the cable is rated below the charger, it tells you a different cable would charge faster.
-- Charger profiles: lists every voltage and current combination the charger advertises and highlights the one in use.
-- Cable information: reads the voltage and current rating, power capacity, and data speed reported by the cable's e-marker chip. Basic cables without a chip and MagSafe cables do not provide this information.
-- Ports and cables: the system tab of the monitor window has a new card listing what is connected to each USB-C and MagSafe port, and whether each cable is active or passive, along with its speed, power rating, and manufacturer.
+- Six desktop widgets: Battery, Data Usage (today by hour and the last 7 days), App Data Usage, Storage (disks and the largest folders), Wi‑Fi (network name, signal and IP addresses) and Accessory Battery. Right-click a widget › Edit to change its theme color; the Data Usage widget can also show upload or download only. Widgets show when their data was last updated if it goes stale.
+- Accessory battery: a new Accessories page shows the battery of Magic Keyboard, Mouse and Trackpad, AirPods (left, right and case) and other Bluetooth devices. The battery popover lists them too, and you can be notified when one drops below 10%.
+- Folder sizes and large files: a new Storage page measures common folders (add your own), lists files of 100 MB or larger, and can show them in Finder or move them to the Trash. Folders that can’t be read are marked. Only file sizes are read, never contents.
+- Eject all external disks with one click.
+- Charger and cable diagnosis: while plugged in, the Battery page tells you whether the charger or the cable is the bottleneck, lists every voltage and current profile the charger offers with the one in use highlighted, and reads the cable’s e-marker for its power rating and speed.
+- Ports and cables: the System page lists what is connected to each USB-C and MagSafe port, and each cable’s type, speed, power rating and manufacturer.
+- Hide the notch: creates and applies a wallpaper with a black top edge so the notch blends into the menu bar. The original wallpaper is remembered and can be restored at any time.
+- The menu bar traffic graph can be an area, mirrored or bar chart and can be widened to show a longer period. Two new speed styles: Speed + CPU and Speed + Memory.
+- Low battery notifications can fire at several levels (50% to 5%), and the alert sound can be chosen from the system sounds with a preview.
 
 ### Improvements
 
-- New app icon: it keeps the white plate, green battery, and red line, now at the standard macOS icon size and without the text that was unreadable at small sizes.
-- Interface details: cards use continuous rounded corners with a hairline border; the icons on the battery tab's info cards sit in tinted squares so the text lines up across cards; usage bars throughout the app share one capsule style with a gradient and animate when the value changes.
-- Charts: the network speed, CPU, GPU, and health lines are thicker and smoothed; the battery history and today's usage bars have a gradient.
-- The sidebar of the monitor window highlights rows on hover, and the battery percentage animates when it changes.
+- The network popover is now as tall as the battery popover.
+- The System page shows CPU, GPU and memory load first; the disk list moved to the new Storage page.
+- Charts: speed, CPU, GPU and health lines are smoothed and bars have a gradient; usage bars throughout the app share one capsule style.
 
 ## [3.9.1] - 2026-10-08
 

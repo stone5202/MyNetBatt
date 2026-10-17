@@ -33,7 +33,7 @@ extension SystemMonitor {
                                 if !ignore {
                                     devices.append(ThunderboltDeviceInfo(
                                         id: [connection, name, uid, vendor].joined(separator: "|"),
-                                        name: name, vendor: vendor.isEmpty ? "未知廠商" : vendor,
+                                        name: name, vendor: vendor.isEmpty ? String(localized: "未知廠商") : vendor,
                                         uid: uid, firmware: firmware, connection: connection
                                     ))
                                 }
@@ -71,8 +71,8 @@ extension SystemMonitor {
             await MainActor.run {
                 self.assignIfChanged(\.thunderboltDevices, snapshot)
                 self.assignIfChanged(\.thunderboltStatus, snapshot.isEmpty
-                    ? "沒有外接 Thunderbolt / USB-C 設備"
-                    : "目前偵測到 \(snapshot.count) 個外接設備")
+                    ? String(localized: "沒有外接 Thunderbolt / USB-C 設備")
+                    : String(localized: "目前偵測到 \(snapshot.count) 個外接設備"))
             }
         }
     }

@@ -169,10 +169,10 @@ extension SystemMonitor {
             let upload = split.values.reduce(UInt64(0)) { $0 + ($1.first ?? 0) }
             let download = split.values.reduce(UInt64(0)) { $0 + ($1.count == 2 ? $1[1] : 0) }
             let unknown = total > upload + download ? total - upload - download : 0
-            points.append(UsageBarPoint(id: "\(key)-down", date: date, kind: "下載", bytes: Double(download)))
-            points.append(UsageBarPoint(id: "\(key)-up", date: date, kind: "上傳", bytes: Double(upload)))
+            points.append(UsageBarPoint(id: "\(key)-down", date: date, kind: String(localized: "下載"), bytes: Double(download)))
+            points.append(UsageBarPoint(id: "\(key)-up", date: date, kind: String(localized: "上傳"), bytes: Double(upload)))
             if unknown > 0 {
-                points.append(UsageBarPoint(id: "\(key)-unknown", date: date, kind: "未分類", bytes: Double(unknown)))
+                points.append(UsageBarPoint(id: "\(key)-unknown", date: date, kind: String(localized: "未分類"), bytes: Double(unknown)))
             }
         }
         if days > 31 {

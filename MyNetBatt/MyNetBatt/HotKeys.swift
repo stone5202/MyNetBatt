@@ -16,8 +16,8 @@ enum HotKeyAction: UInt32, CaseIterable {
 
     var title: String {
         switch self {
-        case .toggleFloatWindow: return "顯示／隱藏懸浮視窗"
-        case .openMainWindow: return "打開監控中心"
+        case .toggleFloatWindow: return String(localized: "顯示／隱藏懸浮視窗")
+        case .openMainWindow: return String(localized: "打開監控中心")
         }
     }
 
@@ -118,7 +118,7 @@ struct ShortcutRecorder: View {
             Button {
                 isRecording ? stopRecording() : startRecording()
             } label: {
-                Text(isRecording ? "請按下組合鍵…" : (binding?.display ?? "按一下錄製"))
+                Text(isRecording ? String(localized: "請按下組合鍵…") : (binding?.display ?? String(localized: "按一下錄製")))
                     .monospacedDigit()
                     .frame(minWidth: 110)
             }

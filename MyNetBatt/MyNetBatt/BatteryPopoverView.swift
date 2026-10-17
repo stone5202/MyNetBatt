@@ -263,6 +263,8 @@ struct BatteryPopoverView: View {
                 .help("切換 macOS 低耗電模式")
             }
 
+            if monitor.popBatShowDevices { PeripheralStrip(monitor: monitor) }
+
             // 第五排
             if monitor.popBatShowChart {
                 WidgetCard {

@@ -26,11 +26,11 @@ final class PrivilegedHelperManager: ObservableObject {
         var errorDescription: String? {
             switch self {
             case .proxyUnavailable:
-                return "無法建立 Privileged Helper 連線。"
+                return String(localized: "無法建立 Privileged Helper 連線。")
             case .timeout:
-                return "Privileged Helper 沒有回應。"
+                return String(localized: "Privileged Helper 沒有回應。")
             case let .versionMismatch(running, expected):
-                return "執行中的 Helper 版本（\(running)）與 App 內附版本（\(expected)）不一致。"
+                return String(localized: "執行中的 Helper 版本（\(running)）與 App 內附版本（\(expected)）不一致。")
             }
         }
     }
@@ -61,18 +61,18 @@ final class PrivilegedHelperManager: ObservableObject {
     }
 
     var statusText: String {
-        if hasLegacyInstall { return "需要更新 Helper" }
+        if hasLegacyInstall { return String(localized: "需要更新 Helper") }
         switch registrationState {
         case .enabled:
-            return isLowPowerModeEnabled ? "已開啟" : "已關閉"
+            return isLowPowerModeEnabled ? String(localized: "已開啟") : String(localized: "已關閉")
         case .requiresApproval:
-            return "等待系統核准"
+            return String(localized: "等待系統核准")
         case .notRegistered:
-            return "尚未啟用 Helper"
+            return String(localized: "尚未啟用 Helper")
         case .notFound:
-            return "找不到 Helper"
+            return String(localized: "找不到 Helper")
         case .unknown:
-            return "讀取中"
+            return String(localized: "讀取中")
         }
     }
 
@@ -120,7 +120,7 @@ final class PrivilegedHelperManager: ObservableObject {
         // 從下載資料夾或磁碟映像直接開啟時，macOS 會把 App 放到每次都不同的暫存路徑執行，
         // 在那裡註冊的 Helper 下次就找不到執行檔。
         guard !Bundle.main.bundlePath.contains("/AppTranslocation/") else {
-            lastError = "請先把 MyNetBatt 移到「應用程式」資料夾並重新開啟，再啟用 Helper。"
+            lastError = String(localized: "請先把 MyNetBatt 移到「應用程式」資料夾並重新開啟，再啟用 Helper。")
             return
         }
 
@@ -129,7 +129,7 @@ final class PrivilegedHelperManager: ObservableObject {
             if let error = await removeLegacyInstall() {
                 helperLog.error("Legacy removal failed: \(error, privacy: .public)")
                 needsRepair = true
-                lastError = "移除舊版 Privileged Helper 失敗：\(error)"
+                lastError = String(localized: "移除舊版 Privileged Helper 失敗：\(error)")
                 return
             }
         }
@@ -153,14 +153,14 @@ final class PrivilegedHelperManager: ObservableObject {
             refreshRegistrationState()
             if registrationState != .requiresApproval {
                 needsRepair = true
-                lastError = "註冊 Privileged Helper 失敗：\(error.localizedDescription)"
+                lastError = String(localized: "註冊 Privileged Helper 失敗：\(error.localizedDescription)")
                 return
             }
         }
 
         refreshRegistrationState()
         if registrationState == .requiresApproval {
-            lastError = "請在「系統設定 › 一般 › 登入項目與延伸功能」允許 MyNetBatt 在背景執行，之後切換低耗電模式不需輸入密碼。"
+            lastError = String(localized: "請在「系統設定 › 一般 › 登入項目與延伸功能」允許 MyNetBatt 在背景執行，之後切換低耗電模式不需輸入密碼。")
             SMAppService.openSystemSettingsLoginItems()
         }
     }
@@ -193,12 +193,12 @@ final class PrivilegedHelperManager: ObservableObject {
                 refreshRegistrationState()
             }
             if hasLegacyInstall, let error = await removeLegacyInstall() {
-                lastError = "移除舊版 Privileged Helper 失敗：\(error)"
+                lastError = String(localized: "移除舊版 Privileged Helper 失敗：\(error)")
             }
             do {
                 try await daemon.unregister()
             } catch {
-                lastError = "移除 Privileged Helper 失敗：\(error.localizedDescription)"
+                lastError = String(localized: "移除 Privileged Helper 失敗：\(error.localizedDescription)")
             }
         }
     }
@@ -242,18 +242,18 @@ final class PrivilegedHelperManager: ObservableObject {
 
         guard !hasLegacyInstall else {
             needsRepair = true
-            lastError = "Helper 的安裝方式已更新，請按「更新 Helper」移除舊版（需輸入一次管理員密碼）。"
+            lastError = String(localized: "Helper 的安裝方式已更新，請按「更新 Helper」移除舊版（需輸入一次管理員密碼）。")
             return
         }
         guard registrationState == .enabled else {
             switch registrationState {
             case .requiresApproval:
-                lastError = "Helper 尚未獲准執行，請在「系統設定 › 一般 › 登入項目與延伸功能」允許 MyNetBatt。"
+                lastError = String(localized: "Helper 尚未獲准執行，請在「系統設定 › 一般 › 登入項目與延伸功能」允許 MyNetBatt。")
             case .notFound:
                 needsRepair = true
-                lastError = "App 內找不到 Helper，請重新建置 App。"
+                lastError = String(localized: "App 內找不到 Helper，請重新建置 App。")
             default:
-                lastError = "請先啟用 Helper；核准一次後，切換低耗電模式不需再授權。"
+                lastError = String(localized: "請先啟用 Helper；核准一次後，切換低耗電模式不需再授權。")
             }
             refreshLowPowerMode()
             return
@@ -287,13 +287,13 @@ final class PrivilegedHelperManager: ObservableObject {
                     isLowPowerModeEnabled = enabled
                 } else {
                     // Helper 有回應，重新註冊也無濟於事，所以不顯示「修復 Helper」。
-                    lastError = errorText ?? "低耗電模式切換失敗。"
+                    lastError = errorText ?? String(localized: "低耗電模式切換失敗。")
                 }
             } catch {
                 helperLog.error("Low power mode request failed: \(error.localizedDescription, privacy: .public)")
                 invalidateConnection()
                 needsRepair = true
-                lastError = "無法使用 Privileged Helper：\(error.localizedDescription)\n請按「修復 Helper」重新註冊目前 App 內的 Helper。"
+                lastError = String(localized: "無法使用 Privileged Helper：\(error.localizedDescription)\n請按「修復 Helper」重新註冊目前 App 內的 Helper。")
             }
         }
     }
@@ -412,7 +412,7 @@ final class PrivilegedHelperManager: ObservableObject {
             guard process.terminationStatus != 0 else { return nil }
             let message = String(data: data, encoding: .utf8)?
                 .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-            return message.isEmpty ? "管理員授權已取消或移除失敗。" : message
+            return message.isEmpty ? String(localized: "管理員授權已取消或移除失敗。") : message
         }.value
 
         refreshRegistrationState()

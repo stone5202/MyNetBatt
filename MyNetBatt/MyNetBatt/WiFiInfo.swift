@@ -15,13 +15,13 @@ nonisolated struct WiFiInfo: Equatable, Sendable {
     let security: String
 
     var signalQuality: String {
-        if rssi >= -50 { return "極佳" }
-        if rssi >= -60 { return "良好" }
-        if rssi >= -70 { return "普通" }
-        return "微弱"
+        if rssi >= -50 { return String(localized: "極佳") }
+        if rssi >= -60 { return String(localized: "良好") }
+        if rssi >= -70 { return String(localized: "普通") }
+        return String(localized: "微弱")
     }
 
-    var rssiText: String { "\(rssi) dBm（\(signalQuality)）" }
+    var rssiText: String { String(localized: "\(rssi) dBm（\(signalQuality)）") }
     var transmitRateText: String { String(format: "%.0f Mbps", transmitRate) }
 }
 
@@ -52,14 +52,14 @@ nonisolated enum WiFiReader {
 
         let security: String
         switch interface.security() {
-        case .none: security = "無"
+        case .none: security = String(localized: "無")
         case .WEP: security = "WEP"
-        case .wpaPersonal, .wpaPersonalMixed: security = "WPA 個人級"
-        case .wpa2Personal: security = "WPA2 個人級"
-        case .personal: security = "WPA/WPA2 個人級"
-        case .wpa3Personal: security = "WPA3 個人級"
-        case .wpa3Transition: security = "WPA2/WPA3 個人級"
-        case .wpaEnterprise, .wpaEnterpriseMixed, .wpa2Enterprise, .enterprise, .wpa3Enterprise: security = "企業級"
+        case .wpaPersonal, .wpaPersonalMixed: security = String(localized: "WPA 個人級")
+        case .wpa2Personal: security = String(localized: "WPA2 個人級")
+        case .personal: security = String(localized: "WPA/WPA2 個人級")
+        case .wpa3Personal: security = String(localized: "WPA3 個人級")
+        case .wpa3Transition: security = String(localized: "WPA2/WPA3 個人級")
+        case .wpaEnterprise, .wpaEnterpriseMixed, .wpa2Enterprise, .enterprise, .wpa3Enterprise: security = String(localized: "企業級")
         case .OWE, .oweTransition: security = "OWE"
         default: security = "--"
         }
@@ -100,7 +100,12 @@ extension SystemMonitor {
     func fetchWiFiInfo() {
         runExclusive("wifiInfo") {
             let info = WiFiReader.snapshot()
+            #if DEBUG
+            let shown = ScreenshotMode.isOn ? info.map(ScreenshotMode.mask) : info
+            await MainActor.run { self.assignIfChanged(\.wifiInfo, shown) }
+            #else
             await MainActor.run { self.assignIfChanged(\.wifiInfo, info) }
+            #endif
         }
     }
 

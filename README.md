@@ -8,46 +8,60 @@
   <img src="MyNetBatt/MyNetBatt/Assets.xcassets/AppIcon.appiconset/MyNetBatt.png" width="128" alt="MyNetBatt app icon">
 </p>
 
-MyNetBatt 是一款原生 macOS 選單列系統監控工具，將電池、網路與系統效能資訊集中在簡潔的 SwiftUI 介面中。
+MyNetBatt 是一款原生 macOS 選單列系統監控工具，把電池、網路、系統效能、儲存空間與周邊裝置集中在一個介面裡。
 
-> 目前版本：4.0 · 介面語言：繁體中文
+> **4.0：全新介面，全新設計。** 監控中心整個重新設計，新增「總覽」首頁、六種桌面小工具、周邊裝置電量、資料夾大小與大型檔案、英文介面與首次啟動導覽，並保留玻璃質感。
+>
+> 目前版本：4.0 · 介面語言：繁體中文、English
 
 各版本的功能更新與修正請參閱 [更新紀錄](CHANGELOG.md) 或 [GitHub Releases](https://github.com/stone5202/MyNetBatt/releases)。更新紀錄也提供[英文版本](CHANGELOG.en.md)。
 
-## Screenshots
+## 截圖
 
 <p align="center">
-  <img src="docs/screenshots/network.webp" width="45%" alt="MyNetBatt network monitoring">
+  <img src="docs/screenshots/overview.webp" width="90%" alt="MyNetBatt 監控中心的總覽頁">
+</p>
+
+<p align="center">
+  監控中心：總覽
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/widget.webp" width="90%" alt="MyNetBatt 的六種桌面小工具">
+</p>
+
+<p align="center">
+  桌面小工具：電池、數據用量、App 數據用量、儲存空間、Wi‑Fi、周邊電量
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/network.webp" width="40%" alt="MyNetBatt 網路小視窗">
   &nbsp;
-  <img src="docs/screenshots/battery.webp" width="45%" alt="MyNetBatt battery monitoring">
+  <img src="docs/screenshots/battery.webp" width="38%" alt="MyNetBatt 電池小視窗">
 </p>
 
 <p align="center">
-  Network & system monitoring · Battery health & power monitoring
+  網路小視窗 · 電池小視窗
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/menubar.webp" width="45%" alt="MyNetBatt menu bar items for CPU, memory, storage and network">
+  <img src="docs/screenshots/monitor.webp" width="90%" alt="MyNetBatt 監控中心的電池頁，含供電細節與充電器與線材卡片">
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/settings.webp" width="80%" alt="MyNetBatt settings tab">
+  <img src="docs/screenshots/settings.webp" width="90%" alt="MyNetBatt 設定頁">
 </p>
 
 <p align="center">
-  Menu bar items · Settings
+  電池頁 · 設定
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/monitor.webp" width="80%" alt="MyNetBatt monitor window battery tab with power supply details and the charger and cable card">
+  <img src="docs/screenshots/menubar.webp" width="45%" alt="MyNetBatt 選單列的 CPU、記憶體、儲存空間與網路項目">
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/widget.webp" width="60%" alt="MyNetBatt small and medium desktop widgets">
-</p>
-
-<p align="center">
-  Monitor window battery tab · Desktop widgets
+  選單列
 </p>
 
 ## 開發狀態
@@ -62,25 +76,30 @@ MyNetBatt 目前持續開發與維護中，專案完整原始碼以 MIT License 
 
 ## 功能
 
-- 選單列顯示電池圖示、電量百分比、即時網路速度與流量圖表；網速有六種樣式（兩行、單行、僅上傳、僅下載、合計、速度＋今日用量），在設定頁以即時預覽選取
+- 監控中心的「總覽」頁一次看完電池、網路、系統效能、儲存空間、連線與周邊裝置
+- 選單列顯示電池圖示、電量百分比、即時網路速度與流量圖表；網速有八種樣式（兩行、單行、僅上傳、僅下載、合計、速度＋今日用量、網速＋CPU、網速＋記憶體），流量圖可選面積、上下對稱或長條並可加寬，在設定頁以即時預覽選取
 - 可另外在選單列顯示 CPU、記憶體與儲存空間使用率
 - 電池電量、充電狀態、健康度、循環次數、溫度、功率與充電耗時；48 小時電量圖依電源狀態上色，並標出充電／用電區段
 - 接上電源時顯示充電器瓦數、實際輸入功率、系統耗電、充電器電壓電流與轉換損耗
 - 充電器與線材診斷：列出充電器的各組電壓／電流檔位與目前使用的檔位，讀取線材 e‑marker 的額定功率與速度，並指出線材是否限制了充電速度
 - 記錄上一次使用電池睡眠的時間長度與耗電量
 - 每天記錄電池健康度與循環次數，可依 30 天、90 天、1 年或全部檢視趨勢與逐日紀錄
-- 低電量、充滿、電池高溫、健康度下降、耗電暴增（會指出 CPU 用量最高的 App）與睡眠耗電偏高通知
+- 低電量（可設定多個提醒時機）、充滿、電池高溫、健康度下降、耗電暴增（會指出 CPU 用量最高的 App）、睡眠耗電偏高與周邊裝置低電量通知；提示音可從系統音效挑選
+- 周邊裝置電量：妙控鍵盤、滑鼠、觸控板，以及 AirPods（左右耳與充電盒）等藍牙裝置
 - 透過受簽章的 Privileged Helper 切換 macOS 低耗電模式；可設定電量降到門檻時自動開啟、接上電源後自動關閉
 - 網路上下載速度、平均速度、累計流量、今日每小時用量、介面、區域 IP、閘道、DNS 與公網 IP
 - Wi‑Fi 頻道、訊號強度、傳輸率與安全性
 - 每個 App 的日、週、月、年網路用量統計（Helper 等附屬程序算在所屬的 App 上，可選擇是否另外列出其他程序），上傳與下載分開計算，並提供歷史長條圖；可暫停記錄
 - 即時列出正在使用網路的 App
-- 桌面與通知中心小工具（小、中兩種尺寸）：電量、充電狀態、健康度與過去 24 小時的電量變化
+- 六種桌面與通知中心小工具：電池、數據用量、App 數據用量、儲存空間、Wi‑Fi、周邊電量，可更換主題色
 - 永遠置頂的懸浮視窗，可用全域快捷鍵開關，背景不透明度可調整
 - 可自訂網路與電池小視窗要顯示的區塊
-- CPU、GPU、記憶體（含記憶體壓力）、Swap 與儲存空間監控，可直接退出外接磁碟
+- CPU、GPU、記憶體（含記憶體壓力）、Swap 與儲存空間監控，可退出單一或全部外接磁碟
+- 資料夾大小與 100 MB 以上的大型檔案，可在 Finder 中顯示或移到垃圾桶
+- 抹黑劉海：產生上緣全黑的桌布，可隨時還原
 - Thunderbolt、USB4 與 USB 裝置資訊；各個 USB‑C／MagSafe 連接埠接了什麼裝置，以及線材的類型、速度、額定功率與製造商
 - 主題（自動／淺色／深色）、玻璃質感與強調色
+- 繁體中文與英文介面，可在設定中切換；首次啟動導覽
 - 睡眠喚醒後自動重新整理監控資料
 - 支援登入時自動啟動
 
@@ -140,6 +159,7 @@ Helper 只公開讀取及切換低耗電模式的方法，不接受任意 shell 
 - MyNetBatt 不包含分析 SDK、廣告 SDK 或使用者追蹤服務。
 - 顯示公網 IP 時，程式會向 [`https://api.ipify.org`](https://api.ipify.org) 發出請求；該服務會自然接收到請求來源 IP。
 - 顯示 Wi‑Fi 名稱需要定位權限（macOS 的規定），只在你主動要求時才會詢問；MyNetBatt 不會記錄或傳送位置。
+- 儲存空間掃描只讀取檔案大小，不讀取檔案內容；第一次掃描「桌面」「文件」「下載項目」時會出現 macOS 的存取詢問。
 - 其他硬體與系統資訊來自 macOS 內建 API 與命令列工具。
 
 ## 專案結構

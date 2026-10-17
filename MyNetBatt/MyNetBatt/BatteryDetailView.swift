@@ -12,14 +12,11 @@ struct BatteryDetailView: View {
     @ObservedObject private var helper = PrivilegedHelperManager.shared
 
     var body: some View {
-        ScrollView {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text("電池與電源狀態").font(.largeTitle.bold())
-                Spacer()
+        PageScroll {
+            PageHeader(title: "電池", subtitle: String(localized: "健康度 \(monitor.batHealth) · 循環 \(monitor.batCycle) 次"), symbol: MainTab.battery.symbol, color: MainTab.battery.color) {
                 lowPowerControl
             }
-            
+
             HStack(spacing: 20) {
                 if monitor.isLowBatteryWarning {
                     Image(systemName: monitor.batteryIcon)
@@ -48,19 +45,20 @@ struct BatteryDetailView: View {
                 Spacer()
                 lowBatteryWarningControl
             }
-            .padding(.bottom, 10)
-            
+            .padding(18)
+            .cardSurface(cornerRadius: Metrics.panelRadius)
+
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 14) {
-                InfoBox(title: "供電來源", value: monitor.batSourceType, icon: "powerplug.fill", color: .green)
+                InfoBox(title: String(localized: "供電來源"), value: monitor.batSourceType, icon: "powerplug.fill", color: .green)
                 InfoBox(title: monitor.batteryTimeTitle, value: monitor.batTimeRemain, icon: "hourglass", color: .blue)
-                InfoBox(title: "健康度", value: monitor.batHealth, icon: "heart.fill", color: .red)
-                InfoBox(title: "循環次數", value: monitor.batCycle, icon: "arrow.3.trianglepath", color: .purple)
-                InfoBox(title: "電池溫度", value: monitor.batTempDisplay, icon: "thermometer.medium", color: .orange)
+                InfoBox(title: String(localized: "健康度"), value: monitor.batHealth, icon: "heart.fill", color: .red)
+                InfoBox(title: String(localized: "循環次數"), value: monitor.batCycle, icon: "arrow.3.trianglepath", color: .purple)
+                InfoBox(title: String(localized: "電池溫度"), value: monitor.batTempDisplay, icon: "thermometer.medium", color: .orange)
                 InfoBox(title: monitor.batteryPowerTitle, value: monitor.batWatts, icon: "bolt.fill", color: .yellow)
                 if monitor.isPluggedIn {
-                    InfoBox(title: "充電器", value: monitor.adapterRating, icon: "powerplug.portrait.fill", color: .teal)
-                    InfoBox(title: "輸入功率", value: monitor.powerInText, icon: "arrow.down.to.line", color: .mint)
-                    InfoBox(title: "系統耗電", value: monitor.systemLoadText, icon: "cpu", color: .indigo)
+                    InfoBox(title: String(localized: "充電器"), value: monitor.adapterRating, icon: "powerplug.portrait.fill", color: .teal)
+                    InfoBox(title: String(localized: "輸入功率"), value: monitor.powerInText, icon: "arrow.down.to.line", color: .mint)
+                    InfoBox(title: String(localized: "系統耗電"), value: monitor.systemLoadText, icon: "cpu", color: .indigo)
                 }
             }
 
@@ -102,28 +100,19 @@ struct BatteryDetailView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             }
             
-            Text("電量變化趨勢").font(.title3.bold()).foregroundColor(.secondary).padding(.top, 16)
-            BatteryHistoryChart(history: monitor.batteryHistory, height: 150)
-
-            if !monitor.sleepSummaryText.isEmpty {
-                Label(monitor.sleepSummaryText, systemImage: "moon.zzz")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                    .monospacedDigit()
+            Panel(title: "電量變化趨勢", symbol: "chart.bar.fill", color: .green) {
+                BatteryHistoryChart(history: monitor.batteryHistory, height: 150)
+                if !monitor.sleepSummaryText.isEmpty {
+                    Label(monitor.sleepSummaryText, systemImage: "moon.zzz")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                }
             }
 
-            BatteryHealthLogSection(monitor: monitor)
-
-            Divider()
-            HStack(spacing: 20) {
-                Toggle("啟用電池模組", isOn: $monitor.showBatModule)
-                Toggle("狀態列圖示", isOn: $monitor.showBatIcon)
-                Toggle("狀態列百分比", isOn: $monitor.showBatText)
-                Spacer()
+            Panel(title: "電池健康紀錄", symbol: "heart.fill", color: .red) {
+                BatteryHealthLogSection(monitor: monitor)
             }
-            .toggleStyle(.switch).tint(.green)
-        }
-        .padding(24)
         }
         .onAppear { monitor.setBatteryDetailVisible(true, source: "mainWindow") }
         .onDisappear { monitor.setBatteryDetailVisible(false, source: "mainWindow") }
@@ -201,7 +190,7 @@ struct BatteryDetailView: View {
                 Image(systemName: "battery.25")
                     .font(.title2)
                     .foregroundStyle(.red)
-                Text("低電量提醒")
+                Text("低電量警示")
                     .font(.headline)
                 Text("\(monitor.lowBatteryThreshold)%")
                     .font(.title3.bold())
@@ -254,19 +243,19 @@ struct BatteryHealthLogSection: View {
         let total = monitor.batteryHealthLog.count
         let points = points
         VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .firstTextBaseline) {
-                Text("電池健康紀錄").font(.title3.bold()).foregroundColor(.secondary)
+            HStack(alignment: .center) {
+                Picker("範圍", selection: $rangeDays) {
+                    Text("30 天").tag(30)
+                    Text("90 天").tag(90)
+                    Text("1 年").tag(365)
+                    Text("全部").tag(0)
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .frame(maxWidth: 320)
                 Spacer()
                 Text("已記錄 \(total) 天").font(.caption).foregroundStyle(.secondary)
             }
-            Picker("範圍", selection: $rangeDays) {
-                Text("30 天").tag(30)
-                Text("90 天").tag(90)
-                Text("1 年").tag(365)
-                Text("全部").tag(0)
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
 
             if let first = points.first, let last = points.last, points.count >= 2 {
                 Text("\(first.id)：\(first.health)%、\(first.cycles) 次循環 → 目前 \(last.health)%、\(last.cycles) 次循環")
@@ -331,13 +320,13 @@ struct BatteryHealthLogSection: View {
                 }
             }
         }
-        .padding(.top, 8)
     }
 
     /// 與前一筆相同時不顯示；有變化時顯示成「（−1%）」。
     private static func changeText(_ change: Int, unit: String) -> String {
         guard change != 0 else { return "" }
-        return "（\(change > 0 ? "+" : "−")\(abs(change))\(unit)）"
+        let sign = change > 0 ? "+" : "−"
+        return String(localized: "（\(sign)\(abs(change))\(unit)）")
     }
 }
 
@@ -348,7 +337,10 @@ struct ChargerCableCard: View {
     var body: some View {
         if let verdict = monitor.chargingVerdict {
             VStack(alignment: .leading, spacing: 12) {
-                Label("充電器與線材", systemImage: "cable.connector").font(.headline)
+                HStack(spacing: 9) {
+                    IconChip(symbol: "powerplug.fill", color: .teal, size: 24)
+                    Text("充電器與線材").font(.headline)
+                }
 
                 HStack(alignment: .top, spacing: 8) {
                     Image(systemName: verdict.limited ? "exclamationmark.triangle.fill" : "checkmark.circle.fill")
@@ -386,9 +378,9 @@ struct ChargerCableCard: View {
                     }
                 }
             }
-            .padding(16)
+            .padding(Metrics.panelPadding)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .cardSurface(cornerRadius: 14)
+            .cardSurface(cornerRadius: Metrics.panelRadius)
         }
     }
 

@@ -11,8 +11,14 @@ struct NetworkBarView: View {
     @Bindable var monitor: SystemMonitor
     var body: some View {
         HStack(spacing: 4) {
-            if monitor.showNetChart { 
-                MiniGraphView(history: Array(monitor.trafficHistory.suffix(5)), globalMaxDl: monitor.trafficHistory.map(\.downloadSpeed).max() ?? 1, globalMaxUl: monitor.trafficHistory.map(\.uploadSpeed).max() ?? 1)
+            if monitor.showNetChart {
+                MiniGraphView(
+                    history: Array(monitor.trafficHistory.suffix(monitor.netChartPoints)),
+                    globalMaxDl: monitor.trafficHistory.map(\.downloadSpeed).max() ?? 1,
+                    globalMaxUl: monitor.trafficHistory.map(\.uploadSpeed).max() ?? 1,
+                    style: monitor.netChartStyle, points: monitor.netChartPoints
+                )
+                .frame(width: monitor.netChartWidth, height: 16)
             }
             if monitor.showNetSpeed {
                 NetSpeedLabel(monitor: monitor, style: monitor.netSpeedStyle)
@@ -27,7 +33,7 @@ struct NetSpeedLabel: View {
     let monitor: SystemMonitor
     let style: Int
 
-    static let styleNames = ["上傳＋下載（兩行）", "僅上傳", "僅下載", "上傳＋下載合計", "上傳＋下載（單行）", "速度＋今日用量"]
+    static let styleNames: [LocalizedStringKey] = ["上傳＋下載（兩行）", "僅上傳", "僅下載", "上傳＋下載合計", "上傳＋下載（單行）", "速度＋今日用量", "網速＋CPU", "網速＋記憶體"]
 
     var body: some View {
         Group {
@@ -48,18 +54,38 @@ struct NetSpeedLabel: View {
                     speedOverUsage(upload: true, color: .green)
                     speedOverUsage(upload: false, color: .cyan)
                 }
-            default:
-                VStack(alignment: .leading, spacing: -2) {
-                    Text(monitor.barSpeedText(upload: true)).foregroundColor(.green)
-                    Text(monitor.barSpeedText(upload: false)).foregroundColor(.cyan)
+            case 6, 7:
+                HStack(spacing: 6) {
+                    twoLineSpeeds.frame(width: monitor.netSpeedTextWidth(style: 0), alignment: .leading)
+                    metricColumn(style == 6 ? "CPU" : "MEM", value: style == 6 ? monitor.currentCpuUsage : monitor.ramUsagePct)
                 }
-                .font(.system(size: 9, weight: .bold).monospacedDigit())
-                // 三位數的速度在窄版放不下時縮小字級，不要截成「…」。
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
+            default:
+                twoLineSpeeds
             }
         }
         .frame(width: monitor.netSpeedTextWidth(style: style), alignment: .leading)
+    }
+
+    private var twoLineSpeeds: some View {
+        VStack(alignment: .leading, spacing: -2) {
+            Text(monitor.barSpeedText(upload: true)).foregroundColor(.green)
+            Text(monitor.barSpeedText(upload: false)).foregroundColor(.cyan)
+        }
+        .font(.system(size: 9, weight: .bold).monospacedDigit())
+        // 三位數的速度在窄版放不下時縮小字級，不要截成「…」。
+        .lineLimit(1)
+        .minimumScaleFactor(0.7)
+    }
+
+    /// 上面是小字標題，下面是百分比；和系統「活動監視器」的選單列樣式相同。
+    private func metricColumn(_ title: String, value: Double) -> some View {
+        VStack(alignment: .center, spacing: -2) {
+            Text(title).font(.system(size: 7, weight: .bold)).foregroundStyle(.secondary)
+            Text("\(Int(value.rounded()))%").font(.system(size: 10, weight: .bold).monospacedDigit())
+                .foregroundStyle(value >= 85 ? Color.red : (value >= 60 ? Color.orange : Color.primary))
+        }
+        .lineLimit(1)
+        .frame(width: SystemMonitor.metricColumnWidth)
     }
 
     private func singleLine(_ text: String, color: Color) -> some View {
@@ -216,25 +242,67 @@ private struct BatteryBoltShape: Shape {
     }
 }
 
+/// 選單列的迷你流量圖。樣式：0 = 重疊面積、1 = 上下鏡像（上傳在上、下載在下）、2 = 長條。
 struct MiniGraphView: View {
     var history: [TrafficData]; var globalMaxDl: Double; var globalMaxUl: Double
+    var style: Int = 0
+    var points: Int = 6
+
     var body: some View {
         Canvas { context, size in
-            context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(Color.red.opacity(0.15)))
+            let frame = Path(roundedRect: CGRect(origin: .zero, size: size), cornerRadius: 3)
+            context.fill(frame, with: .color(Color.primary.opacity(0.08)))
             guard history.count > 1 else { return }
+            // 縱軸至少 100 KB/s，閒置時不會把雜訊放大成滿格。
             let maxDl = max(globalMaxDl, 102400), maxUl = max(globalMaxUl, 102400)
-            var dlPath = Path(), ulPath = Path(); let maxPoints = 5; let stepX = size.width / CGFloat(maxPoints - 1)
-            for (i, data) in history.enumerated() {
-                let x = CGFloat(i) * stepX, dlY = size.height - (CGFloat(data.downloadSpeed / maxDl) * size.height), ulY = size.height - (CGFloat(data.uploadSpeed / maxUl) * size.height)
-                if i == 0 { dlPath.move(to: CGPoint(x: x, y: dlY)); ulPath.move(to: CGPoint(x: x, y: ulY)) } else { dlPath.addLine(to: CGPoint(x: x, y: dlY)); ulPath.addLine(to: CGPoint(x: x, y: ulY)) }
+            let stepX = size.width / CGFloat(max(points - 1, 1))
+            // 資料不足一整排時靠右對齊，最新的點永遠在最右邊。
+            let offsetX = CGFloat(points - history.count) * stepX
+
+            switch style {
+            case 1:
+                let mid = size.height / 2
+                var ul = Path(), dl = Path()
+                for (i, data) in history.enumerated() {
+                    let x = offsetX + CGFloat(i) * stepX
+                    let up = mid - CGFloat(data.uploadSpeed / maxUl) * (mid - 1)
+                    let down = mid + CGFloat(data.downloadSpeed / maxDl) * (mid - 1)
+                    if i == 0 { ul.move(to: CGPoint(x: x, y: mid)); dl.move(to: CGPoint(x: x, y: mid)) }
+                    ul.addLine(to: CGPoint(x: x, y: up)); dl.addLine(to: CGPoint(x: x, y: down))
+                }
+                let lastX = offsetX + CGFloat(history.count - 1) * stepX
+                ul.addLine(to: CGPoint(x: lastX, y: mid)); ul.closeSubpath()
+                dl.addLine(to: CGPoint(x: lastX, y: mid)); dl.closeSubpath()
+                context.fill(ul, with: .color(.green.opacity(0.85)))
+                context.fill(dl, with: .color(.cyan.opacity(0.85)))
+                context.fill(Path(CGRect(x: 0, y: mid - 0.25, width: size.width, height: 0.5)), with: .color(Color.primary.opacity(0.3)))
+            case 2:
+                let barWidth = max(1, stepX * 0.36)
+                for (i, data) in history.enumerated() {
+                    let x = offsetX + CGFloat(i) * stepX
+                    let dlHeight = max(0.5, CGFloat(data.downloadSpeed / maxDl) * (size.height - 1))
+                    let ulHeight = max(0.5, CGFloat(data.uploadSpeed / maxUl) * (size.height - 1))
+                    context.fill(Path(roundedRect: CGRect(x: x - barWidth, y: size.height - ulHeight, width: barWidth, height: ulHeight), cornerRadius: 0.5), with: .color(.green))
+                    context.fill(Path(roundedRect: CGRect(x: x, y: size.height - dlHeight, width: barWidth, height: dlHeight), cornerRadius: 0.5), with: .color(.cyan))
+                }
+            default:
+                var dlPath = Path(), ulPath = Path()
+                for (i, data) in history.enumerated() {
+                    let x = offsetX + CGFloat(i) * stepX
+                    let dlY = size.height - CGFloat(data.downloadSpeed / maxDl) * size.height
+                    let ulY = size.height - CGFloat(data.uploadSpeed / maxUl) * size.height
+                    if i == 0 { dlPath.move(to: CGPoint(x: x, y: dlY)); ulPath.move(to: CGPoint(x: x, y: ulY)) }
+                    else { dlPath.addLine(to: CGPoint(x: x, y: dlY)); ulPath.addLine(to: CGPoint(x: x, y: ulY)) }
+                }
+                let lastX = offsetX + CGFloat(history.count - 1) * stepX
+                for (path, color) in [(dlPath, Color.cyan), (ulPath, Color.green)] {
+                    var area = path
+                    area.addLine(to: CGPoint(x: lastX, y: size.height)); area.addLine(to: CGPoint(x: offsetX, y: size.height)); area.closeSubpath()
+                    context.fill(area, with: .color(color.opacity(0.3)))
+                    context.stroke(path, with: .color(color), lineWidth: 1.0)
+                }
             }
-            var dlArea = dlPath; dlArea.addLine(to: CGPoint(x: CGFloat(history.count - 1) * stepX, y: size.height)); dlArea.addLine(to: CGPoint(x: 0, y: size.height)); dlArea.closeSubpath()
-            context.fill(dlArea, with: .color(.cyan.opacity(0.3)))
-            var ulArea = ulPath; ulArea.addLine(to: CGPoint(x: CGFloat(history.count - 1) * stepX, y: size.height)); ulArea.addLine(to: CGPoint(x: 0, y: size.height)); ulArea.closeSubpath()
-            context.fill(ulArea, with: .color(.green.opacity(0.3)))
-            context.stroke(dlPath, with: .color(.cyan), lineWidth: 1.0)
-            context.stroke(ulPath, with: .color(.green), lineWidth: 1.0)
         }
-        .frame(width: 30, height: 16).cornerRadius(3)
+        .clipShape(RoundedRectangle(cornerRadius: 3, style: .continuous))
     }
 }

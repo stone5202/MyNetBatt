@@ -8,22 +8,52 @@
   <img src="MyNetBatt/MyNetBatt/Assets.xcassets/AppIcon.appiconset/MyNetBatt.png" width="128" alt="MyNetBatt app icon">
 </p>
 
-MyNetBatt is a native macOS menu bar system monitor that brings battery, network, and system performance information together in a clean SwiftUI interface.
+MyNetBatt is a native macOS menu bar system monitor that brings battery, network, system performance, storage, and accessories together in one interface.
 
-> Current version: 4.0 · Interface language: Traditional Chinese
+> **4.0: a new look, redesigned from the ground up.** The monitor window has been completely redesigned, with a new Overview page, six desktop widgets, accessory battery levels, folder sizes and large files, an English interface, and a welcome tour, while keeping the glass look.
+>
+> Current version: 4.0 · Interface languages: Traditional Chinese, English
 
-For release highlights and fixes, see the [changelog](CHANGELOG.en.md) or [GitHub Releases](https://github.com/stone5202/MyNetBatt/releases). The changelog is also available in [Traditional Chinese](CHANGELOG.md).
+See the [changelog](CHANGELOG.en.md) or [GitHub Releases](https://github.com/stone5202/MyNetBatt/releases) for the changes in each version. The changelog is also available in [Traditional Chinese](CHANGELOG.md).
 
 ## Screenshots
 
 <p align="center">
-  <img src="docs/screenshots/network.webp" width="45%" alt="MyNetBatt network monitoring">
-  &nbsp;
-  <img src="docs/screenshots/battery.webp" width="45%" alt="MyNetBatt battery monitoring">
+  <img src="docs/screenshots/en/overview.webp" width="90%" alt="MyNetBatt monitor window Overview page">
 </p>
 
 <p align="center">
-  Network & system monitoring · Battery health & power monitoring
+  Monitor window: Overview
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/en/widget.webp" width="90%" alt="The six MyNetBatt desktop widgets">
+</p>
+
+<p align="center">
+  Desktop widgets: Battery, Data Usage, App Data Usage, Storage, Wi‑Fi, Accessory Battery
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/en/network.webp" width="40%" alt="MyNetBatt network popover">
+  &nbsp;
+  <img src="docs/screenshots/en/battery.webp" width="38%" alt="MyNetBatt battery popover">
+</p>
+
+<p align="center">
+  Network popover · Battery popover
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/en/monitor.webp" width="90%" alt="MyNetBatt Battery page with power details and the Charger & Cable card">
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/en/settings.webp" width="90%" alt="MyNetBatt Settings">
+</p>
+
+<p align="center">
+  Battery page · Settings
 </p>
 
 <p align="center">
@@ -31,23 +61,7 @@ For release highlights and fixes, see the [changelog](CHANGELOG.en.md) or [GitHu
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/settings.webp" width="80%" alt="MyNetBatt settings tab">
-</p>
-
-<p align="center">
-  Menu bar items · Settings
-</p>
-
-<p align="center">
-  <img src="docs/screenshots/monitor.webp" width="80%" alt="MyNetBatt monitor window battery tab with power supply details and the charger and cable card">
-</p>
-
-<p align="center">
-  <img src="docs/screenshots/widget.webp" width="60%" alt="MyNetBatt small and medium desktop widgets">
-</p>
-
-<p align="center">
-  Monitor window battery tab · Desktop widgets
+  Menu bar
 </p>
 
 ## Project status
@@ -62,25 +76,30 @@ MyNetBatt is under active development and maintenance. Its complete source code 
 
 ## Features
 
-- Battery icon, percentage, real-time network speed, and traffic chart in the menu bar; six network speed styles (two lines, single line, upload only, download only, combined, speed with today's usage) picked from live previews in Settings
+- An Overview page in the monitor window shows battery, network, system, storage, connection, and accessories at a glance
+- Battery icon, percentage, real-time network speed, and traffic chart in the menu bar; eight network speed styles (two lines, single line, upload only, download only, combined, speed with today's usage, speed with CPU, speed with memory) and an area, mirrored, or bar traffic chart that can be widened, picked from live previews in Settings
 - Optional CPU, memory, and storage usage items in the menu bar
 - Battery level, charging state, health, cycle count, temperature, power, and charge duration; the 48-hour chart is coloured by power source and marks charging and on-battery periods
 - While plugged in: adapter wattage, actual input power, system load, adapter voltage and current, and conversion loss
 - Charger and cable diagnosis: lists the charger's voltage and current profiles and the one in use, reads the cable's e-marker for its power rating and speed, and tells you when the cable is limiting charging
 - Records the duration and battery drain of the most recent sleep on battery
 - Daily log of battery health and cycle count, viewable over 30 days, 90 days, 1 year, or all time with a day-by-day list
-- Notifications for low battery, full charge, high battery temperature, health drop, power surge (naming the app using the most CPU), and high drain during sleep
+- Notifications for low battery (at several levels you choose), full charge, high battery temperature, health drop, power surge (naming the app using the most CPU), high drain during sleep, and low accessory battery, with a choice of system alert sounds
+- Accessory battery for Magic Keyboard, Mouse, and Trackpad, plus AirPods (each bud and the case) and other Bluetooth devices
 - macOS Low Power Mode control through a signed Privileged Helper; it can turn on automatically when the battery falls to a threshold and off again when power is connected
 - Upload and download speeds, average speed, cumulative traffic, today's hourly usage, interface, local IP, gateway, DNS, and public IP details
 - Wi-Fi channel, signal strength, transmit rate, and security
 - Daily, weekly, monthly, and yearly network usage per app (helpers and other child processes count towards the app that owns them, and other processes can optionally be listed separately), with upload and download counted separately and a history chart; tracking can be paused
 - Live list of apps currently using the network
-- Desktop and Notification Center widget (small and medium): battery level, charging state, health, and the last 24 hours of battery level
+- Six desktop and Notification Center widgets: Battery, Data Usage, App Data Usage, Storage, Wi-Fi, and Accessory Battery, with selectable theme colors
 - Always-on-top float window that can be toggled with a global shortcut, with adjustable background opacity
 - Configurable sections in the network and battery popovers
-- CPU, GPU, memory (including memory pressure), swap, and storage monitoring, with an eject button for external volumes
+- CPU, GPU, memory (including memory pressure), swap, and storage monitoring, with buttons to eject one or all external volumes
+- Folder sizes and files of 100 MB or larger, which can be shown in Finder or moved to the Trash
+- Hide the notch with a generated wallpaper that has a black top edge; the original can be restored at any time
 - Thunderbolt, USB4, and USB device information; what is connected to each USB-C and MagSafe port, and each cable's type, speed, power rating, and manufacturer
 - Theme (auto, light, dark), glass style, and accent color
+- Traditional Chinese and English interface, switchable in Settings, and a welcome tour on first launch
 - Automatic monitoring refresh after waking from sleep
 - Launch-at-login support
 
@@ -140,6 +159,7 @@ The helper exposes only methods for reading and changing Low Power Mode. It does
 - MyNetBatt contains no analytics, advertising, or user-tracking SDKs.
 - To display the public IP address, the app sends a request to [`https://api.ipify.org`](https://api.ipify.org); that service will naturally receive the source IP address of the request.
 - Showing the Wi-Fi network name requires Location access (a macOS requirement) and is requested only when you ask for it; MyNetBatt does not record or transmit your location.
+- Storage scans read file sizes only, never file contents. The first scan of Desktop, Documents, and Downloads triggers the standard macOS access prompt.
 - Other hardware and system information comes from built-in macOS APIs and command-line tools.
 
 ## Project structure

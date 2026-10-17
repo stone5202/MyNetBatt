@@ -16,7 +16,7 @@ extension SystemMonitor {
 
             let gpuModel = cpuModel.contains("Apple")
                 ? "\(cpuModel) GPU"
-                : "內建顯示晶片"
+                : String(localized: "內建顯示晶片")
 
             let totalRamGb = Double(ProcessInfo.processInfo.physicalMemory) / 1_073_741_824.0
             let usedRamGb = (SystemReaders.memoryUsedBytes() ?? 0) / 1_073_741_824.0
@@ -111,6 +111,24 @@ extension SystemMonitor {
         return message
     }
 
+    /// 依序退出所有外接磁碟；回傳退出失敗的磁碟名稱與原因（全部成功時為空）。
+    func ejectAllVolumes() async -> [(name: String, message: String)] {
+        let targets = storageVolumes.filter(\.isEjectable)
+        let failures = await Task.detached { () -> [(name: String, message: String)] in
+            var failures: [(name: String, message: String)] = []
+            for volume in targets {
+                do {
+                    try NSWorkspace.shared.unmountAndEjectDevice(at: URL(fileURLWithPath: volume.mountPath))
+                } catch {
+                    failures.append((volume.name, error.localizedDescription))
+                }
+            }
+            return failures
+        }.value
+        fetchStorageInfo()
+        return failures
+    }
+
     /// 磁碟容量與外接磁碟清單變化很慢：每 30 秒更新一次，掛載／卸除磁碟時由 AppDelegate 立即觸發。
     func fetchStorageInfo() {
         runExclusive("storage") {
@@ -171,7 +189,8 @@ extension SystemMonitor {
             let fDiskTotal = dTotalStr
             let fDiskPct = dPct
             let fVolumes = volumes
-            let fDiskSummary = String(format: "%.1f%% 已使用", dPct)
+            let pctText = String(format: "%.1f", dPct)
+            let fDiskSummary = String(localized: "\(pctText)% 已使用")
 
             await MainActor.run {
                 self.assignIfChanged(\.diskUsageStr, fDiskSummary)

@@ -31,16 +31,16 @@ struct NetworkPopoverView: View {
                     }
                 }
 
-                NetworkLiveRow(title: "上傳", arrow: "arrow.up", speed: monitor.upSpeedStr, total: monitor.totalUpStr, average: monitor.avgUpStr, history: monitor.trafficHistory, upload: true, color: .pink)
+                NetworkLiveRow(title: String(localized: "上傳"), arrow: "arrow.up", speed: monitor.upSpeedStr, total: monitor.totalUpStr, average: monitor.avgUpStr, history: monitor.trafficHistory, upload: true, color: .pink)
                 Divider()
-                NetworkLiveRow(title: "下載", arrow: "arrow.down", speed: monitor.downSpeedStr, total: monitor.totalDownStr, average: monitor.avgDownStr, history: monitor.trafficHistory, upload: false, color: .green)
+                NetworkLiveRow(title: String(localized: "下載"), arrow: "arrow.down", speed: monitor.downSpeedStr, total: monitor.totalDownStr, average: monitor.avgDownStr, history: monitor.trafficHistory, upload: false, color: .green)
 
                 if monitor.popNetShowTotals {
                     Divider()
                     Text("今日數據用量").font(.headline).foregroundStyle(monitor.accentColor)
                     HStack(alignment: .top, spacing: 16) {
-                        HourlyUsageColumn(title: "上載", bytes: monitor.hourlyTraffic.upload, color: .pink, monitor: monitor)
-                        HourlyUsageColumn(title: "下載", bytes: monitor.hourlyTraffic.download, color: .green, monitor: monitor)
+                        HourlyUsageColumn(title: String(localized: "上載"), bytes: monitor.hourlyTraffic.upload, color: .pink, monitor: monitor)
+                        HourlyUsageColumn(title: String(localized: "下載"), bytes: monitor.hourlyTraffic.download, color: .green, monitor: monitor)
                     }
                 }
 
@@ -213,10 +213,10 @@ struct NetworkDetailsPopover: View {
         VStack(alignment: .leading, spacing: 10) {
             Button { monitor.refreshNetworkDetails() } label: { Label("刷新", systemImage: "arrow.clockwise") }.buttonStyle(.plain)
             Divider()
-            NetworkDetailLine(title: "介面", value: monitor.networkInterfaceName)
-            NetworkDetailLine(title: "本機 IP", value: monitor.networkLocalIP, copyable: true)
-            NetworkDetailLine(title: "公網 IP", value: monitor.networkPublicIP, copyable: true)
-            NetworkDetailLine(title: "預設閘道", value: monitor.networkGateway)
+            NetworkDetailLine(title: String(localized: "介面"), value: monitor.networkInterfaceName)
+            NetworkDetailLine(title: String(localized: "本機 IP"), value: monitor.networkLocalIP, copyable: true)
+            NetworkDetailLine(title: String(localized: "公網 IP"), value: monitor.networkPublicIP, copyable: true)
+            NetworkDetailLine(title: String(localized: "預設閘道"), value: monitor.networkGateway)
             NetworkDetailLine(title: "DNS", value: monitor.networkDNS)
             if let wifi = monitor.wifiInfo {
                 Divider()
@@ -225,12 +225,12 @@ struct NetworkDetailsPopover: View {
                     Spacer()
                     if wifi.ssid == nil { WiFiNameAccessButton(monitor: monitor) }
                 }
-                if let ssid = wifi.ssid { NetworkDetailLine(title: "無線網路", value: ssid) }
-                NetworkDetailLine(title: "頻道", value: wifi.channel)
-                NetworkDetailLine(title: "訊號強度", value: wifi.rssiText)
-                NetworkDetailLine(title: "傳輸率", value: wifi.transmitRateText)
-                NetworkDetailLine(title: "安全性", value: wifi.security)
-                NetworkDetailLine(title: "MAC 位址", value: wifi.macAddress, copyable: true)
+                if let ssid = wifi.ssid { NetworkDetailLine(title: String(localized: "無線網路"), value: ssid) }
+                NetworkDetailLine(title: String(localized: "頻道"), value: wifi.channel)
+                NetworkDetailLine(title: String(localized: "訊號強度"), value: wifi.rssiText)
+                NetworkDetailLine(title: String(localized: "傳輸率"), value: wifi.transmitRateText)
+                NetworkDetailLine(title: String(localized: "安全性"), value: wifi.security)
+                NetworkDetailLine(title: String(localized: "MAC 位址"), value: wifi.macAddress, copyable: true)
             }
         }.padding(16).frame(width: 290)
     }

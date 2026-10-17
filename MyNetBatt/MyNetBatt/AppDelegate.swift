@@ -35,6 +35,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         NSApp.setActivationPolicy(.accessory)
+        // 舊版每次啟動都會記下 build；有這筆紀錄代表是從舊版升級，而不是全新安裝。
+        let isExistingUser = UserDefaults.standard.string(forKey: "lastLaunchedBuild") != nil
         restartWidgetAfterUpdate()
 
         setupPopovers()
@@ -85,6 +87,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         
         updateStatusBarWidths()
+
+        IntroWindowController.shared.onOpenMainWindow = { [weak self] in self?.openSettingsWindow() }
+        NotificationCenter.default.addObserver(forName: .showWhatsNew, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { if let self { IntroWindowController.shared.showWhatsNew(monitor: self.monitor) } }
+        }
+        NotificationCenter.default.addObserver(forName: .showOnboarding, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { if let self { IntroWindowController.shared.showOnboarding(monitor: self.monitor) } }
+        }
+        // 等選單列項目出現、第一輪取樣完成後再顯示導覽或新功能。
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+            guard let self else { return }
+            IntroWindowController.shared.showIfNeeded(monitor: self.monitor, isExistingUser: isExistingUser)
+        }
     }
 
     /// App 更新後，舊版的小工具程序可能還在執行；系統會因為版本與磁碟上的 App 不符而拒絕更新小工具，
@@ -267,7 +282,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         if let btn = netItem.button {
             var nW: CGFloat = 6
-            if monitor.showNetChart { nW += 32 }
+            if monitor.showNetChart { nW += monitor.netChartWidth + 2 }
             if monitor.showNetSpeed { nW += monitor.netSpeedTextWidth }
             if monitor.showNetChart && monitor.showNetSpeed { nW += 4 }
             let finalNetWidth = max(nW, 1)
@@ -295,8 +310,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupSettingsWindow() {
         let hostingController = NSHostingController(rootView: MainWindowView(monitor: monitor))
         let window = NSWindow(contentViewController: hostingController)
-        window.title = "MyNetBatt 監控中心"
-        window.styleMask = [.titled, .closable, .miniaturizable, .fullSizeContentView]
+        window.title = String(localized: "MyNetBatt 監控中心")
+        window.styleMask = [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView]
         window.isReleasedWhenClosed = false
         // 視窗每次開啟都重新建立，一律置中；不記住上次的位置，以免被還原到螢幕邊緣或螢幕外。
         // 剛建立時 SwiftUI 內容還沒排版、視窗尺寸是 0，要先定出尺寸再置中，否則會以左上角對齊螢幕中心。
@@ -321,13 +336,27 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         settingsWindow = window
     }
 
+    /// 電池小視窗的高度：有周邊裝置那一列時加高，其他內容才不會被擠壓。網路小視窗也用同一個高度。
+    private var batteryPopoverHeight: CGFloat {
+        guard monitor.popBatShowDevices, !monitor.peripherals.isEmpty else { return 590 }
+        return monitor.peripherals.count > 2 ? 734 : 690
+    }
+
     @objc func toggleNetPopover(_ sender: AnyObject?) {
         if netPopover.isShown { netPopover.performClose(sender) }
-        else { show(netPopover, from: netItem) { NSHostingController(rootView: NetworkPopoverView(monitor: monitor)) } }
+        else {
+            // 和電池小視窗一樣高，兩個小視窗看起來一致；內容超出時可以捲動。
+            netPopover.contentSize = NSSize(width: 380, height: batteryPopoverHeight)
+            show(netPopover, from: netItem) { NSHostingController(rootView: NetworkPopoverView(monitor: monitor)) }
+        }
     }
 
     @objc func toggleBatPopover(_ sender: AnyObject?) {
         if batPopover.isShown { batPopover.performClose(sender) }
-        else { show(batPopover, from: batItem) { NSHostingController(rootView: BatteryPopoverView(monitor: monitor)) } }
+        else {
+            // 有周邊裝置那一列時加高，其他內容才不會被擠壓。
+            batPopover.contentSize = NSSize(width: 360, height: batteryPopoverHeight)
+            show(batPopover, from: batItem) { NSHostingController(rootView: BatteryPopoverView(monitor: monitor)) }
+        }
     }
 }

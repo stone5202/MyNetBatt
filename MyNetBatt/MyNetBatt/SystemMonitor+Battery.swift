@@ -68,7 +68,7 @@ extension SystemMonitor {
             // the last good UI value and history untouched until the next poll.
             guard let tempPct else { return }
 
-            let batType = tempPlugged ? "變壓器 (AC)" : "電池供電"
+            let batType = tempPlugged ? String(localized: "變壓器 (AC)") : String(localized: "電池供電")
 
             let rawCurrentCapacity = number(["AppleRawCurrentCapacity"]).map(Double.init) ?? 0
             let rawMaxCapacity = number(["AppleRawMaxCapacity"]).map(Double.init) ?? 0
@@ -79,21 +79,21 @@ extension SystemMonitor {
                 currentMa = avgCurrent
             }
 
-            var timeRemain = "計算中..."
+            var timeRemain = String(localized: "計算中...")
             if tempPlugged {
                 if tempPct >= 100 {
-                    timeRemain = "已充滿"
+                    timeRemain = String(localized: "已充滿")
                 } else if tempCharging {
                     if let mins = validMinutes(number(["AvgTimeToFull"])) {
                         timeRemain = formatMinutes(mins)
                     } else if rawMaxCapacity > rawCurrentCapacity, currentMa > 0 {
                         let minutes = Int(((rawMaxCapacity - rawCurrentCapacity) / Double(currentMa)) * 60.0)
-                        timeRemain = minutes > 0 && minutes < 24 * 60 ? formatMinutes(minutes) : "計算中..."
+                        timeRemain = minutes > 0 && minutes < 24 * 60 ? formatMinutes(minutes) : String(localized: "計算中...")
                     } else if let t = self.extract(pattern: "(\\d+:\\d+) until full", from: pmOutput()) {
                         timeRemain = t
                     }
                 } else {
-                    timeRemain = "暫停充電"
+                    timeRemain = String(localized: "暫停充電")
                 }
             } else {
                 if let mins = validMinutes(number(["TimeRemaining"]))
@@ -102,7 +102,7 @@ extension SystemMonitor {
                     timeRemain = formatMinutes(mins)
                 } else if rawCurrentCapacity > 0, currentMa < 0 {
                     let minutes = Int((rawCurrentCapacity / abs(Double(currentMa))) * 60.0)
-                    timeRemain = minutes > 0 && minutes < 24 * 60 ? formatMinutes(minutes) : "計算中..."
+                    timeRemain = minutes > 0 && minutes < 24 * 60 ? formatMinutes(minutes) : String(localized: "計算中...")
                 } else if let t = self.extract(pattern: "(\\d+:\\d+) remaining", from: pmOutput()) {
                     timeRemain = t
                 }
@@ -153,7 +153,7 @@ extension SystemMonitor {
                 tIcon = "battery.0"
             }
 
-            let fSource = tempCharging ? "充電中" : (tempPlugged ? "已接上電源" : "放電中")
+            let fSource = tempCharging ? String(localized: "充電中") : (tempPlugged ? String(localized: "已接上電源") : String(localized: "放電中"))
             let fStatus = "\(tempPct)"
             let fIcon = tIcon
             let fTemp = tempStr
@@ -182,10 +182,10 @@ extension SystemMonitor {
                 var parts: [String] = []
                 if let name = adapter["Name"] as? String, !name.isEmpty { parts.append(name) }
                 if let volts = milli(adapter, "AdapterVoltage"), let amps = milli(adapter, "Current") {
-                    parts.append(String(format: "%.1f V／%.2f A", volts, amps))
+                    parts.append(String(format: "%.1f V / %.2f A", volts, amps))
                 }
-                if let loss = milli(telemetry, "AdapterEfficiencyLoss") { parts.append(String(format: "轉換損耗 %.1f W", loss)) }
-                fAdapterDetail = parts.joined(separator: "，")
+                if let loss = milli(telemetry, "AdapterEfficiencyLoss") { let lossText = String(format: "%.1f", loss); parts.append(String(localized: "轉換損耗 \(lossText) W")) }
+                fAdapterDetail = parts.joined(separator: String(localized: "，"))
             }
             let supply = (rating: fAdapterRating, powerIn: fPowerIn, load: fSystemLoad, detail: fAdapterDetail)
             let fProfiles = tempPlugged ? SystemReaders.chargerProfiles(from: adapter) : []
@@ -237,7 +237,7 @@ extension SystemMonitor {
     func updateChargeSession() {
         func format(_ interval: TimeInterval) -> String {
             let minutes = max(0, Int(interval / 60))
-            return minutes >= 60 ? "\(minutes / 60) 小時 \(minutes % 60) 分" : "\(minutes) 分"
+            return minutes >= 60 ? String(localized: "\(minutes / 60) 小時 \(minutes % 60) 分") : String(localized: "\(minutes) 分")
         }
         let now = Date()
         if isCharging, isPluggedIn {
@@ -247,12 +247,14 @@ extension SystemMonitor {
                 return
             }
             if batPct > chargeSessionStartLevel {
-                assignIfChanged(\.chargeSessionText, "本次充電：\(chargeSessionStartLevel)% → \(batPct)%，已 \(format(now.timeIntervalSince(start)))")
+                let elapsed = format(now.timeIntervalSince(start))
+                assignIfChanged(\.chargeSessionText, String(localized: "本次充電：\(chargeSessionStartLevel)% → \(batPct)%，已 \(elapsed)"))
             }
         } else if let start = chargeSessionStart {
             chargeSessionStart = nil
             guard batPct > chargeSessionStartLevel else { return }
-            let summary = "上次充電：\(chargeSessionStartLevel)% → \(batPct)%，用時 \(format(now.timeIntervalSince(start)))"
+            let elapsed = format(now.timeIntervalSince(start))
+            let summary = String(localized: "上次充電：\(chargeSessionStartLevel)% → \(batPct)%，用時 \(elapsed)")
             assignIfChanged(\.chargeSessionText, summary)
             UserDefaults.standard.set(summary, forKey: "lastChargeSummary")
         }

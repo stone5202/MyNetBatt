@@ -39,6 +39,12 @@ final class SystemMonitor {
     var netSpeedStyle: Int = storedSetting("netSpeedStyle", 0) { didSet { UserDefaults.standard.set(netSpeedStyle, forKey: "netSpeedStyle"); layoutChanged.send() } }
     var showNetArrow: Bool = storedSetting("showNetArrow", true) { didSet { UserDefaults.standard.set(showNetArrow, forKey: "showNetArrow"); layoutChanged.send() } }
     var netBarCompact: Bool = storedSetting("netBarCompact", false) { didSet { UserDefaults.standard.set(netBarCompact, forKey: "netBarCompact"); layoutChanged.send() } }
+    /// 選單列流量圖：0 = 重疊面積、1 = 上下鏡像、2 = 長條；加寬時顯示較長的時間。
+    var netChartStyle: Int = storedSetting("netChartStyle", 0) { didSet { UserDefaults.standard.set(netChartStyle, forKey: "netChartStyle") } }
+    var netChartWide: Bool = storedSetting("netChartWide", false) { didSet { UserDefaults.standard.set(netChartWide, forKey: "netChartWide"); layoutChanged.send() } }
+    var netChartWidth: CGFloat { netChartWide ? 56 : 30 }
+    var netChartPoints: Int { netChartWide ? 14 : 6 }
+    static let metricColumnWidth: CGFloat = 28
     /// 以系統電池圖示的尺寸自繪（約 27×12.5 pt）；關閉時使用較小的 SF Symbol。
     var batIconLarge: Bool = storedSetting("batIconLarge", true) { didSet { UserDefaults.standard.set(batIconLarge, forKey: "batIconLarge"); layoutChanged.send() } }
 
@@ -54,6 +60,7 @@ final class SystemMonitor {
     var popNetShowDisk: Bool = storedSetting("popNetShowDisk", true) { didSet { UserDefaults.standard.set(popNetShowDisk, forKey: "popNetShowDisk") } }
     var popNetShowBarToggles: Bool = storedSetting("popNetShowBarToggles", true) { didSet { UserDefaults.standard.set(popNetShowBarToggles, forKey: "popNetShowBarToggles") } }
     var popBatShowChart: Bool = storedSetting("popBatShowChart", true) { didSet { UserDefaults.standard.set(popBatShowChart, forKey: "popBatShowChart") } }
+    var popBatShowDevices: Bool = storedSetting("popBatShowDevices", true) { didSet { UserDefaults.standard.set(popBatShowDevices, forKey: "popBatShowDevices") } }
 
     /// 暫停時仍顯示即時網速，但不再把用量累計進每日／每月紀錄。
     /// 數據用量的顯示方式：0 = 只列出 App，其餘程序合併成一列；1 = App 與程序都列出。
@@ -61,7 +68,7 @@ final class SystemMonitor {
     var usageTrackingPaused: Bool = storedSetting("usageTrackingPaused", false) { didSet { UserDefaults.standard.set(usageTrackingPaused, forKey: "usageTrackingPaused") } }
 
     /// 監控中心目前選取的分頁；選單列項目與齒輪按鈕可指定要打開的分頁。
-    var mainWindowTab: String = "battery"
+    var mainWindowTab: String = "overview"
 
     // MARK: 外觀
     @ObservationIgnored let appearanceChanged = PassthroughSubject<Void, Never>()
@@ -72,6 +79,10 @@ final class SystemMonitor {
     /// 玻璃質感的霧化程度：0 最通透、1 最霧（接近不透明）。只改變壓在模糊材質上的底色濃度，後方內容始終是模糊的。
     var glassFrost: Double = storedSetting("glassFrost", 0.6) { didSet { UserDefaults.standard.set(glassFrost, forKey: "glassFrost") } }
     var accentColorIndex: Int = storedSetting("accentColorIndex", 0) { didSet { UserDefaults.standard.set(accentColorIndex, forKey: "accentColorIndex") } }
+    /// 介面語言：0 = 跟隨系統、1 = 繁體中文、2 = English。App 下次啟動時生效。
+    var appLanguage: Int = storedSetting("appLanguage", 0) { didSet { applyLanguagePreference() } }
+    /// 這次啟動實際使用的語言設定；和 appLanguage 不同時提示重新啟動。
+    @ObservationIgnored let launchLanguage: Int = storedSetting("appLanguage", 0)
 
     // MARK: 懸浮視窗
     /// 視窗層級的設定（顯示、不透明度、陰影）改變時通知 AppDelegate；內容樣式由 SwiftUI 直接觀察。
@@ -109,9 +120,21 @@ final class SystemMonitor {
         didSet { UserDefaults.standard.set(notifySleepDrain, forKey: "notifySleepDrain"); if notifySleepDrain { ensureNotificationPermission() } }
     }
     var notificationSound: Bool = storedSetting("notificationSound", true) { didSet { UserDefaults.standard.set(notificationSound, forKey: "notificationSound") } }
+    /// 提示音：空字串為系統預設，其餘為 /System/Library/Sounds 的音效名稱（BatteryNotifier.soundChoices）。
+    var notificationSoundName: String = storedSetting("notificationSoundName", "") { didSet { UserDefaults.standard.set(notificationSoundName, forKey: "notificationSoundName") } }
+    /// 低電量的提醒時機（百分比）；放電經過每一個門檻時各提醒一次。預設沿用舊版的單一門檻。
+    var lowBatteryAlertLevels: Set<Int> = Set(storedSetting("lowBatteryAlertLevels", [storedSetting("lowBatteryThreshold", 20)])) {
+        didSet { UserDefaults.standard.set(lowBatteryAlertLevels.sorted(by: >), forKey: "lowBatteryAlertLevels") }
+    }
+    static let lowBatteryAlertChoices = [50, 40, 30, 20, 15, 10, 5]
+    @ObservationIgnored var lowBatteryNotifiedLevels = Set<Int>()
+    /// 周邊裝置（鍵盤、滑鼠、耳機）電量降到 10% 時通知。
+    var notifyPeripheralLow: Bool = storedSetting("notifyPeripheralLow", false) {
+        didSet { UserDefaults.standard.set(notifyPeripheralLow, forKey: "notifyPeripheralLow"); if notifyPeripheralLow { ensureNotificationPermission() } }
+    }
+    @ObservationIgnored var peripheralLowNotified = Set<String>()
     /// 使用者在系統設定拒絕通知時為 true，設定頁據此顯示提示。
     var notificationPermissionDenied = false
-    @ObservationIgnored var lowBatteryNotified = false
     @ObservationIgnored var fullChargeNotified = false
     @ObservationIgnored var hasBatteryNotificationBaseline = false
     @ObservationIgnored var highTemperatureNotified = false
@@ -156,6 +179,8 @@ final class SystemMonitor {
     var avgUpStr: String = "0 B/s"
     var avgDownStr: String = "0 B/s"
     var hourlyTraffic = HourlyTraffic(day: "")
+    /// 過去每天經過網卡的 [上傳, 下載] 總量，key 為 "yyyy-MM-dd"；換日時由 hourlyTraffic 結算。
+    @ObservationIgnored var dailyTraffic: [String: [UInt64]] = [:]
     /// 選單列樣式用：上傳加下載的即時速度，以及今天累計的上傳／下載量。
     var totalSpeedStr: String = "0 B/s"
     var todayUpStr: String = "0 B"
@@ -172,7 +197,7 @@ final class SystemMonitor {
     }
     var batteryIcon: String = "battery.100"
     var batteryColor: Color = .green
-    var batteryPowerSource: String = "讀取中..."
+    var batteryPowerSource: String = String(localized: "讀取中...")
     var batHealth: String = "--"
     var batCycle: String = "--"
     var batTemp: String = "--"
@@ -216,17 +241,17 @@ final class SystemMonitor {
     /// 每分鐘新增一筆、最多 2880 筆；寫入由 saveBatteryHistory() 節流，不在每次變動時整包編碼。
     var batteryHistory: [BatteryData] = []
 
-    var cpuModelStr: String = "讀取中..."
-    var macModelStr: String = "讀取中..."
-    var gpuModelStr: String = "讀取中..."
-    var ramUsageStr: String = "讀取中..."
+    var cpuModelStr: String = String(localized: "讀取中...")
+    var macModelStr: String = String(localized: "讀取中...")
+    var gpuModelStr: String = String(localized: "讀取中...")
+    var ramUsageStr: String = String(localized: "讀取中...")
     var ramUsagePct: Double = 0.0
     var memoryPressurePct: Double = 0.0
     /// 1 = 正常、2 = 警告、4 = 嚴重
     var memoryPressureLevel: Int = 1
-    var swapUsageStr: String = "讀取中..."
+    var swapUsageStr: String = String(localized: "讀取中...")
     var swapUsagePct: Double = 0.0
-    var diskUsageStr: String = "讀取中..."
+    var diskUsageStr: String = String(localized: "讀取中...")
     var diskUsedStr: String = "-- GB"
     var diskFreeStr: String = "-- GB"
     var diskTotalStr: String = "-- GB"
@@ -237,7 +262,7 @@ final class SystemMonitor {
     var currentGpuUsage: Double = 0.0
     var gpuHistory: [SimpleData] = []
     var appNetworkUsages: [AppNetworkUsage] = []
-    var appNetworkStatus: String = "建立程序流量基準中…"
+    var appNetworkStatus: String = String(localized: "建立程序流量基準中…")
     var appUsageHistory: [String: [String: UInt64]] = [:]
     /// 以 "yyyy-MM" 為 key 的每月用量，保留 12 個月；每日明細（appUsageHistory）只保留 31 天。
     var appUsageMonthly: [String: [String: UInt64]] = [:]
@@ -247,7 +272,7 @@ final class SystemMonitor {
     var appUsageMonthlySplit: [String: [String: [UInt64]]] = [:]
     /// 用量紀錄裡哪些名稱是 App，以及它的 .app 路徑；用來分辨 App 與程序，並讓沒在執行的 App 也有圖示。
     var appUsageBundlePaths: [String: String] = [:]
-    static let otherProcessesName = "其他程序"
+    static let otherProcessesName = String(localized: "其他程序")
     /// 未連上 Wi‑Fi 時為 nil。
     var wifiInfo: WiFiInfo?
     @ObservationIgnored var wifiLocationAuthorizer: WiFiLocationAuthorizer?
@@ -256,9 +281,13 @@ final class SystemMonitor {
     var networkGateway: String = "--"
     var networkDNS: String = "--"
     var networkPublicIP: String = "--"
-    var networkDetailStatus: String = "讀取中…"
+    var networkDetailStatus: String = String(localized: "讀取中…")
     var thunderboltDevices: [ThunderboltDeviceInfo] = []
-    var thunderboltStatus: String = "讀取中…"
+    /// 已連線、會回報電量的藍牙周邊（妙控系列、AirPods、第三方滑鼠等）。
+    var peripherals: [PeripheralDevice] = []
+    @ObservationIgnored var peripheralProfilerCache: [PeripheralDevice] = []
+    @ObservationIgnored var lastPeripheralProfilerTime: Date?
+    var thunderboltStatus: String = String(localized: "讀取中…")
 
     @ObservationIgnored var lastInBytes: UInt64 = 0
     @ObservationIgnored var lastOutBytes: UInt64 = 0
@@ -298,6 +327,10 @@ final class SystemMonitor {
     @ObservationIgnored var networkPathMonitor: NWPathMonitor?
     @ObservationIgnored var networkRefreshTask: Task<Void, Never>?
     @ObservationIgnored var lastBatteryHistorySave: Date?
+    /// 小工具：各種類上次寫入的內容摘要與上次要求重新載入的時間，以及 App 圖示的快取。
+    @ObservationIgnored var widgetExtrasKeys: [String: String] = [:]
+    @ObservationIgnored var widgetExtrasReloads: [String: Date] = [:]
+    @ObservationIgnored var widgetIconCache: [String: Data] = [:]
 
     init() {
         UserDefaults.standard.register(defaults: [
@@ -360,6 +393,9 @@ final class SystemMonitor {
            decoded.upload.count == 24, decoded.download.count == 24 {
             hourlyTraffic = decoded
         }
+        if let stored = UserDefaults.standard.dictionary(forKey: "dailyTrafficV1") as? [String: [NSNumber]] {
+            dailyTraffic = stored.mapValues { $0.map(\.uint64Value) }.filter { $0.value.count == 2 }
+        }
 
         updateBatteryColor()
         startNetworkSpeedMonitor()
@@ -370,18 +406,23 @@ final class SystemMonitor {
         startSystemInfoMonitor()
         startStorageMonitor()
         startThunderboltMonitor()
+        startPeripheralMonitor()
+        startWidgetExtrasPublisher()
+        // 小工具在另一個程序，啟動時把目前的語言設定同步過去。
+        let sharedDefaults = UserDefaults(suiteName: WidgetSnapshot.appGroup)
+        if let code = Self.languageCodes[appLanguage] { sharedDefaults?.set(code, forKey: "appLanguage") } else { sharedDefaults?.removeObject(forKey: "appLanguage") }
         deviceChangeObserver = DeviceChangeObserver { [weak self] in self?.scheduleDeviceRefresh() }
     }
 
     var batteryTimeTitle: String {
         if isPluggedIn {
-            return (batPct >= 100 || !isCharging) ? "狀態" : "預估充滿時間"
+            return (batPct >= 100 || !isCharging) ? String(localized: "狀態") : String(localized: "預估充滿時間")
         }
-        return "預估剩餘時間"
+        return String(localized: "預估剩餘時間")
     }
 
     var batteryPowerTitle: String {
-        isPluggedIn ? "充電功率" : "輸出功率"
+        isPluggedIn ? String(localized: "充電功率") : String(localized: "輸出功率")
     }
 
     var isLowBatteryWarning: Bool {
@@ -389,8 +430,8 @@ final class SystemMonitor {
     }
 
     static let accentPalette: [(name: String, color: Color)] = [
-        ("藍色", .blue), ("紫色", .purple), ("粉紅色", .pink), ("紅色", .red),
-        ("橘色", .orange), ("黃色", .yellow), ("綠色", .green), ("青色", .cyan)
+        (String(localized: "藍色"), .blue), (String(localized: "紫色"), .purple), (String(localized: "粉紅色"), .pink), (String(localized: "紅色"), .red),
+        (String(localized: "橘色"), .orange), (String(localized: "黃色"), .yellow), (String(localized: "綠色"), .green), (String(localized: "青色"), .cyan)
     ]
 
     var accentColor: Color {
@@ -405,11 +446,12 @@ final class SystemMonitor {
     /// 選單列網速文字的寬度；狀態列項目的長度（AppDelegate）與畫面共用同一個值。
     var netSpeedTextWidth: CGFloat { netSpeedTextWidth(style: netSpeedStyle) }
 
-    /// 各種網速樣式（NetSpeedLabel.styleNames）的寬度；4、5 是兩欄並排。
+    /// 各種網速樣式（NetSpeedLabel.styleNames）的寬度；4、5 是兩欄並排，6、7 是兩行網速加一欄百分比。
     func netSpeedTextWidth(style: Int) -> CGFloat {
-        let twoLine = style == 0 || style == 5
+        let twoLine = style == 0 || style >= 5
         var width: CGFloat = twoLine ? (netBarCompact ? 32 : 40) : (netBarCompact ? 42 : 56)
         if showNetArrow { width += twoLine ? 8 : 10 }
+        if style >= 6 { return width + 6 + Self.metricColumnWidth }
         return style >= 4 ? width * 2 + 6 : width
     }
 

@@ -1,0 +1,40 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "NSLocationUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MyNetBatt needs Location access to show the name of the connected Wi‑Fi network. Your location is never recorded or sent."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MyNetBatt 需要定位權限才能顯示目前連線的 Wi‑Fi 名稱，不會記錄或傳送你的位置。"
+          }
+        }
+      }
+    },
+    "NSLocationWhenInUseUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MyNetBatt needs Location access to show the name of the connected Wi‑Fi network. Your location is never recorded or sent."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MyNetBatt 需要定位權限才能顯示目前連線的 Wi‑Fi 名稱，不會記錄或傳送你的位置。"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}
