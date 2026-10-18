@@ -10,9 +10,11 @@
 
 MyNetBatt is a native macOS menu bar system monitor that brings battery, network, system performance, storage, and accessories together in one interface.
 
-> **4.0: a new look, redesigned from the ground up.** The monitor window has been completely redesigned, with a new Overview page, six desktop widgets, accessory battery levels, folder sizes and large files, an English interface, and a welcome tour, while keeping the glass look.
+> **4.1: ports and cables at a glance.** A new Ports tab and port status in the menu bar show what each port is carrying, how fast it's running, and whether your Mac, the cable or the device is holding it back. The Battery page also explains why it isn't charging.
 >
-> Current version: 4.0 · Interface languages: Traditional Chinese, English
+> 4.0 was the full redesign: a completely new monitor window with an Overview page, six desktop widgets, accessory battery levels, folder sizes and large files, an English interface, and a welcome tour.
+>
+> Current version: 4.1 · Interface languages: Traditional Chinese, English
 
 See the [changelog](CHANGELOG.en.md) or [GitHub Releases](https://github.com/stone5202/MyNetBatt/releases) for the changes in each version. The changelog is also available in [Traditional Chinese](CHANGELOG.md).
 
@@ -57,6 +59,16 @@ See the [changelog](CHANGELOG.en.md) or [GitHub Releases](https://github.com/sto
 </p>
 
 <p align="center">
+  <img src="docs/screenshots/en/ports.webp" width="62%" alt="MyNetBatt Ports page">
+  &nbsp;
+  <img src="docs/screenshots/en/ports-popover.webp" width="30%" alt="MyNetBatt Ports menu bar window">
+</p>
+
+<p align="center">
+  Ports page · Ports menu bar window
+</p>
+
+<p align="center">
   <img src="docs/screenshots/menubar.webp" width="45%" alt="MyNetBatt menu bar items for CPU, memory, storage and network">
 </p>
 
@@ -97,7 +109,9 @@ MyNetBatt is under active development and maintenance. Its complete source code 
 - CPU, GPU, memory (including memory pressure), swap, and storage monitoring, with buttons to eject one or all external volumes
 - Folder sizes and files of 100 MB or larger, which can be shown in Finder or moved to the Trash
 - Hide the notch with a generated wallpaper that has a black top edge; the original can be restored at any time
-- Thunderbolt, USB4, and USB device information; what is connected to each USB-C and MagSafe port, and each cable's type, speed, power rating, and manufacturer
+- Ports: the transports each USB-C, MagSafe, and HDMI port is using, its actual link speed and maximum, and whether your Mac, the cable, or the device is the bottleneck; connected displays and Thunderbolt/USB4 devices, and each cable's type, speed, power rating, and manufacturer; optional technical details such as plug count
+- Port status in the menu bar (five icon styles, optional charger input power) with an orange dot when a cable is limiting speed; notifications when ports connect or disconnect
+- When plugged in, explains why the Mac isn't charging: full, on hold (charge limit or Optimized Battery Charging), or draining while on the charger
 - Theme (auto, light, dark), glass style, and accent color
 - Traditional Chinese and English interface, switchable in Settings, and a welcome tour on first launch
 - Automatic monitoring refresh after waking from sleep

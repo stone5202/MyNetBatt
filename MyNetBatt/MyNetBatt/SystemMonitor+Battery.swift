@@ -188,7 +188,12 @@ extension SystemMonitor {
                 fAdapterDetail = parts.joined(separator: String(localized: "，"))
             }
             let supply = (rating: fAdapterRating, powerIn: fPowerIn, load: fSystemLoad, detail: fAdapterDetail)
+            let fPowerInWatts = tempPlugged ? (milli(telemetry, "SystemPowerIn") ?? 0) : 0
             let fProfiles = tempPlugged ? SystemReaders.chargerProfiles(from: adapter) : []
+            let fChargeState = ChargeState.evaluate(
+                plugged: tempPlugged, charging: tempCharging, percent: tempPct,
+                fullyCharged: (SystemReaders.lookup("FullyCharged", in: batteryProperties) as? NSNumber)?.boolValue ?? false,
+                batteryWatts: signedBatteryWatts)
 
             await MainActor.run {
                 self.assignIfChanged(\.batteryStatus, fStatus)
@@ -205,7 +210,9 @@ extension SystemMonitor {
                 let plugChanged = self.isPluggedIn != isPlugged
                 self.assignIfChanged(\.isPluggedIn, isPlugged)
                 self.assignIfChanged(\.chargerProfiles, fProfiles)
-                if plugChanged { self.refreshPortInfoAfterPlugChange() }
+                self.assignIfChanged(\.chargeState, fChargeState)
+                if plugChanged { self.refreshPortInfoAfterPlugChange(); self.layoutChanged.send() }
+                self.assignIfChanged(\.powerInWatts, (fPowerInWatts * 10).rounded() / 10)
                 self.batterySignedWatts = fSignedWatts
                 self.assignIfChanged(\.adapterRating, supply.rating)
                 self.assignIfChanged(\.powerInText, supply.powerIn)

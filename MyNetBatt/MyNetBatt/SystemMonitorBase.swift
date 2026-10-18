@@ -52,6 +52,14 @@ final class SystemMonitor {
     var showCpuItem: Bool = storedSetting("showCpuItem", false) { didSet { UserDefaults.standard.set(showCpuItem, forKey: "showCpuItem"); layoutChanged.send() } }
     var showMemItem: Bool = storedSetting("showMemItem", false) { didSet { UserDefaults.standard.set(showMemItem, forKey: "showMemItem"); layoutChanged.send() } }
     var showDiskItem: Bool = storedSetting("showDiskItem", false) { didSet { UserDefaults.standard.set(showDiskItem, forKey: "showDiskItem"); layoutChanged.send() } }
+    var showPortsItem: Bool = storedSetting("showPortsItem", false) { didSet { UserDefaults.standard.set(showPortsItem, forKey: "showPortsItem"); layoutChanged.send() } }
+    /// 選單列連接埠圖示的樣式（PortsBarView.symbols 的索引）。
+    var portsIconStyle: Int = storedSetting("portsIconStyle", 1) { didSet { UserDefaults.standard.set(portsIconStyle, forKey: "portsIconStyle") } }
+    /// 接上電源時在連接埠圖示旁顯示輸入功率。
+    var showPortsWatts: Bool = storedSetting("showPortsWatts", false) { didSet { UserDefaults.standard.set(showPortsWatts, forKey: "showPortsWatts"); layoutChanged.send() } }
+    /// 連接埠頁：隱藏沒有連線的連接埠、顯示技術細節（傳輸方式、插拔次數等）。
+    var portsHideIdle: Bool = storedSetting("portsHideIdle", false) { didSet { UserDefaults.standard.set(portsHideIdle, forKey: "portsHideIdle") } }
+    var portsShowTechDetails: Bool = storedSetting("portsShowTechDetails", false) { didSet { UserDefaults.standard.set(portsShowTechDetails, forKey: "portsShowTechDetails") } }
 
     // MARK: 小視窗內容
     var popNetShowTotals: Bool = storedSetting("popNetShowTotals", true) { didSet { UserDefaults.standard.set(popNetShowTotals, forKey: "popNetShowTotals") } }
@@ -133,6 +141,24 @@ final class SystemMonitor {
         didSet { UserDefaults.standard.set(notifyPeripheralLow, forKey: "notifyPeripheralLow"); if notifyPeripheralLow { ensureNotificationPermission() } }
     }
     @ObservationIgnored var peripheralLowNotified = Set<String>()
+    /// 連接埠接上或拔除時通知（例如換了一條線、接上充電器）。
+    var notifyPortChanges: Bool = storedSetting("notifyPortChanges", false) {
+        didSet {
+            UserDefaults.standard.set(notifyPortChanges, forKey: "notifyPortChanges")
+            if notifyPortChanges {
+                ensureNotificationPermission()
+            } else {
+                // 關閉後，還在等待中的連接通知全部取消。
+                portNotifyTasks.values.forEach { $0.cancel() }
+                portNotifyTasks = [:]
+                portNotifyPlan.reset()
+            }
+        }
+    }
+    @ObservationIgnored var portNotifyPlan = PortNotifyPlan()
+    @ObservationIgnored var portNotifyTasks: [String: Task<Void, Never>] = [:]
+    /// 上一次看到有連線的連接埠；第一次讀取只記錄，不通知。
+    @ObservationIgnored var portNotifyBaseline: Set<String>?
     /// 使用者在系統設定拒絕通知時為 true，設定頁據此顯示提示。
     var notificationPermissionDenied = false
     @ObservationIgnored var fullChargeNotified = false
@@ -209,11 +235,15 @@ final class SystemMonitor {
     // 接上電源時的供電細節：充電器額定瓦數、實際輸入功率、系統耗電，以及充電器名稱／電壓電流／轉換損耗。
     var adapterRating: String = "--"
     var powerInText: String = "--"
+    /// 充電器實際輸入功率（瓦）；沒接電源時為 0。
+    var powerInWatts: Double = 0
     var systemLoadText: String = "--"
     var adapterDetailText: String = ""
     /// 充電器宣告的各組檔位，以及各連接埠接了什麼裝置、什麼線材。
     var chargerProfiles: [ChargerProfile] = []
     var portInfos: [PortInfo] = []
+    /// 接上電源時：正在充電、已充滿、暫停充電或電池仍在放電。
+    var chargeState: ChargeState? = nil
 
     /// 充電中顯示本次充電的進度，結束後保留上一次充電的起訖電量與耗時。
     var chargeSessionText: String = storedSetting("lastChargeSummary", "")
@@ -317,6 +347,8 @@ final class SystemMonitor {
     @ObservationIgnored var lastPublicIPCheck: Date?
     @ObservationIgnored var lastPublicIPNetworkKey = ""
     @ObservationIgnored var deviceChangeObserver: DeviceChangeObserver?
+    /// 接上或拔除顯示器（例如單純的 HDMI）不會觸發 USB／Thunderbolt 事件，改由螢幕設定改變來更新連接埠。
+    @ObservationIgnored var screenChangeObserver: NSObjectProtocol?
     @ObservationIgnored var powerSourceObserver: PowerSourceObserver?
     /// 目前正在顯示電池詳細數值的畫面（電池小視窗、監控中心電池頁）；有任何一個時加快電池取樣。
     @ObservationIgnored var batteryViewers = Set<String>()
@@ -412,6 +444,11 @@ final class SystemMonitor {
         let sharedDefaults = UserDefaults(suiteName: WidgetSnapshot.appGroup)
         if let code = Self.languageCodes[appLanguage] { sharedDefaults?.set(code, forKey: "appLanguage") } else { sharedDefaults?.removeObject(forKey: "appLanguage") }
         deviceChangeObserver = DeviceChangeObserver { [weak self] in self?.scheduleDeviceRefresh() }
+        screenChangeObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.didChangeScreenParametersNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.scheduleDeviceRefresh() }
+        }
     }
 
     var batteryTimeTitle: String {

@@ -161,6 +161,15 @@ struct SettingsDetailView: View {
         }
 
         Section {
+            Toggle("隱藏未使用的連接埠", isOn: $monitor.portsHideIdle)
+            Toggle("顯示技術細節", isOn: $monitor.portsShowTechDetails)
+        } header: {
+            Text("連接埠頁")
+        } footer: {
+            Text("技術細節包括支援的傳輸方式、插拔次數、過電流次數與線材識別碼。選單列的連接埠小視窗只列出使用中的連接埠。")
+        }
+
+        Section {
             LabeledContent("加入方式") {
                 Text("在桌面上按右鍵 › 編輯小工具，搜尋「MyNetBatt」").foregroundStyle(.secondary)
             }
@@ -240,6 +249,27 @@ struct SettingsDetailView: View {
             Text("系統")
         } footer: {
             Text("點擊這些項目會打開監控中心的「系統效能」頁。")
+        }
+
+        Section {
+            Toggle("連接埠狀態", isOn: $monitor.showPortsItem)
+            LabeledContent("圖示") {
+                Picker("圖示", selection: $monitor.portsIconStyle) {
+                    ForEach(PortsBarView.symbols.indices, id: \.self) { index in
+                        Image(systemName: PortsBarView.symbols[index]).tag(index)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.segmented)
+                .fixedSize()
+            }
+            .disabled(!monitor.showPortsItem)
+            Toggle("接上電源時顯示輸入功率", isOn: $monitor.showPortsWatts)
+                .disabled(!monitor.showPortsItem)
+        } header: {
+            Text("連接埠")
+        } footer: {
+            Text("點擊會顯示各連接埠的連線速度、線材規格與充電狀態；有連接埠被線材限速時，圖示會出現橘色圓點。")
         }
     }
 
@@ -337,6 +367,14 @@ struct SettingsDetailView: View {
             .disabled(!monitor.notifyPowerSurge)
             Toggle("睡眠耗電偏高通知", isOn: $monitor.notifySleepDrain)
             Toggle("周邊裝置電量低於 10% 通知", isOn: $monitor.notifyPeripheralLow)
+        }
+
+        Section {
+            Toggle("連接埠接上或拔除時通知", isOn: $monitor.notifyPortChanges)
+        } header: {
+            Text("連接埠")
+        } footer: {
+            Text("接上時說明連線速度與線材規格；線材限制了速度時會播放提示音。")
         }
 
         Section("提示音") {

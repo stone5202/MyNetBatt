@@ -179,6 +179,38 @@ struct MetricBarView: View {
     }
 }
 
+/// 選單列的連接埠圖示：有連接埠被線材限速時加一個橘色圓點。
+struct PortsBarView: View {
+    @Bindable var monitor: SystemMonitor
+    static let width: CGFloat = 28
+    /// 加上功率文字時的寬度（例如「65 W」）。
+    static let widthWithWatts: CGFloat = 64
+    /// 可選的圖示樣式：直立線材、橫向線材、閃電、插頭、電源線。
+    static let symbols = ["cable.connector", "cable.connector.horizontal", "bolt.fill", "powerplug.fill", "powercord.fill"]
+
+    /// 設定打開且接著電源時，在圖示旁顯示瓦數（寬度只隨插拔改變，數字跳動不會讓選單列位移）。
+    static func showsWatts(_ monitor: SystemMonitor) -> Bool {
+        monitor.showPortsWatts && monitor.isPluggedIn
+    }
+
+    var body: some View {
+        let warning = monitor.portInfos.contains { $0.verdict?.level == .warning }
+        let symbol = Self.symbols.indices.contains(monitor.portsIconStyle) ? Self.symbols[monitor.portsIconStyle] : Self.symbols[1]
+        HStack(spacing: 3) {
+            Image(systemName: symbol)
+                .font(.system(size: 13, weight: .medium))
+                .overlay(alignment: .topTrailing) {
+                    if warning { Circle().fill(Color.orange).frame(width: 6, height: 6).offset(x: 3, y: -2) }
+                }
+            if Self.showsWatts(monitor) {
+                Text(verbatim: monitor.powerInWatts > 0 ? "\(Int(monitor.powerInWatts.rounded())) W" : "-- W")
+                    .font(.system(size: 12, weight: .medium).monospacedDigit())
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
 /// 與系統電池圖示同尺寸的自繪圖示（含正極約 27×12.5 pt），電量依實際百分比連續填充。
 /// 接上電源時閃電會超出外框上下緣，並在外框與填色上留出一圈間隙。
 struct BatteryGlyph: View {

@@ -330,6 +330,35 @@ struct BatteryHealthLogSection: View {
     }
 }
 
+/// 接著電源時「為什麼有／沒有在充電」。
+struct ChargeStateBanner: View {
+    let state: ChargeState
+    let chargerWatts: Int
+
+    var body: some View {
+        let (symbol, color, title, detail): (String, Color, LocalizedStringKey, LocalizedStringKey) = switch state {
+        case .charging:
+            ("bolt.circle.fill", .green, "正在充電", "充電器正在為電池充電。")
+        case .full:
+            ("checkmark.circle.fill", .green, "電池已充滿，未充電", chargerWatts > 0 ? "Mac 直接使用充電器的電力，需要時最高可取用 \(chargerWatts) W。" : "Mac 直接使用充電器的電力。")
+        case .onHold:
+            ("pause.circle.fill", .blue, "充電暫停", "充電器與線材都正常。macOS 暫停了充電，通常是已到「充電上限」，或「最佳化電池充電」正在延後充到 100%；Mac 仍使用充電器的電力。")
+        case .drainingOnCharger:
+            ("exclamationmark.triangle.fill", .orange, "接著充電器，電池仍在放電", "充電器目前提供的電力不夠系統使用，或沒有實際供電。改用瓦數更高的充電器，或檢查線材與插頭。")
+        }
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: symbol).foregroundStyle(color)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(.callout.weight(.semibold))
+                Text(detail).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(color.opacity(0.10), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+    }
+}
+
 /// 接上電源時顯示：充電器與線材誰是瓶頸的結論、充電器的各組檔位，以及線材額定規格。
 struct ChargerCableCard: View {
     @Bindable var monitor: SystemMonitor
@@ -341,6 +370,8 @@ struct ChargerCableCard: View {
                     IconChip(symbol: "powerplug.fill", color: .teal, size: 24)
                     Text("充電器與線材").font(.headline)
                 }
+
+                if let state = monitor.chargeState { ChargeStateBanner(state: state, chargerWatts: monitor.chargerMaxWatts) }
 
                 HStack(alignment: .top, spacing: 8) {
                     Image(systemName: verdict.limited ? "exclamationmark.triangle.fill" : "checkmark.circle.fill")

@@ -16,6 +16,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var metricItems: [MetricBarView.Metric: NSStatusItem] = [:]
     var netPopover: NSPopover!
     var batPopover: NSPopover!
+    var portsPopover: NSPopover!
+    private var portsItem: NSStatusItem?
     var settingsWindow: NSWindow?
     private var settingsWindowCloseObserver: NSObjectProtocol?
     
@@ -216,6 +218,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 self?.batPopover.contentViewController = nil
             }
             .store(in: &cancellables)
+
+        portsPopover = NSPopover()
+        portsPopover.behavior = .transient
+        NotificationCenter.default.publisher(for: NSPopover.didCloseNotification, object: portsPopover)
+            .sink { [weak self] _ in self?.portsPopover.contentViewController = nil }
+            .store(in: &cancellables)
     }
 
     /// 小視窗的 SwiftUI 畫面只在顯示時存在：關閉後仍保留的話，會隨每次資料更新在背景重算
@@ -270,6 +278,59 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    /// 連接埠圖示：設定裡打開才加到選單列。
+    private func syncPortsItem() {
+        if monitor.showPortsItem, portsItem == nil {
+            let item = NSStatusBar.system.statusItem(withLength: PortsBarView.width)
+            if let button = item.button {
+                let host = NSHostingView(rootView: PortsBarView(monitor: monitor).allowsHitTesting(false))
+                host.frame = NSRect(x: 0, y: 0, width: PortsBarView.width, height: 22)
+                button.addSubview(host)
+                button.target = self
+                button.action = #selector(togglePortsPopover)
+                button.setAccessibilityLabel(String(localized: "連接埠"))
+            }
+            portsItem = item
+        }
+        if let item = portsItem {
+            let width = PortsBarView.showsWatts(monitor) ? PortsBarView.widthWithWatts : PortsBarView.width
+            if item.length != width {
+                item.length = width
+                item.button?.subviews.first?.frame = NSRect(x: 0, y: 0, width: width, height: 22)
+            }
+        }
+        if !monitor.showPortsItem, let item = portsItem {
+            if portsPopover.isShown { portsPopover.performClose(nil) }
+            NSStatusBar.system.removeStatusItem(item)
+            portsItem = nil
+        }
+    }
+
+    @objc func togglePortsPopover(_ sender: AnyObject?) {
+        guard let item = portsItem else { return }
+        if portsPopover.isShown { portsPopover.performClose(sender) }
+        else {
+            monitor.fetchPortInfo()
+            portsPopover.contentSize = NSSize(width: 380, height: portsPopover.contentSize.height > 0 ? portsPopover.contentSize.height : 420)
+            show(portsPopover, from: item) {
+                NSHostingController(rootView: PortsPopoverView(monitor: monitor, openDashboard: { [weak self] in
+                    self?.portsPopover.performClose(nil)
+                    self?.monitor.mainWindowTab = MainTab.ports.rawValue
+                    self?.openSettingsWindow()
+                }, onContentHeight: { [weak self] height in
+                    self?.fitPortsPopover(contentHeight: height)
+                }))
+            }
+        }
+    }
+
+    /// 連接埠小視窗的高度跟著卡片區伸縮：標題、底列與邊距約 92 pt（卡片區上下各有 14 pt 疊在標題與分隔線下），最高 680 pt，超過就捲動。
+    private func fitPortsPopover(contentHeight: CGFloat) {
+        let height = min(max(contentHeight + 92, 240), 680).rounded()
+        guard abs(portsPopover.contentSize.height - height) > 1 else { return }
+        portsPopover.contentSize = NSSize(width: 380, height: height)
+    }
+
     @objc private func openSystemTab() {
         monitor.mainWindowTab = "system"
         openSettingsWindow()
@@ -279,6 +340,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         syncMetricItem(.disk, visible: monitor.showDiskItem)
         syncMetricItem(.memory, visible: monitor.showMemItem)
         syncMetricItem(.cpu, visible: monitor.showCpuItem)
+        syncPortsItem()
 
         if let btn = netItem.button {
             var nW: CGFloat = 6

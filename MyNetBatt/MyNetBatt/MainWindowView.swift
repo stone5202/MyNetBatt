@@ -5,7 +5,7 @@ import Charts
 
 /// 側邊欄的分頁。rawValue 沿用舊版的字串（選單列項目、齒輪按鈕會直接指定分頁）。
 enum MainTab: String, CaseIterable, Identifiable {
-    case overview, battery, network, system, storage, devices, settings, about
+    case overview, battery, network, system, storage, devices, ports, settings, about
     var id: String { rawValue }
 
     var title: LocalizedStringKey {
@@ -16,6 +16,7 @@ enum MainTab: String, CaseIterable, Identifiable {
         case .system: return "系統效能"
         case .storage: return "儲存空間"
         case .devices: return "周邊裝置"
+        case .ports: return "連接埠"
         case .settings: return "設定"
         case .about: return "關於"
         }
@@ -29,6 +30,7 @@ enum MainTab: String, CaseIterable, Identifiable {
         case .system: return "cpu.fill"
         case .storage: return "internaldrive.fill"
         case .devices: return "keyboard.fill"
+        case .ports: return "cable.connector.horizontal"
         case .settings: return "gearshape.fill"
         case .about: return "info.circle.fill"
         }
@@ -42,12 +44,13 @@ enum MainTab: String, CaseIterable, Identifiable {
         case .system: return .purple
         case .storage: return .indigo
         case .devices: return .orange
+        case .ports: return .blue
         case .settings: return .gray
         case .about: return Color(white: 0.5)
         }
     }
 
-    static let monitoring: [MainTab] = [.overview, .battery, .network, .system, .storage, .devices]
+    static let monitoring: [MainTab] = [.overview, .battery, .network, .system, .storage, .devices, .ports]
 }
 
 struct MainWindowView: View {
@@ -68,6 +71,7 @@ struct MainWindowView: View {
                 case .system: SystemDetailView(monitor: monitor)
                 case .storage: StorageDetailView(monitor: monitor)
                 case .devices: DevicesDetailView(monitor: monitor)
+                case .ports: PortsDetailView(monitor: monitor)
                 case .settings: SettingsDetailView(monitor: monitor)
                 case .about: AboutView(monitor: monitor)
                 }

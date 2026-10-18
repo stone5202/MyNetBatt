@@ -53,6 +53,7 @@ extension SystemMonitor {
                 notifyPowerSurge = false
                 notifySleepDrain = false
                 notifyPeripheralLow = false
+                notifyPortChanges = false
             }
         }
     }

@@ -119,54 +119,60 @@ struct SystemDetailView: View {
                 .padding(Metrics.panelPadding)
                 .cardSurface(cornerRadius: Metrics.panelRadius)
 
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack(spacing: 9) {
-                        IconChip(symbol: "bolt.horizontal.fill", color: .blue, size: 24)
-                        Text("Thunderbolt / USB4 設備")
-                            .font(.headline)
-                        Spacer()
-                        Text(monitor.thunderboltStatus)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-
-                    if monitor.thunderboltDevices.isEmpty {
-                        HStack(spacing: 10) {
-                            Image(systemName: "bolt.slash")
-                                .foregroundStyle(.secondary)
-                            Text("沒有設備接入")
-                                .foregroundStyle(.secondary)
-                        }
-                        .padding(.vertical, 6)
-                    } else {
-                        ForEach(monitor.thunderboltDevices) { device in
-                            HStack(alignment: .top, spacing: 10) {
-                                Image(systemName: "externaldrive.connected.to.line.below")
-                                    .foregroundStyle(.blue)
-                                    .frame(width: 24)
-                                VStack(alignment: .leading, spacing: 3) {
-                                    Text(device.name).bold()
-                                    Text("\(device.connection) · \(device.vendor)")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                    HStack(spacing: 12) {
-                                        if !device.uid.isEmpty { Text("UID: \(device.uid)") }
-                                        if !device.firmware.isEmpty { Text("韌體: \(device.firmware)") }
-                                    }
-                                    .font(.caption2)
-                                    .foregroundStyle(.secondary)
-                                }
-                                Spacer()
-                            }
-                            .padding(.vertical, 4)
-                        }
-                    }
-                }
-                .padding(Metrics.panelPadding)
-                .cardSurface(cornerRadius: Metrics.panelRadius)
-
-                PortsCard(monitor: monitor)
         }
+    }
+}
+
+/// 透過 Thunderbolt／USB‑C 連接的設備（名稱、廠商、UID、韌體）。
+struct ThunderboltDevicesCard: View {
+    @Bindable var monitor: SystemMonitor
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 9) {
+                IconChip(symbol: "bolt.horizontal.fill", color: .blue, size: 24)
+                Text("Thunderbolt / USB4 設備")
+                    .font(.headline)
+                Spacer()
+                Text(monitor.thunderboltStatus)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            if monitor.thunderboltDevices.isEmpty {
+                HStack(spacing: 10) {
+                    Image(systemName: "bolt.slash")
+                        .foregroundStyle(.secondary)
+                    Text("沒有設備接入")
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.vertical, 6)
+            } else {
+                ForEach(monitor.thunderboltDevices) { device in
+                    HStack(alignment: .top, spacing: 10) {
+                        Image(systemName: "externaldrive.connected.to.line.below")
+                            .foregroundStyle(.blue)
+                            .frame(width: 24)
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(device.name).bold()
+                            Text("\(device.connection) · \(device.vendor)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            HStack(spacing: 12) {
+                                if !device.uid.isEmpty { Text("UID: \(device.uid)") }
+                                if !device.firmware.isEmpty { Text("韌體: \(device.firmware)") }
+                            }
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                    }
+                    .padding(.vertical, 4)
+                }
+            }
+        }
+        .padding(Metrics.panelPadding)
+        .cardSurface(cornerRadius: Metrics.panelRadius)
     }
 }
 
@@ -186,43 +192,142 @@ struct PortsCard: View {
                     .foregroundStyle(.secondary)
             }
 
+            let ports = monitor.portsHideIdle ? monitor.portInfos.filter(\.isConnected) : monitor.portInfos
             if monitor.portInfos.isEmpty {
                 Text("這台 Mac 沒有回報連接埠資訊").foregroundStyle(.secondary).padding(.vertical, 6)
+            } else if ports.isEmpty {
+                Text("目前沒有連接埠在使用（已隱藏未使用的連接埠）").foregroundStyle(.secondary).padding(.vertical, 6)
             } else {
-                ForEach(monitor.portInfos) { port in
-                    HStack(alignment: .top, spacing: 10) {
-                        Image(systemName: port.isMagSafe ? "magsafe.batterypack" : "cable.connector")
-                            .foregroundStyle(port.isConnected ? Color.blue : Color.secondary)
-                            .frame(width: 24)
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text(port.name).bold()
-                            if port.isConnected {
-                                Text(port.partner.isEmpty ? "已連接" : "已連接：\(port.partner)")
-                                    .font(.caption).foregroundStyle(.secondary)
-                                if let cable = port.cable {
-                                    Text("\(cable.kindText)線材 · \(cable.speed) · 額定 \(cable.ratingText)")
-                                        .font(.caption).monospacedDigit()
-                                    if !cable.vendor.isEmpty {
-                                        Text("線材製造商：\(cable.vendor)").font(.caption2).foregroundStyle(.secondary)
-                                    }
-                                } else if !port.isMagSafe {
-                                    Text("線材沒有 e‑marker 晶片或目前讀不到（基本線材最高 3 A／60 W）")
-                                        .font(.caption2).foregroundStyle(.secondary)
-                                }
-                            } else {
-                                Text("未連接").font(.caption).foregroundStyle(.secondary)
-                            }
-                        }
-                        Spacer()
-                    }
-                    .padding(.vertical, 4)
-                    if port.id != monitor.portInfos.last?.id { Divider() }
+                ForEach(ports) { port in
+                    PortRow(port: port, showsTech: monitor.portsShowTechDetails)
+                        .padding(.vertical, 4)
+                    if port.id != ports.last?.id { Divider() }
                 }
             }
         }
         .padding(Metrics.panelPadding)
         .cardSurface(cornerRadius: Metrics.panelRadius)
         .onAppear { monitor.fetchPortInfo() }
+    }
+}
+
+/// 一個連接埠：接了什麼、正在傳什麼、誰在限速，以及線材與顯示器的細節。
+struct PortRow: View {
+    let port: PortInfo
+    /// 顯示支援的傳輸方式、插拔次數等技術細節。
+    var showsTech = false
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: port.isMagSafe ? "magsafe.batterypack" : (port.id.hasPrefix("HDMI@") ? "tv" : "cable.connector"))
+                .foregroundStyle(port.isConnected ? Color.blue : Color.secondary)
+                .frame(width: 24)
+            VStack(alignment: .leading, spacing: 5) {
+                HStack(spacing: 6) {
+                    Text(port.name).bold()
+                    if port.isConnected {
+                        ForEach(port.transportNames, id: \.self) { name in
+                            Text(name)
+                                .font(.caption2.weight(.medium))
+                                .padding(.horizontal, 6).padding(.vertical, 1)
+                                .background(Color.secondary.opacity(0.14), in: Capsule())
+                        }
+                    }
+                }
+                if port.isConnected {
+                    Text(port.partner.isEmpty ? "已連接" : "已連接：\(port.partner)")
+                        .font(.caption).foregroundStyle(.secondary)
+                    if let verdict = port.verdict { verdictView(verdict) }
+                    if let link = port.link {
+                        let total = LinkRate.gbps(link.total)
+                        Group {
+                            if let max = port.macMaxGbps {
+                                Text("實際連線 \(link.laneText)（\(total) Gbps）· 連接埠最高 \(LinkRate.gbps(max)) Gbps")
+                            } else {
+                                Text("實際連線 \(link.laneText)（\(total) Gbps）")
+                            }
+                        }
+                        .font(.caption).monospacedDigit()
+                    }
+                    if let cable = port.cable {
+                        Text("\(cable.kindText)線材 · \(cable.speed) · 額定 \(cable.ratingText)")
+                            .font(.caption).monospacedDigit()
+                        if !cable.vendor.isEmpty {
+                            Text("線材製造商：\(cable.vendor)").font(.caption2).foregroundStyle(.secondary)
+                        }
+                    } else if !port.isMagSafe && !port.id.hasPrefix("HDMI@") {
+                        Text("線材沒有 e‑marker 晶片或目前讀不到（基本線材最高 3 A／60 W）")
+                            .font(.caption2).foregroundStyle(.secondary)
+                    }
+                    ForEach(port.displays) { display in
+                        let rate = display.lanes > 0 ? "\(display.rate) × \(display.lanes)" : display.rate
+                        Label {
+                            Text(verbatim: "\(display.name) · \(rate)")
+                        } icon: {
+                            Image(systemName: "display")
+                        }
+                        .font(.caption).monospacedDigit()
+                    }
+                } else {
+                    Text("未連接").font(.caption).foregroundStyle(.secondary)
+                }
+                if showsTech, let tech = port.tech { techView(tech) }
+            }
+            Spacer()
+        }
+    }
+
+    private func techView(_ tech: PortTech) -> some View {
+        let yes = String(localized: "是"), no = String(localized: "否")
+        return Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 3) {
+            if !tech.supported.isEmpty {
+                GridRow { Text("支援的傳輸方式").foregroundStyle(.secondary); Text(tech.supported.formatted(.list(type: .and))) }
+            }
+            if !port.transportNames.isEmpty {
+                GridRow { Text("作用中").foregroundStyle(.secondary); Text(port.transportNames.formatted(.list(type: .and))) }
+            }
+            if let plug = tech.plugEvents {
+                GridRow { Text("插拔次數").foregroundStyle(.secondary); Text("\(plug)") }
+            }
+            if let count = tech.connections {
+                GridRow { Text("連線次數").foregroundStyle(.secondary); Text("\(count)") }
+            }
+            if let over = tech.overcurrent {
+                GridRow { Text("過電流次數").foregroundStyle(.secondary); Text("\(over)").foregroundStyle(over > 0 ? Color.orange : Color.primary) }
+            }
+            if port.isConnected, let active = tech.activeCable {
+                GridRow { Text("主動式線材電子元件").foregroundStyle(.secondary); Text(active ? yes : no) }
+            }
+            if port.isConnected, let optical = tech.opticalCable {
+                GridRow { Text("光纖線材").foregroundStyle(.secondary); Text(optical ? yes : no) }
+            }
+            if port.isConnected, let id = tech.cableID {
+                GridRow { Text("線材識別碼").foregroundStyle(.secondary); Text(verbatim: id).textSelection(.enabled) }
+            }
+        }
+        .font(.caption2.monospacedDigit())
+        .padding(8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+    }
+
+    private func verdictView(_ verdict: PortVerdict) -> some View {
+        let (symbol, color): (String, Color) = switch verdict.level {
+        case .good: ("checkmark.circle.fill", .green)
+        case .info: ("info.circle.fill", .blue)
+        case .warning: ("exclamationmark.triangle.fill", .orange)
+        }
+        return HStack(alignment: .top, spacing: 7) {
+            Image(systemName: symbol).foregroundStyle(color)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(verdict.title).font(.callout.weight(.semibold))
+                Text(verdict.detail).font(.caption).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(color.opacity(0.10), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 }
 

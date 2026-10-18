@@ -4,6 +4,23 @@
 
 This document summarizes the major changes in each MyNetBatt release. Versions before 3.0 were uploaded by replacing earlier copies, so their original per-version Git history can no longer be fully recovered. Changes from 1.0 through 2.x are therefore consolidated from the source code that can still be verified, without attributing uncertain details to individual releases.
 
+## [4.1] - 2026-10-19
+
+Ports and cables at a glance. A new Ports tab and port status in the menu bar show what each port is carrying, how fast it's running, and what's holding it back.
+
+### New
+
+- Ports tab: the monitor window has a new Ports tab listing the transports each port is using (Thunderbolt / USB4, USB 3, USB 2, video), its actual link speed and the port's maximum, and whether your Mac, the cable or the device is the bottleneck. It also shows the displays driven through each port and their link rate. The Thunderbolt / USB4 Devices and Ports & Cables cards have moved here from the System page.
+- Port status in the menu bar: add a port icon to the menu bar (five styles). One click shows the ports in use, cable ratings and charging status; it can show the charger's input power next to the icon, and an orange dot appears when a cable is limiting speed. Turn it on in Settings › Menu Bar › Ports.
+- Why it's not charging: when plugged in, the Battery page tells you whether it's charging, full, on hold (charge limit reached or Optimized Battery Charging holding off on 100%), or still draining while on the charger.
+- Port notifications: when you plug in a device or cable you're told its link speed and cable rating, with an alert if the cable is limiting speed; unplugging is reported too. Turn it on in Settings › Notifications › Ports.
+- Technical details: the Ports tab can show supported transports, plug count, connection count, overcurrent count and the cable's ID, and can hide unused ports.
+
+### Changes
+
+- The System page no longer lists Thunderbolt devices and ports; find them in the Ports tab.
+- Port information updates right away when a display (including HDMI) is connected or removed.
+
 ## [4.0] - 2026-10-18
 
 A new look, redesigned from the ground up. Every part of the monitor window, from the sidebar to each page, has been redesigned, with a new Overview page, six desktop widgets and an English interface, while keeping the glass look.

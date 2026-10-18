@@ -9,7 +9,7 @@ final class IntroWindowController: NSObject, NSWindowDelegate {
     static let shared = IntroWindowController()
 
     /// 這一版要在「新功能」裡介紹的版本號；升到這一版的既有使用者第一次啟動時會看到。
-    static let whatsNewVersion = "4.0"
+    static let whatsNewVersion = "4.1"
 
     private var window: NSWindow?
     private weak var monitor: SystemMonitor?
@@ -304,22 +304,18 @@ private struct WhatsNewView: View {
                     .resizable().interpolation(.high)
                     .frame(width: 72, height: 72)
                 Text("MyNetBatt \(IntroWindowController.whatsNewVersion)").font(.system(size: 26, weight: .bold))
-                Text("全新介面，全新設計").font(.title3.weight(.semibold)).foregroundStyle(.secondary)
+                Text("連接埠與線材，一目了然").font(.title3.weight(.semibold)).foregroundStyle(.secondary)
             }
             .padding(.top, 34)
             .padding(.bottom, 20)
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
-                    item("square.grid.2x2.fill", .blue, "全新設計的監控中心", "新的「總覽」首頁把電池、網路、系統、儲存空間與周邊裝置放在同一頁；側邊欄、各分頁與設定全部重新設計，並保留玻璃質感。")
-                    item("character.bubble.fill", .indigo, "英文介面", "整個 App 與小工具都有英文版，可在設定裡選擇語言。")
-                    item("rectangle.3.group", .orange, "六種桌面小工具", "電池、數據用量、App 數據用量、儲存空間、Wi‑Fi、周邊電量，每種都能選主題色。")
-                    item("keyboard.fill", .teal, "周邊裝置電量", "妙控鍵盤、滑鼠、觸控板與 AirPods（左右耳與充電盒）的電量，低電量時可以通知。")
-                    item("internaldrive.fill", .purple, "資料夾大小與大型檔案", "找出佔空間的資料夾和檔案，直接在 Finder 中顯示或移到垃圾桶；外接磁碟可以一鍵全部退出。")
-                    item("powerplug.fill", .green, "充電器與線材診斷", "接上電源時說明充電器與線材誰是瓶頸，列出充電器檔位與每個連接埠的線材規格。")
-                    item("chart.xyaxis.line", .pink, "更多選單列樣式", "流量圖可選面積、上下對稱或長條並加寬；新增「網速＋CPU」「網速＋記憶體」。")
-                    item("bell.badge.fill", .red, "更細的通知", "低電量可以設定多個提醒時機，提示音可以從系統音效中挑選。")
-                    item("laptopcomputer", .gray, "抹黑劉海", "產生上緣全黑的桌布，讓劉海和選單列融為一體，可隨時還原。")
+                    item("cable.connector.horizontal", .blue, "連接埠分頁", "每個連接埠正在傳什麼、實際連線速度、是 Mac、線材還是裝置在限速，以及接了哪些顯示器與 Thunderbolt 設備。")
+                    item("menubar.arrow.up.rectangle", .teal, "選單列連接埠狀態", "點一下就看到各連接埠的連線速度、線材規格與充電狀態；可以顯示輸入功率，線材限速時圖示會出現橘點。")
+                    item("battery.100percent.bolt", .green, "為什麼沒在充電", "電池頁會說明正在充電、已充滿、充電暫停（充電上限或最佳化電池充電），或接著充電器電池仍在放電。")
+                    item("bell.badge.fill", .red, "連接埠插拔通知", "接上裝置或線材時告訴你連線速度與線材規格，線材限速時特別提醒。")
+                    item("list.bullet.rectangle", .gray, "技術細節", "支援的傳輸方式、插拔次數、過電流次數與線材識別碼，可在連接埠頁隨時開關。")
                 }
                 .padding(.horizontal, 44)
             }

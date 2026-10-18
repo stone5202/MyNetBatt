@@ -52,6 +52,40 @@
         }
       }
     },
+    "%@ 已拔除": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ Disconnected"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 已拔除"
+          }
+        }
+      }
+    },
+    "%@ 已連接": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ Connected"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 已連接"
+          }
+        }
+      }
+    },
     "%@%% 已使用": {
       "extractionState": "manual",
       "localizations": {
@@ -491,6 +525,23 @@
         }
       }
     },
+    "DisplayPort 影像": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DisplayPort video"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DisplayPort 影像"
+          }
+        }
+      }
+    },
     "GPU 即時負載": {
       "extractionState": "manual",
       "localizations": {
@@ -521,6 +572,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "GPU 負載"
+          }
+        }
+      }
+    },
+    "HDMI 連接埠": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HDMI Port"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HDMI 連接埠"
+          }
+        }
+      }
+    },
+    "HDMI 連接埠正在輸出影像。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The HDMI port is sending video."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HDMI 連接埠正在輸出影像。"
           }
         }
       }
@@ -572,6 +657,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mac 型號"
+          }
+        }
+      }
+    },
+    "Mac 直接使用充電器的電力。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your Mac runs directly on the charger."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac 直接使用充電器的電力。"
+          }
+        }
+      }
+    },
+    "Mac 直接使用充電器的電力，需要時最高可取用 %lld W。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your Mac runs directly on the charger and can draw up to %lld W when needed."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac 直接使用充電器的電力，需要時最高可取用 %lld W。"
           }
         }
       }
@@ -640,6 +759,74 @@
           "stringUnit": {
             "state": "translated",
             "value": "Thunderbolt / USB4 設備"
+          }
+        }
+      }
+    },
+    "Thunderbolt / USB4 連線中": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thunderbolt / USB4 Connected"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thunderbolt / USB4 連線中"
+          }
+        }
+      }
+    },
+    "Thunderbolt / USB4 連線作用中。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thunderbolt / USB4 link active."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thunderbolt / USB4 連線作用中。"
+          }
+        }
+      }
+    },
+    "USB 3 高速資料連線": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "USB 3 high-speed data"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "USB 3 高速資料連線"
+          }
+        }
+      }
+    },
+    "USB‑C 直接切換成 DisplayPort 傳送影像，沒有其他資料連線。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The USB‑C port has switched to DisplayPort for video; there is no other data link."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "USB‑C 直接切換成 DisplayPort 傳送影像，沒有其他資料連線。"
           }
         }
       }
@@ -1035,6 +1222,23 @@
         }
       }
     },
+    "不在使用中的連接埠不列出": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ports not in use are hidden"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不在使用中的連接埠不列出"
+          }
+        }
+      }
+    },
     "中": {
       "extractionState": "manual",
       "localizations": {
@@ -1065,6 +1269,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "主動式"
+          }
+        }
+      }
+    },
+    "主動式線材電子元件": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active cable electronics"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "主動式線材電子元件"
           }
         }
       }
@@ -1205,6 +1426,23 @@
         }
       }
     },
+    "以 %@ Gbps 運作": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Running at %@ Gbps"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "以 %@ Gbps 運作"
+          }
+        }
+      }
+    },
     "以下都可以略過，之後在設定裡再開啟。": {
       "extractionState": "manual",
       "localizations": {
@@ -1218,6 +1456,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "以下都可以略過，之後在設定裡再開啟。"
+          }
+        }
+      }
+    },
+    "以最高速度 %@ Gbps 運作": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Running at full speed, %@ Gbps"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "以最高速度 %@ Gbps 運作"
           }
         }
       }
@@ -1290,23 +1545,6 @@
         }
       }
     },
-    "低電量可以設定多個提醒時機，提示音可以從系統音效中挑選。": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Set multiple low-battery alert levels and pick an alert sound from the system sounds."
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "低電量可以設定多個提醒時機，提示音可以從系統音效中挑選。"
-          }
-        }
-      }
-    },
     "低電量提醒": {
       "extractionState": "manual",
       "localizations": {
@@ -1354,6 +1592,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "低電量通知"
+          }
+        }
+      }
+    },
+    "作用中": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "作用中"
           }
         }
       }
@@ -1817,19 +2072,19 @@
         }
       }
     },
-    "充電器最高可供 %lld W。有多個連接埠正在使用，各埠的線材規格請看「系統效能」分頁。": {
+    "充電器最高可供 %lld W。有多個連接埠正在使用，各埠的線材規格請看「連接埠」分頁。": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The charger supplies up to %lld W. Several ports are in use; see the System page for each port’s cable."
+            "value": "The charger can supply up to %lld W. Several ports are in use; see the Ports tab for each port’s cable."
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "充電器最高可供 %lld W。有多個連接埠正在使用，各埠的線材規格請看「系統效能」分頁。"
+            "value": "充電器最高可供 %lld W。有多個連接埠正在使用，各埠的線材規格請看「連接埠」分頁。"
           }
         }
       }
@@ -1868,6 +2123,40 @@
         }
       }
     },
+    "充電器正在為電池充電。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The charger is charging the battery."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "充電器正在為電池充電。"
+          }
+        }
+      }
+    },
+    "充電器目前提供的電力不夠系統使用，或沒有實際供電。改用瓦數更高的充電器，或檢查線材與插頭。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The charger isn’t supplying enough power for the system, or isn’t supplying any. Try a higher-wattage charger, or check the cable and plugs."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "充電器目前提供的電力不夠系統使用，或沒有實際供電。改用瓦數更高的充電器，或檢查線材與插頭。"
+          }
+        }
+      }
+    },
     "充電器與線材": {
       "extractionState": "manual",
       "localizations": {
@@ -1902,19 +2191,36 @@
         }
       }
     },
-    "充電器與線材診斷": {
+    "充電器與線材都正常。macOS 暫停了充電，通常是已到「充電上限」，或「最佳化電池充電」正在延後充到 100%；Mac 仍使用充電器的電力。": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Charger & Cable Diagnosis"
+            "value": "The charger and cable are fine. macOS has paused charging, usually because the charge limit was reached or Optimized Battery Charging is holding off on 100%. Your Mac still runs on the charger."
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "充電器與線材診斷"
+            "value": "充電器與線材都正常。macOS 暫停了充電，通常是已到「充電上限」，或「最佳化電池充電」正在延後充到 100%；Mac 仍使用充電器的電力。"
+          }
+        }
+      }
+    },
+    "充電暫停": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Charging on Hold"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "充電暫停"
           }
         }
       }
@@ -1932,6 +2238,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "充電盒"
+          }
+        }
+      }
+    },
+    "光纖線材": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optical cable"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "光纖線材"
           }
         }
       }
@@ -1966,40 +2289,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "內建顯示晶片"
-          }
-        }
-      }
-    },
-    "全新介面，全新設計": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A New Look, Redesigned from the Ground Up"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "全新介面，全新設計"
-          }
-        }
-      }
-    },
-    "全新設計的監控中心": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A Redesigned Dashboard"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "全新設計的監控中心"
           }
         }
       }
@@ -2051,23 +2340,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "公網 IP"
-          }
-        }
-      }
-    },
-    "六種桌面小工具": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Six Desktop Widgets"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "六種桌面小工具"
           }
         }
       }
@@ -2361,6 +2633,40 @@
         }
       }
     },
+    "只有 USB 2.0 速度（480 Mbps）": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "USB 2.0 speed only (480 Mbps)"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只有 USB 2.0 速度（480 Mbps）"
+          }
+        }
+      }
+    },
+    "只有供電": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Power Only"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只有供電"
+          }
+        }
+      }
+    },
     "只顯示最近 %lld 天": {
       "extractionState": "manual",
       "localizations": {
@@ -2471,6 +2777,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "右耳"
+          }
+        }
+      }
+    },
+    "否": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "否"
           }
         }
       }
@@ -2832,6 +3155,23 @@
         }
       }
     },
+    "在監控中心查看": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open in Dashboard"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在監控中心查看"
+          }
+        }
+      }
+    },
     "外接磁碟": {
       "extractionState": "manual",
       "localizations": {
@@ -2968,23 +3308,6 @@
         }
       }
     },
-    "妙控鍵盤、滑鼠、觸控板與 AirPods（左右耳與充電盒）的電量，低電量時可以通知。": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Battery levels for Magic Keyboard, Mouse, Trackpad and AirPods (each bud and the case), with low-battery notifications."
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "妙控鍵盤、滑鼠、觸控板與 AirPods（左右耳與充電盒）的電量，低電量時可以通知。"
-          }
-        }
-      }
-    },
     "安全性": {
       "extractionState": "manual",
       "localizations": {
@@ -3032,6 +3355,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "容量"
+          }
+        }
+      }
+    },
+    "實際連線 %@（%@ Gbps）": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Link %@ (%@ Gbps)"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "實際連線 %@（%@ Gbps）"
+          }
+        }
+      }
+    },
+    "實際連線 %@（%@ Gbps）· 連接埠最高 %@ Gbps": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Link %@ (%@ Gbps) · port maximum %@ Gbps"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "實際連線 %@（%@ Gbps）· 連接埠最高 %@ Gbps"
           }
         }
       }
@@ -3439,6 +3796,23 @@
         }
       }
     },
+    "已達這個連接埠支援的最高速度，線材沒有限制速度。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is the fastest this port supports; the cable isn’t holding it back."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已達這個連接埠支援的最高速度，線材沒有限制速度。"
+          }
+        }
+      }
+    },
     "已開啟": {
       "extractionState": "manual",
       "localizations": {
@@ -3745,19 +4119,36 @@
         }
       }
     },
-    "找出佔空間的資料夾和檔案，直接在 Finder 中顯示或移到垃圾桶；外接磁碟可以一鍵全部退出。": {
+    "技術細節": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Find the folders and files taking up space, then show them in Finder or move them to the Trash. Eject all external disks with one click."
+            "value": "Technical Details"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "找出佔空間的資料夾和檔案，直接在 Finder 中顯示或移到垃圾桶；外接磁碟可以一鍵全部退出。"
+            "value": "技術細節"
+          }
+        }
+      }
+    },
+    "技術細節包括支援的傳輸方式、插拔次數、過電流次數與線材識別碼。選單列的連接埠小視窗只列出使用中的連接埠。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Technical details include supported transports, plug count, overcurrent count and the cable’s ID. The Ports menu bar window only lists ports in use."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "技術細節包括支援的傳輸方式、插拔次數、過電流次數與線材識別碼。選單列的連接埠小視窗只列出使用中的連接埠。"
           }
         }
       }
@@ -3881,6 +4272,57 @@
         }
       }
     },
+    "接上充電器、線材或裝置後，這裡會顯示連線速度與線材規格。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect a charger, cable or device to see its link speed and cable rating here."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接上充電器、線材或裝置後，這裡會顯示連線速度與線材規格。"
+          }
+        }
+      }
+    },
+    "接上時說明連線速度與線材規格；線材限制了速度時會播放提示音。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When something is plugged in, shows its link speed and cable rating. Plays a sound if the cable is limiting speed."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接上時說明連線速度與線材規格；線材限制了速度時會播放提示音。"
+          }
+        }
+      }
+    },
+    "接上裝置或線材時告訴你連線速度與線材規格，線材限速時特別提醒。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When you plug in a device or cable, see its link speed and cable rating, with an alert if the cable is limiting speed."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接上裝置或線材時告訴你連線速度與線材規格，線材限速時特別提醒。"
+          }
+        }
+      }
+    },
     "接上電源": {
       "extractionState": "manual",
       "localizations": {
@@ -3898,19 +4340,36 @@
         }
       }
     },
-    "接上電源時說明充電器與線材誰是瓶頸，列出充電器檔位與每個連接埠的線材規格。": {
+    "接上電源時顯示輸入功率": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "When plugged in, see whether the charger or the cable is the bottleneck, plus the charger’s profiles and the cable on every port."
+            "value": "Show Input Power When Plugged In"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "接上電源時說明充電器與線材誰是瓶頸，列出充電器檔位與每個連接埠的線材規格。"
+            "value": "接上電源時顯示輸入功率"
+          }
+        }
+      }
+    },
+    "接著充電器，電池仍在放電": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Battery Draining on Charger"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接著充電器，電池仍在放電"
           }
         }
       }
@@ -3962,6 +4421,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "提醒時機"
+          }
+        }
+      }
+    },
+    "插拔次數": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plug count"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "插拔次數"
           }
         }
       }
@@ -4034,6 +4510,40 @@
         }
       }
     },
+    "支援的傳輸方式": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supported transports"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "支援的傳輸方式"
+          }
+        }
+      }
+    },
+    "支援的傳輸方式、插拔次數、過電流次數與線材識別碼，可在連接埠頁隨時開關。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supported transports, plug count, overcurrent count and the cable’s ID — switch them on or off any time on the Ports page."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "支援的傳輸方式、插拔次數、過電流次數與線材識別碼，可在連接埠頁隨時開關。"
+          }
+        }
+      }
+    },
     "收合": {
       "extractionState": "manual",
       "localizations": {
@@ -4064,23 +4574,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "放電中"
-          }
-        }
-      }
-    },
-    "整個 App 與小工具都有英文版，可在設定裡選擇語言。": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The whole app and its widgets are available in English. Choose the language in Settings."
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "整個 App 與小工具都有英文版，可在設定裡選擇語言。"
           }
         }
       }
@@ -4153,23 +4646,6 @@
         }
       }
     },
-    "新的「總覽」首頁把電池、網路、系統、儲存空間與周邊裝置放在同一頁；側邊欄、各分頁與設定全部重新設計，並保留玻璃質感。": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A new Overview page brings battery, network, system, storage and accessories together. The sidebar, every page and Settings have been redesigned, with the glass look kept."
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "新的「總覽」首頁把電池、網路、系統、儲存空間與周邊裝置放在同一頁；側邊欄、各分頁與設定全部重新設計，並保留玻璃質感。"
-          }
-        }
-      }
-    },
     "日": {
       "extractionState": "manual",
       "localizations": {
@@ -4200,6 +4676,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "日期"
+          }
+        }
+      }
+    },
+    "是": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yes"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "是"
           }
         }
       }
@@ -4289,23 +4782,6 @@
         }
       }
     },
-    "更多選單列樣式": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "More Menu Bar Styles"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "更多選單列樣式"
-          }
-        }
-      }
-    },
     "更新 Helper": {
       "extractionState": "manual",
       "localizations": {
@@ -4353,23 +4829,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "更新紀錄"
-          }
-        }
-      }
-    },
-    "更細的通知": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Finer-Grained Notifications"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "更細的通知"
           }
         }
       }
@@ -4799,6 +5258,40 @@
         }
       }
     },
+    "正在傳輸影像": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carrying Video"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在傳輸影像"
+          }
+        }
+      }
+    },
+    "正在充電": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Charging"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在充電"
+          }
+        }
+      }
+    },
     "正在切換…": {
       "extractionState": "manual",
       "localizations": {
@@ -4846,6 +5339,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "每個裝置充電回 20% 以上後才會再次提醒。"
+          }
+        }
+      }
+    },
+    "每個連接埠正在傳什麼、實際連線速度、是 Mac、線材還是裝置在限速，以及接了哪些顯示器與 Thunderbolt 設備。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What each port is carrying, its actual link speed, whether your Mac, the cable or the device is the bottleneck, and which displays and Thunderbolt devices are connected."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每個連接埠正在傳什麼、實際連線速度、是 Mac、線材還是裝置在限速，以及接了哪些顯示器與 Thunderbolt 設備。"
           }
         }
       }
@@ -4986,23 +5496,6 @@
         }
       }
     },
-    "流量圖可選面積、上下對稱或長條並加寬；新增「網速＋CPU」「網速＋記憶體」。": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The traffic graph can be an area, mirrored or bar chart, and can be widened. New “Speed + CPU” and “Speed + Memory” styles."
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "流量圖可選面積、上下對稱或長條並加寬；新增「網速＋CPU」「網速＋記憶體」。"
-          }
-        }
-      }
-    },
     "流量圖表": {
       "extractionState": "manual",
       "localizations": {
@@ -5101,6 +5594,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "滑鼠"
+          }
+        }
+      }
+    },
+    "為什麼沒在充電": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Why It’s Not Charging"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "為什麼沒在充電"
           }
         }
       }
@@ -5326,23 +5836,6 @@
         }
       }
     },
-    "產生上緣全黑的桌布，讓劉海和選單列融為一體，可隨時還原。": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Creates a wallpaper with a black top edge so the notch blends into the menu bar. Restore any time."
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "產生上緣全黑的桌布，讓劉海和選單列融為一體，可隨時還原。"
-          }
-        }
-      }
-    },
     "用量": {
       "extractionState": "manual",
       "localizations": {
@@ -5470,6 +5963,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "目前沒有 App 正在使用網路"
+          }
+        }
+      }
+    },
+    "目前沒有連接埠在使用（已隱藏未使用的連接埠）": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No ports in use (unused ports are hidden)"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "目前沒有連接埠在使用（已隱藏未使用的連接埠）"
           }
         }
       }
@@ -6103,6 +6613,74 @@
         }
       }
     },
+    "線材 %@ · %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cable %@ · %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "線材 %@ · %@"
+          }
+        }
+      }
+    },
+    "線材 e‑marker 宣告只有 USB 2.0（480 Mbps），裝置若支援更高速度，請換一條支援 USB 3 以上的線材。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The cable’s e‑marker reports USB 2.0 only (480 Mbps). If your device is faster, use a cable rated for USB 3 or better."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "線材 e‑marker 宣告只有 USB 2.0（480 Mbps），裝置若支援更高速度，請換一條支援 USB 3 以上的線材。"
+          }
+        }
+      }
+    },
+    "線材只支援 USB 2.0": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cable Limited to USB 2.0"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "線材只支援 USB 2.0"
+          }
+        }
+      }
+    },
+    "線材可能限制了速度（%@ Gbps）": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cable May Be Limiting Speed (%@ Gbps)"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "線材可能限制了速度（%@ Gbps）"
+          }
+        }
+      }
+    },
     "線材沒有 e‑marker 晶片或目前讀不到（基本線材最高 3 A／60 W）": {
       "extractionState": "manual",
       "localizations": {
@@ -6133,6 +6711,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "線材製造商：%@"
+          }
+        }
+      }
+    },
+    "線材識別碼": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cable ID"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "線材識別碼"
+          }
+        }
+      }
+    },
+    "線材資訊來自線材內的 e‑marker 晶片；沒有晶片的基本線材、MagSafe 線讀不到規格。插拔後幾秒內會自動更新。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cable details come from the cable’s e‑marker chip; basic cables without one and MagSafe cables don’t report a rating. Updates a few seconds after you plug or unplug."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "線材資訊來自線材內的 e‑marker 晶片；沒有晶片的基本線材、MagSafe 線讀不到規格。插拔後幾秒內會自動更新。"
           }
         }
       }
@@ -6324,23 +6936,6 @@
         }
       }
     },
-    "英文介面": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "English Interface"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "英文介面"
-          }
-        }
-      }
-    },
     "藍牙裝置": {
       "extractionState": "manual",
       "localizations": {
@@ -6439,6 +7034,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "裝置"
+          }
+        }
+      }
+    },
+    "裝置以 USB 3（5 Gbps 以上）連線。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The device is connected over USB 3 (5 Gbps or faster)."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "裝置以 USB 3（5 Gbps 以上）連線。"
+          }
+        }
+      }
+    },
+    "裝置只支援 USB 2，或這是一條只能充電／只有 USB 2 的線材。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The device only supports USB 2, or this is a charge-only / USB 2 cable."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "裝置只支援 USB 2，或這是一條只能充電／只有 USB 2 的線材。"
           }
         }
       }
@@ -6846,23 +7475,6 @@
         }
       }
     },
-    "資料夾大小與大型檔案": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Folder Sizes & Large Files"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "資料夾大小與大型檔案"
-          }
-        }
-      }
-    },
     "起": {
       "extractionState": "manual",
       "localizations": {
@@ -7067,6 +7679,57 @@
         }
       }
     },
+    "這個連接埠最高支援 %@ Gbps，但線材只能承載 %@ Gbps。如果裝置也支援更高速度，換一條更快的線材可以提升速度。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This port supports up to %@ Gbps, but the cable only carries %@ Gbps. If your device supports more, a faster cable can raise the speed."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這個連接埠最高支援 %@ Gbps，但線材只能承載 %@ Gbps。如果裝置也支援更高速度，換一條更快的線材可以提升速度。"
+          }
+        }
+      }
+    },
+    "這個連接埠正在輸出影像。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This port is sending video."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這個連接埠正在輸出影像。"
+          }
+        }
+      }
+    },
+    "這個連接埠目前只有電力，沒有資料連線。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This port is carrying power only, with no data link."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這個連接埠目前只有電力，沒有資料連線。"
+          }
+        }
+      }
+    },
     "這台 Mac 沒有回報連接埠資訊": {
       "extractionState": "manual",
       "localizations": {
@@ -7169,6 +7832,108 @@
         }
       }
     },
+    "連接埠": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ports"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "連接埠"
+          }
+        }
+      }
+    },
+    "連接埠、線材與 Thunderbolt 設備": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ports, cables and Thunderbolt devices"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "連接埠、線材與 Thunderbolt 設備"
+          }
+        }
+      }
+    },
+    "連接埠分頁": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ports Tab"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "連接埠分頁"
+          }
+        }
+      }
+    },
+    "連接埠接上或拔除時通知": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notify When Ports Connect or Disconnect"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "連接埠接上或拔除時通知"
+          }
+        }
+      }
+    },
+    "連接埠插拔通知": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Port Notifications"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "連接埠插拔通知"
+          }
+        }
+      }
+    },
+    "連接埠狀態": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Port Status"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "連接埠狀態"
+          }
+        }
+      }
+    },
     "連接埠與線材": {
       "extractionState": "manual",
       "localizations": {
@@ -7186,6 +7951,57 @@
         }
       }
     },
+    "連接埠與線材最高可到 %@ Gbps。通常是裝置本身只支援這個速度；如果裝置規格更高，重新插拔試試。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The port and cable can reach %@ Gbps. Usually the device itself tops out here; if it’s rated faster, try reconnecting."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "連接埠與線材最高可到 %@ Gbps。通常是裝置本身只支援這個速度；如果裝置規格更高，重新插拔試試。"
+          }
+        }
+      }
+    },
+    "連接埠與線材，一目了然": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ports and Cables at a Glance"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "連接埠與線材，一目了然"
+          }
+        }
+      }
+    },
+    "連接埠頁": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ports Page"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "連接埠頁"
+          }
+        }
+      }
+    },
     "連線": {
       "extractionState": "manual",
       "localizations": {
@@ -7199,6 +8015,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "連線"
+          }
+        }
+      }
+    },
+    "連線次數": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connection count"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "連線次數"
+          }
+        }
+      }
+    },
+    "連線速率讀取中或無法取得。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Link speed is still loading or unavailable."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "連線速率讀取中或無法取得。"
           }
         }
       }
@@ -7305,6 +8155,23 @@
         }
       }
     },
+    "過電流次數": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Overcurrent count"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "過電流次數"
+          }
+        }
+      }
+    },
     "選單列": {
       "extractionState": "manual",
       "localizations": {
@@ -7318,6 +8185,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "選單列"
+          }
+        }
+      }
+    },
+    "選單列連接埠狀態": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Port Status in the Menu Bar"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選單列連接埠狀態"
           }
         }
       }
@@ -7730,6 +8614,23 @@
         }
       }
     },
+    "隱藏未使用的連接埠": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide Unused Ports"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隱藏未使用的連接埠"
+          }
+        }
+      }
+    },
     "電池": {
       "extractionState": "manual",
       "localizations": {
@@ -7760,23 +8661,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "電池、數據用量、App 數據用量、儲存空間、Wi‑Fi、周邊電量"
-          }
-        }
-      }
-    },
-    "電池、數據用量、App 數據用量、儲存空間、Wi‑Fi、周邊電量，每種都能選主題色。": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Battery, Data Usage, App Data Usage, Storage, Wi‑Fi and Accessory Battery, each with its own theme color."
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "電池、數據用量、App 數據用量、儲存空間、Wi‑Fi、周邊電量，每種都能選主題色。"
           }
         }
       }
@@ -7934,6 +8818,23 @@
         }
       }
     },
+    "電池已充滿，未充電": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Battery Full, Not Charging"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "電池已充滿，未充電"
+          }
+        }
+      }
+    },
     "電池已充電至 %lld%%。": {
       "extractionState": "manual",
       "localizations": {
@@ -8066,6 +8967,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "電池電量"
+          }
+        }
+      }
+    },
+    "電池頁會說明正在充電、已充滿、充電暫停（充電上限或最佳化電池充電），或接著充電器電池仍在放電。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Battery page tells you whether it’s charging, full, on hold (charge limit or Optimized Battery Charging), or still draining while plugged in."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "電池頁會說明正在充電、已充滿、充電暫停（充電上限或最佳化電池充電），或接著充電器電池仍在放電。"
           }
         }
       }
@@ -8592,6 +9510,23 @@
         }
       }
     },
+    "顯示器": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Display"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "顯示器"
+          }
+        }
+      }
+    },
     "顯示懸浮視窗": {
       "extractionState": "manual",
       "localizations": {
@@ -8605,6 +9540,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "顯示懸浮視窗"
+          }
+        }
+      }
+    },
+    "顯示技術細節": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show Technical Details"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "顯示技術細節"
           }
         }
       }
@@ -8711,6 +9663,23 @@
         }
       }
     },
+    "點一下就看到各連接埠的連線速度、線材規格與充電狀態；可以顯示輸入功率，線材限速時圖示會出現橘點。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One click shows every port’s link speed, cable rating and charging status. It can show input power, and an orange dot appears when a cable is limiting speed."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "點一下就看到各連接埠的連線速度、線材規格與充電狀態；可以顯示輸入功率，線材限速時圖示會出現橘點。"
+          }
+        }
+      }
+    },
     "點一下選單列的網路或電池圖示會打開小視窗；更多資訊在「監控中心」。": {
       "extractionState": "manual",
       "localizations": {
@@ -8724,6 +9693,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "點一下選單列的網路或電池圖示會打開小視窗；更多資訊在「監控中心」。"
+          }
+        }
+      }
+    },
+    "點擊會顯示各連接埠的連線速度、線材規格與充電狀態；有連接埠被線材限速時，圖示會出現橘色圓點。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Click to see each port’s link speed, cable rating and charging status. An orange dot appears when a cable is limiting a port."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "點擊會顯示各連接埠的連線速度、線材規格與充電狀態；有連接埠被線材限速時，圖示會出現橘色圓點。"
           }
         }
       }

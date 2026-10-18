@@ -18,6 +18,8 @@ nonisolated struct CableInfo: Equatable {
     let vendor: String
     let isActive: Bool
     let speed: String
+    /// e‑marker 的速度欄位（0＝USB 2.0 … 4＝USB4 Gen 4）。
+    let speedIndex: Int
     let maxVolts: Int
     let amps: Int
     /// 線材額定可承載的功率：支援 EPR 的 5 A 線為 240 W，其餘為 20 V × 額定電流。
@@ -35,6 +37,24 @@ nonisolated struct PortInfo: Identifiable, Equatable {
     /// 對端裝置（充電器、Hub、顯示器…）的廠商；裝置沒有回報時為空字串。
     let partner: String
     let cable: CableInfo?
+    /// 作用中的傳輸方式代碼（CC、USB2、USB3、CIO、DisplayPort）。
+    var transports: [String] = []
+    /// Thunderbolt／USB4 實際連線速率，以及這個連接埠支援的最高速度（Gb/s）。
+    var link: LinkRate? = nil
+    var macMaxGbps: Double? = nil
+    /// 透過這個連接埠輸出影像的顯示器。
+    var displays: [DisplayLink] = []
+    var tech: PortTech? = nil
+
+    var transportNames: [String] { PortAnalysis.transportNames(transports) }
+
+    /// 有連線時，正在傳什麼、誰在限速的結論。MagSafe 只供電，不判斷。
+    var verdict: PortVerdict? {
+        guard isConnected, !isMagSafe else { return nil }
+        return PortAnalysis.verdict(transports: transports, link: link, macMax: macMaxGbps,
+                                    cableGbps: cable.flatMap { PortAnalysis.cableGbps(speedIndex: $0.speedIndex) },
+                                    displayCount: displays.count, isHDMI: id.hasPrefix("HDMI@"))
+    }
 }
 
 nonisolated extension SystemReaders {
@@ -70,9 +90,37 @@ nonisolated extension SystemReaders {
             if let vendor = (dict["Vendor ID"] as? NSNumber)?.intValue, vendor > 0 { partners[portKey(dict)] = vendorName(vendor) }
         }
         var cables: [String: CableInfo] = [:]
+        var cableIDs: [String: String] = [:]
         for dict in registryProperties(ofClass: "IOPortTransportComponentCCUSBPDSOPp") {
             if let cable = cableInfo(from: dict) { cables[portKey(dict)] = cable }
+            let vid = (dict["Vendor ID"] as? NSNumber)?.intValue ?? 0, pid = (dict["Product ID"] as? NSNumber)?.intValue ?? 0
+            if vid > 0 || pid > 0 { cableIDs[portKey(dict)] = String(format: "VID 0x%04X · PID 0x%04X", vid, pid) }
         }
+
+        // Thunderbolt／USB4 對端裝置的名稱（例如「BenQ PD2725U」），比 PD 的廠商代碼好懂。
+        var tbDevices: [String: String] = [:]
+        for dict in registryProperties(ofClass: "IOPortTransportStateCIO") where dict["Active"] as? Bool == true {
+            let vendor = dict["Device Vendor Name"] as? String ?? ""
+            let model = dict["Device Model Name"] as? String ?? ""
+            let name = model.hasPrefix(vendor) ? model : [vendor, model].filter { !$0.isEmpty }.joined(separator: " ")
+            if !name.isEmpty { tbDevices[portKey(dict)] = name }
+        }
+        // 每個連接埠作用中的傳輸方式。
+        var transports: [String: [String]] = [:]
+        var techs: [String: PortTech] = [:]
+        for dict in registryProperties(ofClass: "IOAccessoryManager") {
+            guard let type = dict["PortTypeDescription"] as? String, let number = (dict["PortNumber"] as? NSNumber)?.intValue else { continue }
+            let key = "\(type)@\(number)"
+            transports[key] = dict["TransportsActive"] as? [String] ?? []
+            func int(_ name: String) -> Int? { (dict[name] as? NSNumber)?.intValue }
+            techs[key] = PortTech(
+                supported: PortAnalysis.transportNames(dict["TransportsSupported"] as? [String] ?? []),
+                plugEvents: int("Plug Event Count"), connections: int("ConnectionCount"), overcurrent: int("Overcurrent Count"),
+                activeCable: dict["ActiveCable"] as? Bool, opticalCable: dict["OpticalCable"] as? Bool)
+        }
+        for (key, id) in cableIDs { techs[key, default: PortTech()].cableID = id }
+        let links = thunderboltLinks()
+        let displays = displayLinks()
 
         var ports: [PortInfo] = []
         for dict in registryProperties(ofClass: "IOPortTransportStateCC") {
@@ -86,12 +134,60 @@ nonisolated extension SystemReaders {
                 name: isMagSafe ? type : String(localized: "USB‑C 連接埠 \(number)"),
                 isMagSafe: isMagSafe,
                 isConnected: dict["Active"] as? Bool ?? false,
-                partner: partners[key] ?? "",
-                cable: cables[key]
+                partner: tbDevices[key] ?? partners[key] ?? "",
+                cable: cables[key],
+                transports: transports[key] ?? [],
+                link: (transports[key] ?? []).contains("CIO") ? links[number]?.current : nil,
+                macMaxGbps: isMagSafe ? nil : links[number]?.max,
+                displays: displays[key] ?? [],
+                tech: techs[key]
             ))
         }
-        // MagSafe 排在最前面，其餘依連接埠編號。
-        return ports.sorted { ($0.isMagSafe ? 0 : 1, $0.id) < ($1.isMagSafe ? 0 : 1, $1.id) }
+        // HDMI 等非 USB‑C 的影像埠：有接顯示器時才列出。
+        for (key, list) in displays where key.hasPrefix("HDMI@") && !list.isEmpty {
+            ports.append(PortInfo(id: key, name: String(localized: "HDMI 連接埠"), isMagSafe: false, isConnected: true,
+                                  partner: list.map(\.name).formatted(.list(type: .and)), cable: nil,
+                                  transports: ["DisplayPort"], displays: list))
+        }
+        // MagSafe 排在最前面，接著 USB‑C 依連接埠編號，HDMI 最後。
+        func rank(_ port: PortInfo) -> Int { port.isMagSafe ? 0 : (port.id.hasPrefix("HDMI@") ? 2 : 1) }
+        return ports.sorted { (rank($0), $0.id) < (rank($1), $1.id) }
+    }
+
+    /// 每個 USB‑C 連接埠（以 Thunderbolt 的 Socket ID 對應連接埠編號）的實際連線速率與支援的最高速度。
+    private static func thunderboltLinks() -> [Int: (current: LinkRate?, max: Double?)] {
+        var result: [Int: (current: LinkRate?, max: Double?)] = [:]
+        for dict in registryProperties(ofClass: "IOThunderboltPort") {
+            // 只看 Mac 這一端、第一條通道的連接埠；外接裝置上的連接埠沒有 Socket ID。
+            guard let socket = (dict["Socket ID"] as? String).flatMap(Int.init),
+                  (dict["Lane"] as? NSNumber)?.intValue == 1 else { continue }
+            func int(_ key: String) -> Int { (dict[key] as? NSNumber)?.intValue ?? 0 }
+            let current = LinkRate(speedCode: int("Current Link Speed"), widthCode: int("Current Link Width"))
+            let maxLanes = int("Supported Link Width") >= 2 ? 2.0 : 1.0
+            let max = LinkRate.perLane(code: int("Supported Link Speed")).map { $0 * maxLanes }
+            result[socket] = (current, max)
+        }
+        return result
+    }
+
+    /// 各連接埠上正在輸出影像的顯示器（名稱、DisplayPort 連線速率與通道數）。
+    private static func displayLinks() -> [String: [DisplayLink]] {
+        var result: [String: [DisplayLink]] = [:]
+        for dict in registryProperties(ofClass: "IOPortTransportStateDisplayPort") where dict["Active"] as? Bool == true {
+            guard (dict["ParentPortBuiltIn"] as? Bool) != false else { continue }
+            let type = dict["ParentPortTypeDescription"] as? String ?? ""
+            let number = (dict["ParentPortNumber"] as? NSNumber)?.intValue ?? 0
+            let metadata = dict["Metadata"] as? [String: Any] ?? [:]
+            let name = (metadata["ProductName"] as? String) ?? (dict["ManufacturerName"] as? String) ?? String(localized: "顯示器")
+            let link = DisplayLink(
+                id: dict["TransportDescription"] as? String ?? UUID().uuidString,
+                name: name,
+                rate: dict["LinkRateDescription"] as? String ?? "",
+                lanes: (dict["LaneCount"] as? NSNumber)?.intValue ?? 0,
+                tunneled: dict["Tunneled"] as? Bool ?? false)
+            result["\(type)@\(number)", default: []].append(link)
+        }
+        return result.mapValues { $0.sorted { $0.id < $1.id } }
     }
 
     /// 解讀 Discover Identity 回應裡的線材 VDO（第 4 個 VDO）。
@@ -112,6 +208,7 @@ nonisolated extension SystemReaders {
             vendor: vendor > 0 ? vendorName(vendor) : "",
             isActive: productType == 4,
             speed: speedIndex < speeds.count ? speeds[speedIndex] : String(localized: "未知速度"),
+            speedIndex: speedIndex,
             maxVolts: maxVolts,
             amps: amps,
             watts: epr && amps == 5 ? 240 : amps * 20
@@ -150,7 +247,11 @@ extension SystemMonitor {
     func fetchPortInfo() {
         runExclusive("portInfo") {
             let snapshot = SystemReaders.portInfos()
-            await MainActor.run { self.assignIfChanged(\.portInfos, snapshot) }
+            await MainActor.run {
+                let previous = self.portInfos
+                self.assignIfChanged(\.portInfos, snapshot)
+                self.evaluatePortNotifications(previous: previous, current: snapshot)
+            }
         }
     }
 
@@ -160,6 +261,43 @@ extension SystemMonitor {
         Task { [weak self] in
             try? await Task.sleep(for: .seconds(4))
             self?.fetchPortInfo()
+        }
+    }
+
+    /// 連接埠接上或拔除時通知。接上後 e‑marker 與連線速度要幾秒才讀得到，所以等 6 秒再用最新資料描述。
+    func evaluatePortNotifications(previous: [PortInfo], current: [PortInfo]) {
+        let connected = Set(current.filter(\.isConnected).map(\.id))
+        let (added, removed) = PortAnalysis.changes(previous: portNotifyBaseline, current: connected)
+        portNotifyBaseline = connected
+        for id in removed {
+            portNotifyTasks.removeValue(forKey: id)?.cancel()
+            portNotifyPlan.disconnected(id)
+        }
+        guard notifyPortChanges else { return }
+        for id in added {
+            let token = portNotifyPlan.connected(id)
+            portNotifyTasks.removeValue(forKey: id)?.cancel()
+            portNotifyTasks[id] = Task { [weak self] in
+                try? await Task.sleep(for: .seconds(6))
+                guard !Task.isCancelled, let self else { return }
+                self.portNotifyTasks[id] = nil
+                let port = self.portInfos.first(where: { $0.id == id })
+                guard let port, self.portNotifyPlan.shouldDeliver(id, token: token, enabled: self.notifyPortChanges, stillConnected: port.isConnected) else { return }
+                var parts: [String] = []
+                if !port.partner.isEmpty { parts.append(port.partner) }
+                if let verdict = port.verdict {
+                    parts.append(verdict.title)
+                    if verdict.level == .warning { parts.append(verdict.detail) }
+                }
+                if let cable = port.cable { parts.append(String(localized: "線材 \(cable.speed) · \(cable.ratingText)")) }
+                BatteryNotifier.shared.post(id: "port-\(id)", title: String(localized: "\(port.name) 已連接"),
+                                            body: parts.joined(separator: "\n"),
+                                            sound: PortNotifyPlan.playsSound(soundEnabled: self.notificationSound, verdict: port.verdict))
+            }
+        }
+        for id in removed {
+            let name = previous.first(where: { $0.id == id })?.name ?? id
+            BatteryNotifier.shared.post(id: "port-\(id)", title: String(localized: "\(name) 已拔除"), body: "", sound: false)
         }
     }
 
@@ -181,7 +319,7 @@ extension SystemMonitor {
         let charger = chargerMaxWatts
         guard let port = poweringPort else {
             return portInfos.filter(\.isConnected).count > 1
-                ? (String(localized: "充電器最高可供 \(charger) W。有多個連接埠正在使用，各埠的線材規格請看「系統效能」分頁。"), false)
+                ? (String(localized: "充電器最高可供 \(charger) W。有多個連接埠正在使用，各埠的線材規格請看「連接埠」分頁。"), false)
                 : (String(localized: "充電器最高可供 \(charger) W。"), false)
         }
         if port.isMagSafe { return (String(localized: "充電器最高可供 \(charger) W。MagSafe 線材不提供線材規格。"), false) }
