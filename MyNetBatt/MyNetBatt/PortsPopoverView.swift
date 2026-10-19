@@ -39,6 +39,10 @@ struct PortsPopoverView: View {
                                     .foregroundStyle(verdict.limited ? Color.orange : Color.secondary)
                                     .fixedSize(horizontal: false, vertical: true)
                             }
+                            if let contract = monitor.activeSupply?.contract {
+                                Label("目前協商 \(contract.text)", systemImage: "bolt.fill")
+                                    .font(.caption).foregroundStyle(.secondary).monospacedDigit()
+                            }
                         }
                     }
 

@@ -1,5 +1,6 @@
 import Foundation
 import IOKit
+import CoreGraphics
 
 // MARK: - USB‑C 連接埠、線材與充電器檔位
 
@@ -45,6 +46,8 @@ nonisolated struct PortInfo: Identifiable, Equatable {
     /// 透過這個連接埠輸出影像的顯示器。
     var displays: [DisplayLink] = []
     var tech: PortTech? = nil
+    /// PD 控制器的供電檔位、協商結果與異常計數（對應不到連接埠時為 nil）。
+    var power: PortPower? = nil
 
     var transportNames: [String] { PortAnalysis.transportNames(transports) }
 
@@ -79,7 +82,7 @@ nonisolated extension SystemReaders {
 
     /// 每個內建連接埠目前的連線狀態，以及接在上面的裝置與線材。
     /// 線材資訊來自 USB‑PD 的 SOP' 回應（e‑marker），沒有晶片的基本線材或 MagSafe 線讀不到。
-    static func portInfos() -> [PortInfo] {
+    static func portInfos(controllers: [PortPower] = []) -> [PortInfo] {
         func portKey(_ dict: [String: Any]) -> String {
             let type = dict["ParentPortTypeDescription"] as? String ?? ""
             let number = (dict["ParentPortNumber"] as? NSNumber)?.intValue ?? 0
@@ -108,11 +111,13 @@ nonisolated extension SystemReaders {
         // 每個連接埠作用中的傳輸方式。
         var transports: [String: [String]] = [:]
         var techs: [String: PortTech] = [:]
+        var connectionCounts: [String: Int] = [:]
         for dict in registryProperties(ofClass: "IOAccessoryManager") {
             guard let type = dict["PortTypeDescription"] as? String, let number = (dict["PortNumber"] as? NSNumber)?.intValue else { continue }
             let key = "\(type)@\(number)"
             transports[key] = dict["TransportsActive"] as? [String] ?? []
             func int(_ name: String) -> Int? { (dict[name] as? NSNumber)?.intValue }
+            if let count = int("ConnectionCount") { connectionCounts[key] = count }
             techs[key] = PortTech(
                 supported: PortAnalysis.transportNames(dict["TransportsSupported"] as? [String] ?? []),
                 plugEvents: int("Plug Event Count"), connections: int("ConnectionCount"), overcurrent: int("Overcurrent Count"),
@@ -120,7 +125,8 @@ nonisolated extension SystemReaders {
         }
         for (key, id) in cableIDs { techs[key, default: PortTech()].cableID = id }
         let links = thunderboltLinks()
-        let displays = displayLinks()
+        let displays = displayLinks(transports: transports)
+        let powers = PortPower.match(controllers: controllers, portConnections: connectionCounts)
 
         var ports: [PortInfo] = []
         for dict in registryProperties(ofClass: "IOPortTransportStateCC") {
@@ -140,7 +146,8 @@ nonisolated extension SystemReaders {
                 link: (transports[key] ?? []).contains("CIO") ? links[number]?.current : nil,
                 macMaxGbps: isMagSafe ? nil : links[number]?.max,
                 displays: displays[key] ?? [],
-                tech: techs[key]
+                tech: techs[key],
+                power: powers[key]
             ))
         }
         // HDMI 等非 USB‑C 的影像埠：有接顯示器時才列出。
@@ -152,6 +159,13 @@ nonisolated extension SystemReaders {
         // MagSafe 排在最前面，接著 USB‑C 依連接埠編號，HDMI 最後。
         func rank(_ port: PortInfo) -> Int { port.isMagSafe ? 0 : (port.id.hasPrefix("HDMI@") ? 2 : 1) }
         return ports.sorted { (rank($0), $0.id) < (rank($1), $1.id) }
+    }
+
+    /// AppleSmartBattery 回報的各 PD 控制器資料（供電檔位、協商結果、異常計數）。
+    static func powerControllers() -> [PortPower] {
+        guard let battery = registryProperties(ofClass: "AppleSmartBattery").first,
+              let list = battery["PortControllerInfo"] as? [[String: Any]] else { return [] }
+        return list.map(PortPower.init(controller:))
     }
 
     /// 每個 USB‑C 連接埠（以 Thunderbolt 的 Socket ID 對應連接埠編號）的實際連線速率與支援的最高速度。
@@ -170,21 +184,57 @@ nonisolated extension SystemReaders {
         return result
     }
 
-    /// 各連接埠上正在輸出影像的顯示器（名稱、DisplayPort 連線速率與通道數）。
-    private static func displayLinks() -> [String: [DisplayLink]] {
+    /// macOS 目前接著的外接螢幕：用 EDID 的廠商／產品／序號對應，取目前更新率與原生解析度下可選的更新率。
+    private struct ScreenMode { let vendor: Int; let model: Int; let serial: Int; let current: Double; let width: Int; let height: Int; let modes: [(w: Int, h: Int, refresh: Int)] }
+    private static func screenModes() -> [ScreenMode] {
+        var count: UInt32 = 0
+        var ids = [CGDirectDisplayID](repeating: 0, count: 16)
+        guard CGGetOnlineDisplayList(16, &ids, &count) == .success else { return [] }
+        let options = [kCGDisplayShowDuplicateLowResolutionModes: true] as CFDictionary
+        return ids.prefix(Int(count)).compactMap { id in
+            guard CGDisplayIsBuiltin(id) == 0, let mode = CGDisplayCopyDisplayMode(id) else { return nil }
+            let all = (CGDisplayCopyAllDisplayModes(id, options) as? [CGDisplayMode]) ?? []
+            return ScreenMode(vendor: Int(CGDisplayVendorNumber(id)), model: Int(CGDisplayModelNumber(id)),
+                              serial: Int(CGDisplaySerialNumber(id)), current: mode.refreshRate, width: mode.pixelWidth, height: mode.pixelHeight,
+                              modes: all.flatMap { [($0.pixelWidth, $0.pixelHeight, Int($0.refreshRate.rounded())),
+                                                    ($0.width, $0.height, Int($0.refreshRate.rounded()))] })
+        }
+    }
+
+    /// 各連接埠上正在輸出影像的顯示器（名稱、DisplayPort 連線速率與通道數、模式診斷）。
+    private static func displayLinks(transports: [String: [String]]) -> [String: [DisplayLink]] {
         var result: [String: [DisplayLink]] = [:]
+        let screens = screenModes()
         for dict in registryProperties(ofClass: "IOPortTransportStateDisplayPort") where dict["Active"] as? Bool == true {
             guard (dict["ParentPortBuiltIn"] as? Bool) != false else { continue }
             let type = dict["ParentPortTypeDescription"] as? String ?? ""
             let number = (dict["ParentPortNumber"] as? NSNumber)?.intValue ?? 0
             let metadata = dict["Metadata"] as? [String: Any] ?? [:]
             let name = (metadata["ProductName"] as? String) ?? (dict["ManufacturerName"] as? String) ?? String(localized: "顯示器")
+            let rate = dict["LinkRateDescription"] as? String ?? ""
+            let lanes = (dict["LaneCount"] as? NSNumber)?.intValue ?? 0
+            let tunneled = dict["Tunneled"] as? Bool ?? false
+            var diagnosis: DisplayDiagnosis?
+            if let data = (dict["EDID"] as? Data) ?? (metadata["EDID"] as? Data), let edid = EDIDInfo([UInt8](data)), let best = edid.best {
+                // 同型號接兩台時要靠序號區分；仍然分不出來就不拿目前模式。
+                var matches = screens.filter { $0.vendor == edid.vendorID && $0.model == edid.productID }
+                if matches.count > 1 { matches = matches.filter { $0.serial == edid.serial } }
+                let screen = matches.count == 1 ? matches[0] : nil
+                let offered = Set(screen?.modes.filter { $0.w == best.width && $0.h == best.height }.map(\.refresh) ?? [])
+                diagnosis = DisplayDiagnosis.evaluate(
+                    edid: edid, currentRefresh: screen?.current, offeredRefreshes: offered,
+                    linkRate: DisplayDiagnosis.rate(from: rate), lanes: lanes,
+                    maxLanes: (dict["MaxLaneCount"] as? NSNumber)?.intValue ?? lanes,
+                    usbShared: (transports["\(type)@\(number)"] ?? []).contains("USB3"), tunneled: tunneled,
+                    currentWidth: screen?.width, currentHeight: screen?.height)
+            }
             let link = DisplayLink(
                 id: dict["TransportDescription"] as? String ?? UUID().uuidString,
                 name: name,
-                rate: dict["LinkRateDescription"] as? String ?? "",
-                lanes: (dict["LaneCount"] as? NSNumber)?.intValue ?? 0,
-                tunneled: dict["Tunneled"] as? Bool ?? false)
+                rate: rate,
+                lanes: lanes,
+                tunneled: tunneled,
+                diagnosis: diagnosis)
             result["\(type)@\(number)", default: []].append(link)
         }
         return result.mapValues { $0.sorted { $0.id < $1.id } }
@@ -246,10 +296,13 @@ extension SystemMonitor {
     /// 讀一次各連接埠的狀態；只在插拔、畫面打開與低頻率的保底更新時呼叫。
     func fetchPortInfo() {
         runExclusive("portInfo") {
-            let snapshot = SystemReaders.portInfos()
+            let controllers = SystemReaders.powerControllers()
+            let snapshot = SystemReaders.portInfos(controllers: controllers)
+            let supply = PortPower.activeSupply(controllers)
             await MainActor.run {
                 let previous = self.portInfos
                 self.assignIfChanged(\.portInfos, snapshot)
+                self.assignIfChanged(\.activeSupply, supply)
                 self.evaluatePortNotifications(previous: previous, current: snapshot)
             }
         }
@@ -301,16 +354,17 @@ extension SystemMonitor {
         }
     }
 
-    /// 正在供電的那個連接埠：只有一個連接埠有連線時才能確定是它。
+    /// 正在供電的那個連接埠：和 activeSupply 同一個 PD 控制器的埠；判斷不出來時為 nil。
     var poweringPort: PortInfo? {
         let connected = portInfos.filter(\.isConnected)
-        return connected.count == 1 ? connected.first : nil
+        let id = PortPower.poweringPortID(connected: connected.map { ($0.id, $0.power) }, supply: activeSupply)
+        return connected.first { $0.id == id }
     }
 
     /// 充電器所有檔位裡最高的瓦數；讀不到檔位時用系統回報的額定瓦數。
     var chargerMaxWatts: Int {
-        let best = chargerProfiles.map(\.watts).max().map { Int($0.rounded()) } ?? 0
-        return max(best, Int(adapterRating.replacingOccurrences(of: " W", with: "")) ?? 0)
+        let best = max(chargerProfiles.map(\.watts).max() ?? 0, activeSupply?.maxWatts ?? 0).rounded()
+        return max(Int(best), Int(adapterRating.replacingOccurrences(of: " W", with: "")) ?? 0)
     }
 
     /// 充電器與線材誰是瓶頸的一句結論；`limited` 為真代表換線材可以充得更快。

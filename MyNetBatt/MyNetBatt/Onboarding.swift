@@ -9,7 +9,7 @@ final class IntroWindowController: NSObject, NSWindowDelegate {
     static let shared = IntroWindowController()
 
     /// 這一版要在「新功能」裡介紹的版本號；升到這一版的既有使用者第一次啟動時會看到。
-    static let whatsNewVersion = "4.1"
+    static let whatsNewVersion = "4.2"
 
     private var window: NSWindow?
     private weak var monitor: SystemMonitor?
@@ -304,18 +304,17 @@ private struct WhatsNewView: View {
                     .resizable().interpolation(.high)
                     .frame(width: 72, height: 72)
                 Text("MyNetBatt \(IntroWindowController.whatsNewVersion)").font(.system(size: 26, weight: .bold))
-                Text("連接埠與線材，一目了然").font(.title3.weight(.semibold)).foregroundStyle(.secondary)
+                Text("充電與螢幕，看得更透徹").font(.title3.weight(.semibold)).foregroundStyle(.secondary)
             }
             .padding(.top, 34)
             .padding(.bottom, 20)
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
-                    item("cable.connector.horizontal", .blue, "連接埠分頁", "每個連接埠正在傳什麼、實際連線速度、是 Mac、線材還是裝置在限速，以及接了哪些顯示器與 Thunderbolt 設備。")
-                    item("menubar.arrow.up.rectangle", .teal, "選單列連接埠狀態", "點一下就看到各連接埠的連線速度、線材規格與充電狀態；可以顯示輸入功率，線材限速時圖示會出現橘點。")
-                    item("battery.100percent.bolt", .green, "為什麼沒在充電", "電池頁會說明正在充電、已充滿、充電暫停（充電上限或最佳化電池充電），或接著充電器電池仍在放電。")
-                    item("bell.badge.fill", .red, "連接埠插拔通知", "接上裝置或線材時告訴你連線速度與線材規格，線材限速時特別提醒。")
-                    item("list.bullet.rectangle", .gray, "技術細節", "支援的傳輸方式、插拔次數、過電流次數與線材識別碼，可在連接埠頁隨時開關。")
+                    item("bolt.fill", .orange, "完整供電檔位", "列出充電器宣告的所有檔位（包含 PPS 與 EPR 高功率檔位），並標出 Mac 實際談妥的電壓與電流。")
+                    item("display", .indigo, "螢幕診斷", "比對螢幕支援的最佳解析度與更新率；沒跑到最佳時，說明是設定、連線頻寬，還是 USB 資料佔用了影像通道。")
+                    item("waveform.path.ecg", .purple, "充電路徑電阻", "依負載變化估算線材、接頭與充電器的整段電阻，以及滿載時路徑上損失多少功率。")
+                    item("list.bullet.rectangle", .gray, "PD 健康計數", "技術細節新增硬體重設、短路偵測、通訊錯誤與角色切換失敗次數。")
                 }
                 .padding(.horizontal, 44)
             }

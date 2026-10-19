@@ -4,6 +4,23 @@
 
 This document summarizes the major changes in each MyNetBatt release. Versions before 3.0 were uploaded by replacing earlier copies, so their original per-version Git history can no longer be fully recovered. Changes from 1.0 through 2.x are therefore consolidated from the source code that can still be verified, without attributing uncertain details to individual releases.
 
+## [4.2] - 2026-10-19
+
+A closer look at charging and displays. See every power level your charger offers and what your Mac actually negotiated, estimate the charging path's resistance, and check whether your display is running at its best.
+
+### New
+
+- Full charger power levels: Charger Profiles on the Battery page now lists every USB‑PD level the charger offers, including adjustable PPS and high-power EPR levels at 28 V and above, and marks the voltage and current your Mac actually negotiated (for example 20 V × 4.7 A, 94 W). You're told when the charger can't supply as much as your Mac wants. The Ports menu bar window and technical details also show the negotiated power.
+- Display diagnosis: on the Ports tab and in the Ports menu bar window, each display shows whether it's running at its best resolution and refresh rate. If not, it explains whether you can switch in System Settings, the link lacks bandwidth, or USB 3 data is using the video lanes. Technical details show the bandwidth the best mode needs and what the link provides.
+- Charging path resistance: estimates the resistance of the cable, both connectors and the charger from load changes, and how much power is lost along the path at full load. macOS updates input voltage and current about once a minute, so a figure appears after a few minutes with varying load.
+- PD health counters: technical details on the Ports tab now include PD hard resets, short-circuit detections, controller communication errors and role swap failures.
+
+### Changes
+
+- When several ports are in use, the powering port is identified from the actual negotiation; when that can't be determined, MyNetBatt no longer guesses.
+- Charger information updates right away when the charger renegotiates or changes what it can supply without being unplugged (for example, when a phone is plugged into another port of a multi-port charger).
+- Text in the Ports menu bar window now wraps whole phrases instead of breaking numbers or labels in the middle.
+
 ## [4.1] - 2026-10-19
 
 Ports and cables at a glance. A new Ports tab and port status in the menu bar show what each port is carrying, how fast it's running, and what's holding it back.

@@ -190,6 +190,13 @@ extension SystemMonitor {
             let supply = (rating: fAdapterRating, powerIn: fPowerIn, load: fSystemLoad, detail: fAdapterDetail)
             let fPowerInWatts = tempPlugged ? (milli(telemetry, "SystemPowerIn") ?? 0) : 0
             let fProfiles = tempPlugged ? SystemReaders.chargerProfiles(from: adapter) : []
+            let fTelemetryIn: (volts: Double, amps: Double, time: Int, adapterMV: Int)? = tempPlugged ? {
+                guard let mv = (telemetry["SystemVoltageIn"] as? NSNumber)?.doubleValue,
+                      let ma = (telemetry["SystemCurrentIn"] as? NSNumber)?.doubleValue,
+                      let time = (SystemReaders.lookup("UpdateTime", in: batteryProperties) as? NSNumber)?.intValue else { return nil }
+                return (mv / 1000, ma / 1000, time, (adapter["AdapterVoltage"] as? NSNumber)?.intValue ?? 0)
+            }() : nil
+            let fContracts = PortPower.contractFingerprint(SystemReaders.lookup("PortControllerInfo", in: batteryProperties) as? [[String: Any]] ?? [])
             let fChargeState = ChargeState.evaluate(
                 plugged: tempPlugged, charging: tempCharging, percent: tempPct,
                 fullyCharged: (SystemReaders.lookup("FullyCharged", in: batteryProperties) as? NSNumber)?.boolValue ?? false,
@@ -212,6 +219,18 @@ extension SystemMonitor {
                 self.assignIfChanged(\.chargerProfiles, fProfiles)
                 self.assignIfChanged(\.chargeState, fChargeState)
                 if plugChanged { self.refreshPortInfoAfterPlugChange(); self.layoutChanged.send() }
+                // 沒有插拔但重新協商了（例如多孔充電器另一孔插上手機），也要更新「目前協商」。
+                if let previous = self.lastContractFingerprint, previous != fContracts, !plugChanged { self.fetchPortInfo() }
+                self.lastContractFingerprint = fContracts
+                // 充電路徑電阻：換充電器或重新協商（context 改變）會清掉舊樣本。
+                if let input = fTelemetryIn {
+                    self.resistanceSampler.add(volts: input.volts, amps: input.amps, updateTime: input.time,
+                                               context: fContracts + [input.adapterMV])
+                    self.assignIfChanged(\.chargePathResistance, self.resistanceSampler.status)
+                } else {
+                    self.resistanceSampler.reset()
+                    self.assignIfChanged(\.chargePathResistance, nil)
+                }
                 self.assignIfChanged(\.powerInWatts, (fPowerInWatts * 10).rounded() / 10)
                 self.batterySignedWatts = fSignedWatts
                 self.assignIfChanged(\.adapterRating, supply.rating)

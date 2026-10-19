@@ -10,11 +10,13 @@
 
 MyNetBatt is a native macOS menu bar system monitor that brings battery, network, system performance, storage, and accessories together in one interface.
 
-> **4.1: ports and cables at a glance.** A new Ports tab and port status in the menu bar show what each port is carrying, how fast it's running, and whether your Mac, the cable or the device is holding it back. The Battery page also explains why it isn't charging.
+> **4.2: a closer look at charging and displays.** See every power level your charger offers and the voltage and current your Mac actually negotiated, estimate the charging path's resistance, and check whether your display is running at its best resolution and refresh rate.
+>
+> 4.1 added the Ports tab and port status in the menu bar, showing what each port is carrying, how fast it's running, and what's holding it back.
 >
 > 4.0 was the full redesign: a completely new monitor window with an Overview page, six desktop widgets, accessory battery levels, folder sizes and large files, an English interface, and a welcome tour.
 >
-> Current version: 4.1 · Interface languages: Traditional Chinese, English
+> Current version: 4.2 · Interface languages: Traditional Chinese, English
 
 See the [changelog](CHANGELOG.en.md) or [GitHub Releases](https://github.com/stone5202/MyNetBatt/releases) for the changes in each version. The changelog is also available in [Traditional Chinese](CHANGELOG.md).
 
@@ -93,7 +95,8 @@ MyNetBatt is under active development and maintenance. Its complete source code 
 - Optional CPU, memory, and storage usage items in the menu bar
 - Battery level, charging state, health, cycle count, temperature, power, and charge duration; the 48-hour chart is coloured by power source and marks charging and on-battery periods
 - While plugged in: adapter wattage, actual input power, system load, adapter voltage and current, and conversion loss
-- Charger and cable diagnosis: lists the charger's voltage and current profiles and the one in use, reads the cable's e-marker for its power rating and speed, and tells you when the cable is limiting charging
+- Charger and cable diagnosis: lists every power level the charger offers (including PPS and high-power EPR levels) and the voltage and current your Mac actually negotiated, reads the cable's e-marker for its power rating and speed, and tells you when the cable is limiting charging
+- Charging path resistance: estimates the resistance of the cable, connectors and charger from load changes, and how much power is lost along the path at full load
 - Records the duration and battery drain of the most recent sleep on battery
 - Daily log of battery health and cycle count, viewable over 30 days, 90 days, 1 year, or all time with a day-by-day list
 - Notifications for low battery (at several levels you choose), full charge, high battery temperature, health drop, power surge (naming the app using the most CPU), high drain during sleep, and low accessory battery, with a choice of system alert sounds
@@ -109,7 +112,8 @@ MyNetBatt is under active development and maintenance. Its complete source code 
 - CPU, GPU, memory (including memory pressure), swap, and storage monitoring, with buttons to eject one or all external volumes
 - Folder sizes and files of 100 MB or larger, which can be shown in Finder or moved to the Trash
 - Hide the notch with a generated wallpaper that has a black top edge; the original can be restored at any time
-- Ports: the transports each USB-C, MagSafe, and HDMI port is using, its actual link speed and maximum, and whether your Mac, the cable, or the device is the bottleneck; connected displays and Thunderbolt/USB4 devices, and each cable's type, speed, power rating, and manufacturer; optional technical details such as plug count
+- Ports: the transports each USB-C, MagSafe, and HDMI port is using, its actual link speed and maximum, and whether your Mac, the cable, or the device is the bottleneck; connected displays and Thunderbolt/USB4 devices, and each cable's type, speed, power rating, and manufacturer; optional technical details such as plug count, PD hard resets and short-circuit detections
+- Display diagnosis: compares your display's best resolution and refresh rate with what it's running, and explains whether a setting, link bandwidth, or USB data using the video lanes is holding it back
 - Port status in the menu bar (five icon styles, optional charger input power) with an orange dot when a cable is limiting speed; notifications when ports connect or disconnect
 - When plugged in, explains why the Mac isn't charging: full, on hold (charge limit or Optimized Battery Charging), or draining while on the charger
 - Theme (auto, light, dark), glass style, and accent color

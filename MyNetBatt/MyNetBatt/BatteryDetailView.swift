@@ -379,7 +379,9 @@ struct ChargerCableCard: View {
                     Text(verdict.text).font(.callout).fixedSize(horizontal: false, vertical: true)
                 }
 
-                if !monitor.chargerProfiles.isEmpty {
+                if let supply = monitor.activeSupply, !supply.pdos.isEmpty {
+                    PDProfilesView(supply: supply, monitor: monitor)
+                } else if !monitor.chargerProfiles.isEmpty {
                     VStack(alignment: .leading, spacing: 6) {
                         Text("充電器檔位").font(.caption).foregroundStyle(.secondary)
                         LazyVGrid(columns: [GridItem(.adaptive(minimum: 92), spacing: 8)], alignment: .leading, spacing: 8) {
@@ -408,6 +410,10 @@ struct ChargerCableCard: View {
                             .font(.system(size: 14, weight: .semibold, design: .rounded)).monospacedDigit()
                     }
                 }
+
+                if let status = monitor.chargePathResistance {
+                    ChargePathResistanceView(status: status, fullAmps: monitor.activeSupply?.contract?.amps)
+                }
             }
             .padding(Metrics.panelPadding)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -418,5 +424,83 @@ struct ChargerCableCard: View {
     /// 整數不帶小數點，其餘保留到小數兩位（例如 5、2.25）。
     private static func trim(_ value: Double) -> String {
         value == value.rounded() ? String(Int(value)) : String(format: "%.2f", value).replacingOccurrences(of: "0+$", with: "", options: .regularExpression)
+    }
+}
+
+/// 充電器宣告的完整 USB‑PD 檔位（含 PPS／EPR），標出 Mac 實際協商的那一個。
+struct PDProfilesView: View {
+    let supply: PortPower
+    @Bindable var monitor: SystemMonitor
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("充電器檔位").font(.caption).foregroundStyle(.secondary)
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 104), spacing: 8)], alignment: .leading, spacing: 8) {
+                ForEach(supply.pdos) { pdo in
+                    let active = supply.contract?.position == pdo.position
+                    VStack(spacing: 2) {
+                        Text(pdo.voltageText).font(.system(size: 13, weight: .semibold, design: .rounded))
+                            .lineLimit(1).minimumScaleFactor(0.8)
+                        Text(pdo.limitText).font(.caption2)
+                            .foregroundStyle(active ? monitor.accentContrastColor.opacity(0.85) : Color.secondary)
+                    }
+                    .monospacedDigit()
+                    .foregroundStyle(active ? monitor.accentContrastColor : Color.primary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 6)
+                    .background(active ? monitor.accentColor : Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .help(active ? String(localized: "目前使用的檔位") : "")
+                    .accessibilityLabel("\(pdo.voltageText) \(pdo.limitText)\(active ? String(localized: "，目前使用") : "")")
+                }
+            }
+            if let contract = supply.contract {
+                HStack(spacing: 6) {
+                    Text("目前協商").foregroundStyle(.secondary)
+                    Text(contract.text).fontWeight(.semibold).monospacedDigit()
+                }
+                .font(.caption)
+                if contract.capabilityMismatch {
+                    Label("Mac 需要的電力超過充電器這個檔位能給的，充電可能變慢。", systemImage: "exclamationmark.triangle.fill")
+                        .font(.caption).foregroundStyle(.orange)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+    }
+}
+
+/// 充電路徑電阻（線材＋接頭＋充電器輸出）的估算結果或收集進度。
+struct ChargePathResistanceView: View {
+    let status: ResistanceSampler.Status
+    /// 協商的最大電流（A）；用來說明滿載時路徑上損失多少功率。
+    let fullAmps: Double?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text("充電路徑電阻（估算）").font(.caption).foregroundStyle(.secondary)
+            switch status {
+            case .ready(let estimate):
+                let mohm = Int(estimate.milliohms.rounded())
+                Text("約 \(mohm) mΩ").font(.system(size: 14, weight: .semibold, design: .rounded)).monospacedDigit()
+                let r2 = String(format: "%.2f", estimate.rSquared)
+                Group {
+                    if let amps = fullAmps, amps > 0.1 {
+                        let loss = String(format: "%.1f", amps * amps * estimate.milliohms / 1000)
+                        let a = PDObject.num(amps)
+                        Text("以協商的 \(a) A 滿載時，路徑上約損失 \(loss) W。依 \(estimate.samples) 筆負載變化估算（擬合度 \(r2)），包含線材、兩端接頭與充電器；同一個充電器換線比較才有意義。")
+                    } else {
+                        Text("依 \(estimate.samples) 筆負載變化估算（擬合度 \(r2)），包含線材、兩端接頭與充電器；同一個充電器換線比較才有意義。")
+                    }
+                }
+                .font(.caption2).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            case .collecting(let samples, let span):
+                let spanText = String(format: "%.1f", span)
+                Text("收集中：已記錄 \(samples) 筆，電流變化 \(spanText) A。系統約每分鐘更新一次電壓與電流，需要至少 5 筆、電流變化 1 A 以上（例如先閒置再跑重度工作）。")
+                    .font(.caption2).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            case .unreliable:
+                Text("電壓和電流的變化不一致（充電器可能在調整電壓），暫時無法估算。")
+                    .font(.caption2).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            }
+        }
     }
 }

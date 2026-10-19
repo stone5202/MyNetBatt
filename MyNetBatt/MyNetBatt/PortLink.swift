@@ -54,6 +54,8 @@ nonisolated struct DisplayLink: Equatable, Identifiable {
     let lanes: Int
     /// 透過 Thunderbolt 隧道傳送（不是 USB‑C 直接切換成 DisplayPort）。
     let tunneled: Bool
+    /// 目前模式與螢幕最佳模式的比較（EDID 讀不到時為 nil）。
+    var diagnosis: DisplayDiagnosis? = nil
 }
 
 /// 連接埠的技術細節：支援的傳輸方式與控制器累計的計數。

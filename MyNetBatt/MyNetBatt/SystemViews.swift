@@ -223,12 +223,14 @@ struct PortRow: View {
                 .foregroundStyle(port.isConnected ? Color.blue : Color.secondary)
                 .frame(width: 24)
             VStack(alignment: .leading, spacing: 5) {
-                HStack(spacing: 6) {
-                    Text(port.name).bold()
+                // 窄的地方（選單列小視窗）標籤整顆換到下一行，不在字中間斷開。
+                FlowLayout(spacing: 6, lineSpacing: 4) {
+                    Text(port.name).bold().lineLimit(1).fixedSize()
                     if port.isConnected {
                         ForEach(port.transportNames, id: \.self) { name in
                             Text(name)
                                 .font(.caption2.weight(.medium))
+                                .lineLimit(1).fixedSize()
                                 .padding(.horizontal, 6).padding(.vertical, 1)
                                 .background(Color.secondary.opacity(0.14), in: Capsule())
                         }
@@ -240,18 +242,20 @@ struct PortRow: View {
                     if let verdict = port.verdict { verdictView(verdict) }
                     if let link = port.link {
                         let total = LinkRate.gbps(link.total)
-                        Group {
+                        FlowLayout(spacing: 4, lineSpacing: 2) {
+                            Text("實際連線 \(link.laneText)（\(total) Gbps）").fixedSize()
                             if let max = port.macMaxGbps {
-                                Text("實際連線 \(link.laneText)（\(total) Gbps）· 連接埠最高 \(LinkRate.gbps(max)) Gbps")
-                            } else {
-                                Text("實際連線 \(link.laneText)（\(total) Gbps）")
+                                Text("· 連接埠最高 \(LinkRate.gbps(max)) Gbps").fixedSize()
                             }
                         }
                         .font(.caption).monospacedDigit()
                     }
                     if let cable = port.cable {
-                        Text("\(cable.kindText)線材 · \(cable.speed) · 額定 \(cable.ratingText)")
-                            .font(.caption).monospacedDigit()
+                        FlowLayout(spacing: 4, lineSpacing: 2) {
+                            Text("\(cable.kindText)線材 · \(cable.speed)").fixedSize()
+                            Text("· 額定 \(cable.ratingText)").fixedSize()
+                        }
+                        .font(.caption).monospacedDigit()
                         if !cable.vendor.isEmpty {
                             Text("線材製造商：\(cable.vendor)").font(.caption2).foregroundStyle(.secondary)
                         }
@@ -267,6 +271,7 @@ struct PortRow: View {
                             Image(systemName: "display")
                         }
                         .font(.caption).monospacedDigit()
+                        if let diagnosis = display.diagnosis { displayDiagnosisView(diagnosis) }
                     }
                 } else {
                     Text("未連接").font(.caption).foregroundStyle(.secondary)
@@ -304,11 +309,55 @@ struct PortRow: View {
             if port.isConnected, let id = tech.cableID {
                 GridRow { Text("線材識別碼").foregroundStyle(.secondary); Text(verbatim: id).textSelection(.enabled) }
             }
+            if port.isConnected, let power = port.power, let contract = power.contract {
+                GridRow {
+                    Text("供電檔位").foregroundStyle(.secondary).gridCellAnchor(.topLeading)
+                    Text(verbatim: power.pdos.map { "\($0.voltageText)  \($0.limitText)" }.joined(separator: "\n"))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                GridRow { Text("目前協商").foregroundStyle(.secondary); Text(contract.text) }
+            }
+            if let health = port.power?.health {
+                GridRow {
+                    Text("PD 硬體重設").foregroundStyle(.secondary)
+                    Text("\(health.hardResets)").foregroundStyle(health.hardResets > 0 ? Color.orange : Color.primary)
+                }
+                GridRow {
+                    Text("短路偵測").foregroundStyle(.secondary)
+                    Text("\(health.shortDetects)").foregroundStyle(health.shortDetects > 0 ? Color.orange : Color.primary)
+                }
+                GridRow { Text("控制器通訊錯誤").foregroundStyle(.secondary); Text("\(health.commErrors)") }
+                GridRow { Text("角色切換失敗").foregroundStyle(.secondary); Text("\(health.roleSwapFailures)") }
+            }
         }
         .font(.caption2.monospacedDigit())
         .padding(8)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+    }
+
+    /// 螢幕模式診斷：一行結論＋說明；打開技術細節時加上頻寬數字。
+    private func displayDiagnosisView(_ diagnosis: DisplayDiagnosis) -> some View {
+        let (symbol, color): (String, Color) = switch diagnosis.level {
+        case .good: ("checkmark.circle.fill", .green)
+        case .info: ("info.circle.fill", .blue)
+        case .warning: ("exclamationmark.triangle.fill", .orange)
+        }
+        return HStack(alignment: .top, spacing: 6) {
+            Image(systemName: symbol).foregroundStyle(color).font(.caption)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(diagnosis.title).font(.caption.weight(.semibold))
+                Text(diagnosis.detail).font(.caption2).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                if showsTech, let need = diagnosis.requiredGbps, let have = diagnosis.availableGbps {
+                    let needText = String(format: "%.1f", need), haveText = String(format: "%.1f", have)
+                    Text("最佳模式約需 \(needText) Gbps · 連線可用約 \(haveText) Gbps（8 bit 色彩、未壓縮）")
+                        .font(.caption2).foregroundStyle(.secondary).monospacedDigit()
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+        .padding(.leading, 22)
     }
 
     private func verdictView(_ verdict: PortVerdict) -> some View {
@@ -509,5 +558,49 @@ struct SystemInfoRow: View {
             Spacer()
             Text(value).bold().font(.headline)
         }
+    }
+}
+
+/// 由左到右排列，排不下就換行；每個子元件保持完整、不會在中間斷開。
+struct FlowLayout: Layout {
+    var spacing: CGFloat = 6
+    var lineSpacing: CGFloat = 4
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let rows = arrange(width: proposal.width ?? .infinity, subviews: subviews)
+        let width = rows.map(\.width).max() ?? 0
+        let height = rows.map(\.height).reduce(0, +) + lineSpacing * CGFloat(max(rows.count - 1, 0))
+        return CGSize(width: width, height: height)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var y = bounds.minY
+        for row in arrange(width: bounds.width, subviews: subviews) {
+            var x = bounds.minX
+            for index in row.items {
+                let size = subviews[index].sizeThatFits(.unspecified)
+                subviews[index].place(at: CGPoint(x: x, y: y + (row.height - size.height) / 2), proposal: .unspecified)
+                x += size.width + spacing
+            }
+            y += row.height + lineSpacing
+        }
+    }
+
+    private struct Row { var items: [Int] = []; var width: CGFloat = 0; var height: CGFloat = 0 }
+
+    private func arrange(width: CGFloat, subviews: Subviews) -> [Row] {
+        var rows: [Row] = [Row()]
+        for index in subviews.indices {
+            let size = subviews[index].sizeThatFits(.unspecified)
+            let needed = rows[rows.count - 1].items.isEmpty ? size.width : rows[rows.count - 1].width + spacing + size.width
+            if needed > width, !rows[rows.count - 1].items.isEmpty {
+                rows.append(Row(items: [index], width: size.width, height: size.height))
+            } else {
+                rows[rows.count - 1].items.append(index)
+                rows[rows.count - 1].width = needed
+                rows[rows.count - 1].height = max(rows[rows.count - 1].height, size.height)
+            }
+        }
+        return rows.filter { !$0.items.isEmpty }
     }
 }

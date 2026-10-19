@@ -241,6 +241,13 @@ final class SystemMonitor {
     var adapterDetailText: String = ""
     /// 充電器宣告的各組檔位，以及各連接埠接了什麼裝置、什麼線材。
     var chargerProfiles: [ChargerProfile] = []
+    /// 正在供電給 Mac 的 PD 控制器（完整檔位與協商結果）；沒有 USB‑PD 協商時為 nil。
+    var activeSupply: PortPower? = nil
+    /// 上一次電池取樣時各 PD 控制器的協商值；不拔線重新協商（多孔充電器重新分配、PPS 調整）時用來發現變化。
+    @ObservationIgnored var lastContractFingerprint: [Int]? = nil
+    /// 充電路徑電阻估算的樣本，以及要顯示的結果（沒接電源時為 nil）。
+    @ObservationIgnored var resistanceSampler = ResistanceSampler()
+    var chargePathResistance: ResistanceSampler.Status? = nil
     var portInfos: [PortInfo] = []
     /// 接上電源時：正在充電、已充滿、暫停充電或電池仍在放電。
     var chargeState: ChargeState? = nil
