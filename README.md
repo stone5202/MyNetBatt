@@ -16,7 +16,7 @@ MyNetBatt 是一款原生 macOS 選單列系統監控工具，把電池、網路
 >
 > 4.0 是全新設計的版本：監控中心整個重新設計，新增「總覽」首頁、六種桌面小工具、周邊裝置電量、資料夾大小與大型檔案、英文介面與首次啟動導覽。
 >
-> 目前版本：4.2 · 介面語言：繁體中文、English
+> 目前版本：4.2.1 · 介面語言：繁體中文、English
 
 各版本的功能更新與修正請參閱 [更新紀錄](CHANGELOG.md) 或 [GitHub Releases](https://github.com/stone5202/MyNetBatt/releases)。更新紀錄也提供[英文版本](CHANGELOG.en.md)。
 

@@ -4,6 +4,15 @@
 
 This document summarizes the major changes in each MyNetBatt release. Versions before 3.0 were uploaded by replacing earlier copies, so their original per-version Git history can no longer be fully recovered. Changes from 1.0 through 2.x are therefore consolidated from the source code that can still be verified, without attributing uncertain details to individual releases.
 
+## [4.2.1] - 2026-10-25
+
+### Fixes
+
+- Bluetooth accessory battery levels are back: starting with macOS 27, the system no longer reports the battery of third-party Bluetooth mice and keyboards (such as Logitech) through the channels MyNetBatt used, so the Devices page could be empty. MyNetBatt now reads the system's accessory power sources, and AirPods show left, right and case levels directly.
+- Earbud levels are no longer hidden behind an outdated overall level, which could also suppress the low-battery notification.
+- Two accessories with the same name (for example two identical mice) are now listed separately, with "(2)" added to the second one, instead of being merged so that one of them disappears.
+- Charging path resistance: when the charger renegotiates or is replaced, a reading the system took just before the change is no longer counted toward the new charging path. Collection now starts about a minute later after switching chargers.
+
 ## [4.2] - 2026-10-19
 
 A closer look at charging and displays. See every power level your charger offers and what your Mac actually negotiated, estimate the charging path's resistance, and check whether your display is running at its best.
