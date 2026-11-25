@@ -14,10 +14,11 @@ final class BatteryNotifier: NSObject, UNUserNotificationCenterDelegate {
     /// 可選的提示音（系統音效名稱）；空字串為系統預設的通知音。
     static let soundChoices = ["", "Glass", "Ping", "Pop", "Purr", "Hero", "Funk", "Submarine", "Tink", "Blow", "Bottle", "Frog", "Morse", "Sosumi", "Basso"]
 
-    func post(id: String, title: String, body: String, sound: Bool) {
+    func post(id: String, title: String, body: String, sound: Bool, userInfo: [String: Any] = [:]) {
         let content = UNMutableNotificationContent()
         content.title = title
         content.body = body
+        content.userInfo = userInfo
         // 通知只能播放 App 內附或 ~/Library/Sounds 的音效；選了系統音效時改由 App 自己播放。
         let soundName = UserDefaults.standard.string(forKey: "notificationSoundName") ?? ""
         if sound {
@@ -36,6 +37,14 @@ final class BatteryNotifier: NSObject, UNUserNotificationCenterDelegate {
         _ center: UNUserNotificationCenter, willPresent notification: UNNotification
     ) async -> UNNotificationPresentationOptions {
         [.banner, .list, .sound]
+    }
+
+    // Wi‑Fi 自動登入的通知：點了打開登入頁。
+    nonisolated func userNotificationCenter(
+        _ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse
+    ) async {
+        let open = response.notification.request.content.userInfo["openCaptivePortal"] as? Bool ?? false
+        if open { await MainActor.run { CaptivePortalWindow.show(learn: false) } }
     }
 }
 

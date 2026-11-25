@@ -9,7 +9,7 @@ final class IntroWindowController: NSObject, NSWindowDelegate {
     static let shared = IntroWindowController()
 
     /// 這一版要在「新功能」裡介紹的版本號；升到這一版的既有使用者第一次啟動時會看到。
-    static let whatsNewVersion = "4.2"
+    static let whatsNewVersion = "4.3"
 
     private var window: NSWindow?
     private weak var monitor: SystemMonitor?
@@ -304,17 +304,17 @@ private struct WhatsNewView: View {
                     .resizable().interpolation(.high)
                     .frame(width: 72, height: 72)
                 Text("MyNetBatt \(IntroWindowController.whatsNewVersion)").font(.system(size: 26, weight: .bold))
-                Text("充電與螢幕，看得更透徹").font(.title3.weight(.semibold)).foregroundStyle(.secondary)
+                Text("公用 Wi‑Fi 被踢，自動幫你登回去").font(.title3.weight(.semibold)).foregroundStyle(.secondary)
             }
             .padding(.top, 34)
             .padding(.bottom, 20)
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
-                    item("bolt.fill", .orange, "完整供電檔位", "列出充電器宣告的所有檔位（包含 PPS 與 EPR 高功率檔位），並標出 Mac 實際談妥的電壓與電流。")
-                    item("display", .indigo, "螢幕診斷", "比對螢幕支援的最佳解析度與更新率；沒跑到最佳時，說明是設定、連線頻寬，還是 USB 資料佔用了影像通道。")
-                    item("waveform.path.ecg", .purple, "充電路徑電阻", "依負載變化估算線材、接頭與充電器的整段電阻，以及滿載時路徑上損失多少功率。")
-                    item("list.bullet.rectangle", .gray, "PD 健康計數", "技術細節新增硬體重設、短路偵測、通訊錯誤與角色切換失敗次數。")
+                    item("checkmark.shield.fill", .teal, "Wi‑Fi 自動登入", "醫院、咖啡店等公用 Wi‑Fi 被踢掉、要再按「同意／確認」時，在背景自動按下並恢復網路。只處理你加入清單的網路，不會幫你填帳號密碼。")
+                    item("hand.tap.fill", .blue, "教學模式", "登入頁比較特別、自動找不到按鈕時，在登入頁上示範一次要按哪裡，之後就照著做。")
+                    item("wifi.exclamationmark", .orange, "斷線自動重連", "連著清單裡的 Wi‑Fi 卻一直沒有網路時，自動把 Wi‑Fi 關掉再打開。")
+                    item("switch.2", .gray, "網路小視窗一鍵開關", "開關就在網路小視窗的 Wi‑Fi 名稱旁，點一下看狀態；需要你處理時會亮起小紅點。網路清單、教學與紀錄在監控中心的「網路」頁。")
                 }
                 .padding(.horizontal, 44)
             }

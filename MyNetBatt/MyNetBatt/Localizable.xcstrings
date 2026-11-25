@@ -18,6 +18,23 @@
         }
       }
     },
+    "%@ · 今天自動登入 %lld 次": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · Signed in automatically %lld times today"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · 今天自動登入 %lld 次"
+          }
+        }
+      }
+    },
     "%@ • 平均 %@": {
       "extractionState": "manual",
       "localizations": {
@@ -423,6 +440,23 @@
         }
       }
     },
+    "1 分鐘": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 minute"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 分鐘"
+          }
+        }
+      }
+    },
     "1 年": {
       "extractionState": "manual",
       "localizations": {
@@ -436,6 +470,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "1 年"
+          }
+        }
+      }
+    },
+    "10 秒": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "10 seconds"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "10 秒"
           }
         }
       }
@@ -457,6 +508,23 @@
         }
       }
     },
+    "20 秒": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "20 seconds"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "20 秒"
+          }
+        }
+      }
+    },
     "30 天": {
       "extractionState": "manual",
       "localizations": {
@@ -470,6 +538,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "30 天"
+          }
+        }
+      }
+    },
+    "30 秒": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30 seconds"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30 秒"
           }
         }
       }
@@ -797,23 +882,6 @@
         }
       }
     },
-    "PD 健康計數": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "PD Health Counters"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "PD 健康計數"
-          }
-        }
-      }
-    },
     "PD 硬體重設": {
       "extractionState": "manual",
       "localizations": {
@@ -1069,6 +1137,57 @@
         }
       }
     },
+    "Wi‑Fi 已關閉": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wi‑Fi Is Off"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wi‑Fi 已關閉"
+          }
+        }
+      }
+    },
+    "Wi‑Fi 自動登入": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wi‑Fi Auto Login"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wi‑Fi 自動登入"
+          }
+        }
+      }
+    },
+    "Wi‑Fi 自動登入的狀態": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wi‑Fi Auto Login status"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wi‑Fi 自動登入的狀態"
+          }
+        }
+      }
+    },
     "Wi‑Fi 詳情": {
       "extractionState": "manual",
       "localizations": {
@@ -1171,6 +1290,91 @@
         }
       }
     },
+    "、": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ", "
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "、"
+          }
+        }
+      }
+    },
+    "「%@」一直沒有網路，重新連線 Wi‑Fi（第 %lld 次）": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” still has no internet. Reconnecting Wi‑Fi (attempt %lld)"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%@」一直沒有網路，重新連線 Wi‑Fi（第 %lld 次）"
+          }
+        }
+      }
+    },
+    "「%@」斷線了，重新連線 Wi‑Fi（第 %lld 次）": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” disconnected. Reconnecting Wi‑Fi (attempt %lld)"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%@」斷線了，重新連線 Wi‑Fi（第 %lld 次）"
+          }
+        }
+      }
+    },
+    "「%@」沒辦法自動登入": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t sign in to “%@” automatically"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%@」沒辦法自動登入"
+          }
+        }
+      }
+    },
+    "「%@」的安全憑證無效": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The security certificate for “%@” is not valid"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%@」的安全憑證無效"
+          }
+        }
+      }
+    },
     "「%@」電量剩餘 %lld%%，請記得充電。": {
       "extractionState": "manual",
       "localizations": {
@@ -1184,6 +1388,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "「%@」電量剩餘 %lld%%，請記得充電。"
+          }
+        }
+      }
+    },
+    "「%@」需要登入": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” requires sign-in"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%@」需要登入"
+          }
+        }
+      }
+    },
+    "「%@」需要登入，但不在自動登入清單": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” requires sign-in, but it isn’t in your auto login list"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%@」需要登入，但不在自動登入清單"
+          }
+        }
+      }
+    },
+    "「%@」需要登入，自動處理中": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” requires sign-in. Signing in automatically…"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%@」需要登入，自動處理中"
           }
         }
       }
@@ -1477,6 +1732,23 @@
         }
       }
     },
+    "今天自動登入 %lld 次": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signed in automatically %lld times today"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今天自動登入 %lld 次"
+          }
+        }
+      }
+    },
     "今天還沒有 App 用量紀錄。": {
       "extractionState": "manual",
       "localizations": {
@@ -1596,6 +1868,23 @@
         }
       }
     },
+    "仍要繼續": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue Anyway"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "仍要繼續"
+          }
+        }
+      }
+    },
     "以 %@ Gbps 運作": {
       "extractionState": "manual",
       "localizations": {
@@ -1677,6 +1966,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "企業級"
+          }
+        }
+      }
+    },
+    "伺服器回應 %lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server responded with %lld"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "伺服器回應 %lld"
           }
         }
       }
@@ -1936,23 +2242,6 @@
         }
       }
     },
-    "依負載變化估算線材、接頭與充電器的整段電阻，以及滿載時路徑上損失多少功率。": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Estimates the resistance of the cable, connectors and charger from load changes, and how much power is lost along the path at full load."
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "依負載變化估算線材、接頭與充電器的整段電阻，以及滿載時路徑上損失多少功率。"
-          }
-        }
-      }
-    },
     "修復 Helper": {
       "extractionState": "manual",
       "localizations": {
@@ -2136,6 +2425,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "僅下載"
+          }
+        }
+      }
+    },
+    "儲存": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "儲存"
           }
         }
       }
@@ -2480,40 +2786,6 @@
         }
       }
     },
-    "充電與螢幕，看得更透徹": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A Closer Look at Charging and Displays"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "充電與螢幕，看得更透徹"
-          }
-        }
-      }
-    },
-    "充電路徑電阻": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Charging Path Resistance"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "充電路徑電阻"
-          }
-        }
-      }
-    },
     "充電路徑電阻（估算）": {
       "extractionState": "manual",
       "localizations": {
@@ -2616,6 +2888,23 @@
         }
       }
     },
+    "公用 Wi‑Fi 被踢，自動幫你登回去": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kicked Off Public Wi‑Fi? We'll Sign You Back In"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "公用 Wi‑Fi 被踢，自動幫你登回去"
+          }
+        }
+      }
+    },
     "公網 IP": {
       "extractionState": "manual",
       "localizations": {
@@ -2680,23 +2969,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "切換 macOS 低耗電模式"
-          }
-        }
-      }
-    },
-    "列出充電器宣告的所有檔位（包含 PPS 與 EPR 高功率檔位），並標出 Mac 實際談妥的電壓與電流。": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lists every power level your charger offers (including PPS and high-power EPR levels) and marks the voltage and current your Mac actually negotiated."
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "列出充電器宣告的所有檔位（包含 PPS 與 EPR 高功率檔位），並標出 Mac 實際談妥的電壓與電流。"
           }
         }
       }
@@ -2837,6 +3109,23 @@
         }
       }
     },
+    "加入目前的網路": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Current Network"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "加入目前的網路"
+          }
+        }
+      }
+    },
     "加入資料夾…": {
       "extractionState": "manual",
       "localizations": {
@@ -2867,6 +3156,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "加寬圖表（顯示較長的時間）"
+          }
+        }
+      }
+    },
+    "勾選了 %lld 個同意方塊": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checked %lld agreement boxes"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "勾選了 %lld 個同意方塊"
           }
         }
       }
@@ -2922,6 +3228,40 @@
         }
       }
     },
+    "取消教學": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel Teaching"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取消教學"
+          }
+        }
+      }
+    },
+    "受限制": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restricted"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "受限制"
+          }
+        }
+      }
+    },
     "只會改變目前桌面空間的桌布，原本的桌布會記下來，可以隨時還原。更換桌布後再按一次「重新產生」。": {
       "extractionState": "manual",
       "localizations": {
@@ -2969,6 +3309,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "只有供電"
+          }
+        }
+      }
+    },
+    "只有清單裡的網路會自動按同意與重新連線。醫院的 Wi‑Fi 加進來就好；若自動找不到按鈕，再用「教學」按一次。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only networks in this list are signed in and reconnected automatically. Just add your Wi‑Fi here; if the button can’t be found automatically, use Teach to click it once."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只有清單裡的網路會自動按同意與重新連線。醫院的 Wi‑Fi 加進來就好；若自動找不到按鈕，再用「教學」按一次。"
           }
         }
       }
@@ -3223,6 +3580,23 @@
         }
       }
     },
+    "啟動中": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starting"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "啟動中"
+          }
+        }
+      }
+    },
     "啟用": {
       "extractionState": "manual",
       "localizations": {
@@ -3253,6 +3627,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "啟用 Helper"
+          }
+        }
+      }
+    },
+    "啟用 Wi‑Fi 自動登入": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enable Wi‑Fi Auto Login"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "啟用 Wi‑Fi 自動登入"
           }
         }
       }
@@ -3321,6 +3712,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "回報問題或建議"
+          }
+        }
+      }
+    },
+    "回應格式不對": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unexpected response"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "回應格式不對"
           }
         }
       }
@@ -3427,6 +3835,23 @@
         }
       }
     },
+    "在 Finder 中顯示紀錄檔": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show Log File in Finder"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 Finder 中顯示紀錄檔"
+          }
+        }
+      }
+    },
     "在「設定 › 進階」為監控中心與懸浮視窗設定快捷鍵": {
       "extractionState": "manual",
       "localizations": {
@@ -3478,6 +3903,23 @@
         }
       }
     },
+    "在登入頁上按一次「同意／確認」，App 會記住要按哪一顆": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Click “Agree” or “Confirm” once on the sign-in page and the app will remember which button to press"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在登入頁上按一次「同意／確認」，App 會記住要按哪一顆"
+          }
+        }
+      }
+    },
     "在監控中心查看": {
       "extractionState": "manual",
       "localizations": {
@@ -3525,6 +3967,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "外觀"
+          }
+        }
+      }
+    },
+    "多久檢查一次網路": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check Network Every"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "多久檢查一次網路"
           }
         }
       }
@@ -3644,23 +4103,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "安全性"
-          }
-        }
-      }
-    },
-    "完整供電檔位": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Full Charger Power Levels"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "完整供電檔位"
           }
         }
       }
@@ -3869,6 +4311,23 @@
         }
       }
     },
+    "尚未詢問": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not Asked Yet"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "尚未詢問"
+          }
+        }
+      }
+    },
     "尺寸": {
       "extractionState": "manual",
       "localizations": {
@@ -3971,6 +4430,23 @@
         }
       }
     },
+    "已取消": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelled"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已取消"
+          }
+        }
+      }
+    },
     "已套用：選單列為全黑": {
       "extractionState": "manual",
       "localizations": {
@@ -3984,6 +4460,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "已套用：選單列為全黑"
+          }
+        }
+      }
+    },
+    "已拒絕": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denied"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已拒絕"
           }
         }
       }
@@ -4022,6 +4515,40 @@
         }
       }
     },
+    "已暫停": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paused"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已暫停"
+          }
+        }
+      }
+    },
+    "已暫停自動登入": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auto login paused"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已暫停自動登入"
+          }
+        }
+      }
+    },
     "已暫停記錄": {
       "extractionState": "manual",
       "localizations": {
@@ -4052,6 +4579,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "已用 %@ / 共 %@"
+          }
+        }
+      }
+    },
+    "已自動重新連上網路": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reconnected Automatically"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已自動重新連上網路"
+          }
+        }
+      }
+    },
+    "已記下 %lld 個動作，之後「%@」會照這樣自動按。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved %lld actions. “%@” will be signed in this way from now on."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已記下 %lld 個動作，之後「%@」會照這樣自動按。"
           }
         }
       }
@@ -4115,6 +4676,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "已連接：%@"
+          }
+        }
+      }
+    },
+    "已連網": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connected"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已連網"
+          }
+        }
+      }
+    },
+    "已連網%@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connected%@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已連網%@"
           }
         }
       }
@@ -4200,6 +4795,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "已關閉"
+          }
+        }
+      }
+    },
+    "已關閉，不會自動登入或重連": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off. Won’t sign in or reconnect automatically"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已關閉，不會自動登入或重連"
           }
         }
       }
@@ -4323,6 +4935,23 @@
         }
       }
     },
+    "恢復自動登入": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auto login resumed"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "恢復自動登入"
+          }
+        }
+      }
+    },
     "恢復預設資料夾": {
       "extractionState": "manual",
       "localizations": {
@@ -4357,6 +4986,23 @@
         }
       }
     },
+    "或輸入 Wi‑Fi 名稱": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Or enter a Wi‑Fi name"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "或輸入 Wi‑Fi 名稱"
+          }
+        }
+      }
+    },
     "所有資料只存在這台 Mac 上，不會上傳，也沒有任何分析或追蹤。": {
       "extractionState": "manual",
       "localizations": {
@@ -4370,6 +5016,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "所有資料只存在這台 Mac 上，不會上傳，也沒有任何分析或追蹤。"
+          }
+        }
+      }
+    },
+    "打不開：%@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t open: %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打不開：%@"
+          }
+        }
+      }
+    },
+    "打開登入頁": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Sign-In Page"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打開登入頁"
+          }
+        }
+      }
+    },
+    "打開登入頁，按一次要按的按鈕": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open the sign-in page and click the button once"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打開登入頁，按一次要按的按鈕"
           }
         }
       }
@@ -4408,6 +5105,23 @@
         }
       }
     },
+    "找不到主機": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Host not found"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "找不到主機"
+          }
+        }
+      }
+    },
     "找不到原本的桌布檔案，請到「系統設定 › 桌布」重新選擇。": {
       "extractionState": "manual",
       "localizations": {
@@ -4421,6 +5135,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "找不到原本的桌布檔案，請到「系統設定 › 桌布」重新選擇。"
+          }
+        }
+      }
+    },
+    "找不到同意按鈕，請用「教學模式」按一次": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t find the agree button. Use Teach Mode to click it once"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "找不到同意按鈕，請用「教學模式」按一次"
           }
         }
       }
@@ -4493,19 +5224,19 @@
         }
       }
     },
-    "技術細節新增硬體重設、短路偵測、通訊錯誤與角色切換失敗次數。": {
+    "把「%@」加入自動登入": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Technical details now include hard resets, short-circuit detections, communication errors and role swap failures."
+            "value": "Add “%@” to Auto Login"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "技術細節新增硬體重設、短路偵測、通訊錯誤與角色切換失敗次數。"
+            "value": "把「%@」加入自動登入"
           }
         }
       }
@@ -4591,6 +5322,74 @@
           "stringUnit": {
             "state": "translated",
             "value": "按一下錄製"
+          }
+        }
+      }
+    },
+    "按下「%@」": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "clicked “%@”"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按下「%@」"
+          }
+        }
+      }
+    },
+    "按下「%@」%@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clicked “%@”%@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按下「%@」%@"
+          }
+        }
+      }
+    },
+    "按了「%@」但還是沒有網路": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clicked “%@” but there’s still no internet"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按了「%@」但還是沒有網路"
+          }
+        }
+      }
+    },
+    "按鈕": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "button"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按鈕"
           }
         }
       }
@@ -4935,6 +5734,74 @@
         }
       }
     },
+    "教學…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teach…"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "教學…"
+          }
+        }
+      }
+    },
+    "教學「%@」：請在下面的登入頁照平常那樣勾選、按「同意／確認」，我會記住你按的地方（不會記你輸入的帳號密碼）。按完再按「儲存」。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teaching “%@”: check the boxes and click “Agree” or “Confirm” on the sign-in page below as usual. Your clicks are remembered (but not any username or password you type). Then click Save."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "教學「%@」：請在下面的登入頁照平常那樣勾選、按「同意／確認」，我會記住你按的地方（不會記你輸入的帳號密碼）。按完再按「儲存」。"
+          }
+        }
+      }
+    },
+    "教學完成：「%@」記下 %lld 個動作": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teaching finished: saved %2$lld actions for “%1$@”"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "教學完成：「%@」記下 %lld 個動作"
+          }
+        }
+      }
+    },
+    "教學模式": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teach Mode"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "教學模式"
+          }
+        }
+      }
+    },
     "數據用量": {
       "extractionState": "manual",
       "localizations": {
@@ -4999,6 +5866,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "新功能"
+          }
+        }
+      }
+    },
+    "斷線或一直沒網路時，自動重開 Wi‑Fi": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn Wi‑Fi off and on when disconnected or offline"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "斷線或一直沒網路時，自動重開 Wi‑Fi"
+          }
+        }
+      }
+    },
+    "斷線自動重連": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatic Reconnect"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "斷線自動重連"
           }
         }
       }
@@ -5360,6 +6261,40 @@
         }
       }
     },
+    "未命名網路": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unnamed Network"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未命名網路"
+          }
+        }
+      }
+    },
+    "未知": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未知"
+          }
+        }
+      }
+    },
     "未知廠商": {
       "extractionState": "manual",
       "localizations": {
@@ -5373,6 +6308,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "未知廠商"
+          }
+        }
+      }
+    },
+    "未知登入頁": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "unknown sign-in page"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未知登入頁"
           }
         }
       }
@@ -5564,6 +6516,23 @@
         }
       }
     },
+    "檢查網址回 204": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check URL returned 204"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "檢查網址回 204"
+          }
+        }
+      }
+    },
     "權限": {
       "extractionState": "manual",
       "localizations": {
@@ -5734,23 +6703,6 @@
         }
       }
     },
-    "比對螢幕支援的最佳解析度與更新率；沒跑到最佳時，說明是設定、連線頻寬，還是 USB 資料佔用了影像通道。": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Compares your display’s best resolution and refresh rate with what it’s running. If it’s not at its best, it explains whether it’s a setting, link bandwidth, or USB data using the video lanes."
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "比對螢幕支援的最佳解析度與更新率；沒跑到最佳時，說明是設定、連線頻寬，還是 USB 資料佔用了影像通道。"
-          }
-        }
-      }
-    },
     "沒有 100 MB 以上的檔案": {
       "extractionState": "manual",
       "localizations": {
@@ -5802,6 +6754,23 @@
         }
       }
     },
+    "沒有網路（%@）": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No internet (%@)"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "沒有網路（%@）"
+          }
+        }
+      }
+    },
     "沒有設備接入": {
       "extractionState": "manual",
       "localizations": {
@@ -5815,6 +6784,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "沒有設備接入"
+          }
+        }
+      }
+    },
+    "沒有連上 Wi‑Fi": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not Connected to Wi‑Fi"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "沒有連上 Wi‑Fi"
           }
         }
       }
@@ -5921,6 +6907,23 @@
         }
       }
     },
+    "清除": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清除"
+          }
+        }
+      }
+    },
     "清除快捷鍵": {
       "extractionState": "manual",
       "localizations": {
@@ -5934,6 +6937,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "清除快捷鍵"
+          }
+        }
+      }
+    },
+    "清除教學": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear Teaching"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清除教學"
           }
         }
       }
@@ -5985,6 +7005,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "無"
+          }
+        }
+      }
+    },
+    "無法判斷（%@）": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inconclusive (%@)"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法判斷（%@）"
           }
         }
       }
@@ -6070,6 +7107,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "無線網路"
+          }
+        }
+      }
+    },
+    "照教學的 %lld 個動作：": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Following %lld taught actions: "
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "照教學的 %lld 個動作："
           }
         }
       }
@@ -6227,6 +7281,108 @@
         }
       }
     },
+    "登入頁": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign-In Page"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登入頁"
+          }
+        }
+      }
+    },
+    "登入頁 %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign-in page %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登入頁 %@"
+          }
+        }
+      }
+    },
+    "登入頁打不開：%@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t open the sign-in page: %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登入頁打不開：%@"
+          }
+        }
+      }
+    },
+    "登入頁比較特別、自動找不到按鈕時，在登入頁上示範一次要按哪裡，之後就照著做。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If a login page is unusual and the button can't be found automatically, show MyNetBatt once where to click, and it will do the same next time."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登入頁比較特別、自動找不到按鈕時，在登入頁上示範一次要按哪裡，之後就照著做。"
+          }
+        }
+      }
+    },
+    "登入頁要輸入%@，請自己登入": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The sign-in page asks for %@. Please sign in yourself"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登入頁要輸入%@，請自己登入"
+          }
+        }
+      }
+    },
+    "登入頁：%@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign-in page: %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登入頁：%@"
+          }
+        }
+      }
+    },
     "百分比": {
       "extractionState": "manual",
       "localizations": {
@@ -6257,6 +7413,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "監控"
+          }
+        }
+      }
+    },
+    "目前": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "目前"
           }
         }
       }
@@ -6375,6 +7548,23 @@
         }
       }
     },
+    "目前已經可以上網。要教學的話，等登入頁出現時再按「教學模式」。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You’re already online. To teach, wait until the sign-in page appears and then click Teach Mode."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "目前已經可以上網。要教學的話，等登入頁出現時再按「教學模式」。"
+          }
+        }
+      }
+    },
     "目前沒有 App 正在使用網路": {
       "extractionState": "manual",
       "localizations": {
@@ -6422,6 +7612,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "目前的桌布是動態或影片桌布，無法轉換。請先在「系統設定 › 桌布」換成一般圖片。"
+          }
+        }
+      }
+    },
+    "目前的網路": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "the current network"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "目前的網路"
           }
         }
       }
@@ -6528,6 +7735,23 @@
         }
       }
     },
+    "確定": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "確定"
+          }
+        }
+      }
+    },
     "確定要重置數據用量嗎？": {
       "extractionState": "manual",
       "localizations": {
@@ -6630,6 +7854,23 @@
         }
       }
     },
+    "移除": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除"
+          }
+        }
+      }
+    },
     "移除舊版安裝方式並改由系統管理 Helper（需輸入一次管理員密碼）": {
       "extractionState": "manual",
       "localizations": {
@@ -6647,6 +7888,23 @@
         }
       }
     },
+    "稍後再自動重試": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Will retry automatically later"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "稍後再自動重試"
+          }
+        }
+      }
+    },
     "窄": {
       "extractionState": "manual",
       "localizations": {
@@ -6660,6 +7918,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "窄"
+          }
+        }
+      }
+    },
+    "立即檢查": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check Now"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "立即檢查"
           }
         }
       }
@@ -6732,6 +8007,23 @@
         }
       }
     },
+    "系統不允許這個 http 網址": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The system doesn’t allow this http URL"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系統不允許這個 http 網址"
+          }
+        }
+      }
+    },
     "系統效能": {
       "extractionState": "manual",
       "localizations": {
@@ -6779,6 +8071,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "系統預設"
+          }
+        }
+      }
+    },
+    "紀錄": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "紀錄"
           }
         }
       }
@@ -6966,6 +8275,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "網路小視窗"
+          }
+        }
+      }
+    },
+    "網路小視窗一鍵開關": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One Switch in the Network Popover"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "網路小視窗一鍵開關"
+          }
+        }
+      }
+    },
+    "網路已恢復": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "internet restored"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "網路已恢復"
+          }
+        }
+      }
+    },
+    "網路清單、教學模式與紀錄在監控中心的「網路」頁。清單是空的時候只在換網路或醒來時檢查一次。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The network list, Teach Mode, and log are on the Network page of the Dashboard. When the list is empty, the network is checked only when it changes or the Mac wakes."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "網路清單、教學模式與紀錄在監控中心的「網路」頁。清單是空的時候只在換網路或醒來時檢查一次。"
           }
         }
       }
@@ -7395,6 +8755,108 @@
         }
       }
     },
+    "自動找「同意／確認」按鈕": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finds the “Agree” or “Confirm” button automatically"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自動找「同意／確認」按鈕"
+          }
+        }
+      }
+    },
+    "自動登入": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auto Login"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自動登入"
+          }
+        }
+      }
+    },
+    "自動登入中…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signing In Automatically…"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自動登入中…"
+          }
+        }
+      }
+    },
+    "自動登入已中止（暫停或換了網路）": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auto login stopped (paused or network changed)"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自動登入已中止（暫停或換了網路）"
+          }
+        }
+      }
+    },
+    "自動登入成功時通知": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notify When Signed In Automatically"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自動登入成功時通知"
+          }
+        }
+      }
+    },
+    "自動登入成功（%@）": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signed in automatically (%@)"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自動登入成功（%@）"
+          }
+        }
+      }
+    },
     "良好": {
       "extractionState": "manual",
       "localizations": {
@@ -7514,23 +8976,6 @@
         }
       }
     },
-    "螢幕診斷": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Display Diagnosis"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "螢幕診斷"
-          }
-        }
-      }
-    },
     "被動式": {
       "extractionState": "manual",
       "localizations": {
@@ -7544,6 +8989,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "被動式"
+          }
+        }
+      }
+    },
+    "被踢時會照教學的動作自動登入": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Will sign in with the taught actions when disconnected"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "被踢時會照教學的動作自動登入"
+          }
+        }
+      }
+    },
+    "被踢時會自動按「同意／確認」": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Will click “Agree” or “Confirm” when disconnected"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "被踢時會自動按「同意／確認」"
           }
         }
       }
@@ -7616,6 +9095,40 @@
         }
       }
     },
+    "複製全部": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy All"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "複製全部"
+          }
+        }
+      }
+    },
+    "要先允許讀取 Wi‑Fi 名稱，才能把這個網路加入自動登入": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow access to the Wi‑Fi name first to add this network to Auto Login"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "要先允許讀取 Wi‑Fi 名稱，才能把這個網路加入自動登入"
+          }
+        }
+      }
+    },
     "要把「%@」移到垃圾桶嗎？": {
       "extractionState": "manual",
       "localizations": {
@@ -7629,6 +9142,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "要把「%@」移到垃圾桶嗎？"
+          }
+        }
+      }
+    },
+    "要讓它以後自動按同意，請把它加入自動登入清單。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To have it signed in automatically next time, add it to your auto login list."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "要讓它以後自動按同意，請把它加入自動登入清單。"
           }
         }
       }
@@ -8070,6 +9600,23 @@
         }
       }
     },
+    "載入中…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading…"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "載入中…"
+          }
+        }
+      }
+    },
     "輸入功率": {
       "extractionState": "manual",
       "localizations": {
@@ -8100,6 +9647,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "輸出功率"
+          }
+        }
+      }
+    },
+    "轉址網址無效（%lld）": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invalid redirect URL (%lld)"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "轉址網址無效（%lld）"
           }
         }
       }
@@ -8257,6 +9821,74 @@
         }
       }
     },
+    "這個 Wi‑Fi": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This Wi‑Fi"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這個 Wi‑Fi"
+          }
+        }
+      }
+    },
+    "這個網路": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This network"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這個網路"
+          }
+        }
+      }
+    },
+    "這個網路不在自動登入清單": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This network isn’t in your auto login list"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這個網路不在自動登入清單"
+          }
+        }
+      }
+    },
+    "這個網路需要登入，加入清單後就會自動處理": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This network requires sign-in. Add it to the list to sign in automatically"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這個網路需要登入，加入清單後就會自動處理"
+          }
+        }
+      }
+    },
     "這個連接埠最高支援 %@ Gbps，但線材只能承載 %@ Gbps。如果裝置也支援更高速度，換一條更快的線材可以提升速度。": {
       "extractionState": "manual",
       "localizations": {
@@ -8342,6 +9974,23 @@
         }
       }
     },
+    "這次無法判斷網路狀態（%@）": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t determine the network status this time (%@)"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這次無法判斷網路狀態（%@）"
+          }
+        }
+      }
+    },
     "通知": {
       "extractionState": "manual",
       "localizations": {
@@ -8393,6 +10042,40 @@
         }
       }
     },
+    "連上 Wi‑Fi 但沒有網路": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connected to Wi‑Fi, No Internet"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "連上 Wi‑Fi 但沒有網路"
+          }
+        }
+      }
+    },
+    "連上 Wi‑Fi 但沒有網路（%@）": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connected to Wi‑Fi but no internet (%@)"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "連上 Wi‑Fi 但沒有網路（%@）"
+          }
+        }
+      }
+    },
     "連上妙控鍵盤、滑鼠、觸控板或 AirPods 等會回報電量的藍牙裝置後，電量會顯示在這裡。": {
       "extractionState": "manual",
       "localizations": {
@@ -8406,6 +10089,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "連上妙控鍵盤、滑鼠、觸控板或 AirPods 等會回報電量的藍牙裝置後，電量會顯示在這裡。"
+          }
+        }
+      }
+    },
+    "連不上主機": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t connect to host"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "連不上主機"
           }
         }
       }
@@ -8546,6 +10246,23 @@
         }
       }
     },
+    "連線中斷": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connection lost"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "連線中斷"
+          }
+        }
+      }
+    },
     "連線次數": {
       "extractionState": "manual",
       "localizations": {
@@ -8597,6 +10314,23 @@
         }
       }
     },
+    "連著清單裡的 Wi‑Fi 卻一直沒有網路時，自動把 Wi‑Fi 關掉再打開。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When you're connected to a Wi‑Fi network on your list but still have no internet, MyNetBatt turns Wi‑Fi off and on again."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "連著清單裡的 Wi‑Fi 卻一直沒有網路時，自動把 Wi‑Fi 關掉再打開。"
+          }
+        }
+      }
+    },
     "週": {
       "extractionState": "manual",
       "localizations": {
@@ -8627,6 +10361,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "進階"
+          }
+        }
+      }
+    },
+    "逾時": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timed out"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "逾時"
           }
         }
       }
@@ -8784,6 +10535,23 @@
         }
       }
     },
+    "還沒有網路。連上醫院 Wi‑Fi 後，按下面的「加入目前的網路」。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No networks yet. After joining your Wi‑Fi, click “Add Current Network” below."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "還沒有網路。連上醫院 Wi‑Fi 後，按下面的「加入目前的網路」。"
+          }
+        }
+      }
+    },
     "邊框": {
       "extractionState": "manual",
       "localizations": {
@@ -8797,6 +10565,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "邊框"
+          }
+        }
+      }
+    },
+    "醫院、咖啡店等公用 Wi‑Fi 被踢掉、要再按「同意／確認」時，在背景自動按下並恢復網路。只處理你加入清單的網路，不會幫你填帳號密碼。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When a hospital, café, or other public Wi‑Fi network drops you and asks you to tap \"Agree\" or \"OK\" again, MyNetBatt presses it in the background and restores the connection. Only networks on your list are handled, and usernames and passwords are never filled in."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "醫院、咖啡店等公用 Wi‑Fi 被踢掉、要再按「同意／確認」時，在背景自動按下並恢復網路。只處理你加入清單的網路，不會幫你填帳號密碼。"
+          }
+        }
+      }
+    },
+    "醫院、咖啡店等公用 Wi‑Fi 被踢掉、需要再按「同意／確認」時，在背景自動按下並恢復網路。只處理下面清單裡的網路，不會幫你填帳號密碼。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When public Wi‑Fi at a hospital or café drops you and asks you to click “Agree” or “Confirm” again, it’s clicked for you in the background so you get back online. Only networks in the list below are handled, and no usernames or passwords are ever filled in."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "醫院、咖啡店等公用 Wi‑Fi 被踢掉、需要再按「同意／確認」時，在背景自動按下並恢復網路。只處理下面清單裡的網路，不會幫你填帳號密碼。"
+          }
+        }
+      }
+    },
+    "醫院、飯店的登入頁常用自簽憑證，只按「同意」通常沒關係；但若不確定這是不是正確的 Wi‑Fi，請不要在這頁輸入帳號密碼或個人資料。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign-in pages at hospitals and hotels often use self-signed certificates, so just clicking “Agree” is usually fine. If you’re not sure this is the right Wi‑Fi, don’t enter a username, password, or personal information on this page."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "醫院、飯店的登入頁常用自簽憑證，只按「同意」通常沒關係；但若不確定這是不是正確的 Wi‑Fi，請不要在這頁輸入帳號密碼或個人資料。"
           }
         }
       }
@@ -8869,6 +10688,40 @@
         }
       }
     },
+    "重新連線 Wi‑Fi 中…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reconnecting Wi‑Fi…"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新連線 Wi‑Fi 中…"
+          }
+        }
+      }
+    },
+    "重新開登入頁": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reload Sign-In Page"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新開登入頁"
+          }
+        }
+      }
+    },
     "重新顯示導覽": {
       "extractionState": "manual",
       "localizations": {
@@ -8916,6 +10769,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "重置…"
+          }
+        }
+      }
+    },
+    "重開 Wi‑Fi 失敗，請手動開啟 Wi‑Fi": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t restart Wi‑Fi. Please turn Wi‑Fi on manually"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重開 Wi‑Fi 失敗，請手動開啟 Wi‑Fi"
+          }
+        }
+      }
+    },
+    "錯誤 %lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Error %lld"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "錯誤 %lld"
           }
         }
       }
@@ -9069,6 +10956,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "開機時自動啟動"
+          }
+        }
+      }
+    },
+    "開關就在網路小視窗的 Wi‑Fi 名稱旁，點一下看狀態；需要你處理時會亮起小紅點。網路清單、教學與紀錄在監控中心的「網路」頁。": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The switch sits next to the Wi‑Fi name in the network popover; click it to see the status, and a small red dot appears when something needs your attention. The network list, teaching mode, and log are on the Network page of the monitor window."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開關就在網路小視窗的 Wi‑Fi 名稱旁，點一下看狀態；需要你處理時會亮起小紅點。網路清單、教學與紀錄在監控中心的「網路」頁。"
           }
         }
       }
@@ -9549,6 +11453,23 @@
         }
       }
     },
+    "電腦醒來，檢查網路": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac woke up. Checking network"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "電腦醒來，檢查網路"
+          }
+        }
+      }
+    },
     "電量": {
       "extractionState": "manual",
       "localizations": {
@@ -9736,6 +11657,57 @@
         }
       }
     },
+    "需要你處理": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needs Your Attention"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "需要你處理"
+          }
+        }
+      }
+    },
+    "需要登入": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign-In Required"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "需要登入"
+          }
+        }
+      }
+    },
+    "需要登入（%@）": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign-in required (%@)"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "需要登入（%@）"
+          }
+        }
+      }
+    },
     "霧化程度：往左較通透，往右較霧；後方內容始終是模糊的": {
       "extractionState": "manual",
       "localizations": {
@@ -9817,6 +11789,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "音效"
+          }
+        }
+      }
+    },
+    "頁面上的按鈕：%@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buttons on the page: %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "頁面上的按鈕：%@"
           }
         }
       }
@@ -10271,6 +12260,91 @@
           "stringUnit": {
             "state": "translated",
             "value": "（%@%lld%@）"
+          }
+        }
+      }
+    },
+    "（%@）": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " (%@)"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "（%@）"
+          }
+        }
+      }
+    },
+    "（按這裡打開登入頁）": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " (Click to open the sign-in page)"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "（按這裡打開登入頁）"
+          }
+        }
+      }
+    },
+    "（按鈕）": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "(button)"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "（按鈕）"
+          }
+        }
+      }
+    },
+    "（教學記下的按鈕）": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " (taught button)"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "（教學記下的按鈕）"
+          }
+        }
+      }
+    },
+    "（沒有文字）": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "(no text)"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "（沒有文字）"
           }
         }
       }

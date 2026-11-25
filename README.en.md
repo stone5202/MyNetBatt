@@ -10,13 +10,15 @@
 
 MyNetBatt is a native macOS menu bar system monitor that brings battery, network, system performance, storage, and accessories together in one interface.
 
-> **4.2: a closer look at charging and displays.** See every power level your charger offers and the voltage and current your Mac actually negotiated, estimate the charging path's resistance, and check whether your display is running at its best resolution and refresh rate.
+> **4.3: Kicked off public Wi‑Fi? MyNetBatt signs you back in.** New Wi‑Fi Auto Login: when a hospital, café, or other public Wi‑Fi network drops you and asks you to tap "Agree" again, MyNetBatt does it in the background and restores the connection. You can also teach it once where to click, and it turns Wi‑Fi off and on when the connection gets stuck.
+>
+> 4.2 lets you see every power level your charger offers and the voltage and current your Mac actually negotiated, estimate the charging path's resistance, and check whether your display is running at its best resolution and refresh rate.
 >
 > 4.1 added the Ports tab and port status in the menu bar, showing what each port is carrying, how fast it's running, and what's holding it back.
 >
 > 4.0 was the full redesign: a completely new monitor window with an Overview page, six desktop widgets, accessory battery levels, folder sizes and large files, an English interface, and a welcome tour.
 >
-> Current version: 4.2.1 · Interface languages: Traditional Chinese, English
+> Current version: 4.3 · Interface languages: Traditional Chinese, English
 
 See the [changelog](CHANGELOG.en.md) or [GitHub Releases](https://github.com/stone5202/MyNetBatt/releases) for the changes in each version. The changelog is also available in [Traditional Chinese](CHANGELOG.md).
 
@@ -106,6 +108,7 @@ MyNetBatt is under active development and maintenance. Its complete source code 
 - Wi-Fi channel, signal strength, transmit rate, and security
 - Daily, weekly, monthly, and yearly network usage per app (helpers and other child processes count towards the app that owns them, and other processes can optionally be listed separately), with upload and download counted separately and a history chart; tracking can be paused
 - Live list of apps currently using the network
+- Wi‑Fi Auto Login: when a hospital, café, or other public Wi‑Fi network kicks you off and asks you to tap "Agree" or "OK" again, MyNetBatt presses it and restores the connection; teaching mode lets you show it once where to click, and it turns Wi‑Fi off and on when you are connected but offline. Only networks on your list are handled, and usernames and passwords are never filled in
 - Six desktop and Notification Center widgets: Battery, Data Usage, App Data Usage, Storage, Wi-Fi, and Accessory Battery, with selectable theme colors
 - Always-on-top float window that can be toggled with a global shortcut, with adjustable background opacity
 - Configurable sections in the network and battery popovers
@@ -176,6 +179,7 @@ The helper exposes only methods for reading and changing Low Power Mode. It does
 - Battery history, per-app network usage, and interface preferences are stored locally in `UserDefaults`.
 - MyNetBatt contains no analytics, advertising, or user-tracking SDKs.
 - To display the public IP address, the app sends a request to [`https://api.ipify.org`](https://api.ipify.org); that service will naturally receive the source IP address of the request.
+- Wi‑Fi Auto Login checks for internet access by contacting `http://captive.apple.com` on a timer (only when you switch networks or wake from sleep while the list is empty) and opens the public Wi‑Fi login page locally to tap "Agree". It never reads or fills in usernames or passwords, and its activity log stays on your Mac.
 - Showing the Wi-Fi network name requires Location access (a macOS requirement) and is requested only when you ask for it; MyNetBatt does not record or transmit your location.
 - Storage scans read file sizes only, never file contents. The first scan of Desktop, Documents, and Downloads triggers the standard macOS access prompt.
 - Other hardware and system information comes from built-in macOS APIs and command-line tools.

@@ -181,6 +181,8 @@ struct SettingsDetailView: View {
         } footer: {
             Text("在小工具上按右鍵 › 編輯，可以更換主題色；數據用量小工具還能選擇只顯示上傳或下載。")
         }
+
+        CaptivePortalSettingsSection()
     }
 
     // MARK: 選單列
@@ -278,6 +280,7 @@ struct SettingsDetailView: View {
     private var windowSections: some View {
         Section("網路小視窗") {
             Toggle("今日數據用量", isOn: $monitor.popNetShowTotals)
+            Toggle("Wi‑Fi 自動登入", isOn: $monitor.popNetShowCaptive)
             Toggle("正在使用網路的 App", isOn: $monitor.popNetShowActive)
             Toggle("今日 App 用量", isOn: $monitor.popNetShowAppUsage)
             Toggle("儲存空間", isOn: $monitor.popNetShowDisk)

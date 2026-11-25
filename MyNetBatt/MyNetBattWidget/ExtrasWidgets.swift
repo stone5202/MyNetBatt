@@ -501,13 +501,13 @@ struct PeripheralsWidgetView: View {
     /// AirPods 拆成左右耳（取較低者）與充電盒兩個圓環，其他裝置一個圓環。
     private func rings(_ devices: [WidgetExtras.Peripheral]) -> [Ring] {
         devices.flatMap { device -> [Ring] in
-            if let level = device.level { return [Ring(id: device.name, symbol: device.symbol, label: Text(verbatim: device.name), level: level)] }
+            if let level = device.level { return [Ring(id: device.id, symbol: device.symbol, label: Text(verbatim: device.name), level: level)] }
             var result: [Ring] = []
             if let buds = [device.left, device.right].compactMap({ $0 }).min() {
-                result.append(Ring(id: device.name + "-buds", symbol: device.symbol, label: Text(verbatim: device.name), level: buds))
+                result.append(Ring(id: device.id + "-buds", symbol: device.symbol, label: Text(verbatim: device.name), level: buds))
             }
             if let caseLevel = device.caseLevel {
-                result.append(Ring(id: device.name + "-case", symbol: "airpods.chargingcase", label: Text("充電盒"), level: caseLevel))
+                result.append(Ring(id: device.id + "-case", symbol: "airpods.chargingcase", label: Text("充電盒"), level: caseLevel))
             }
             return result
         }

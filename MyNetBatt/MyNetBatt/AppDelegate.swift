@@ -53,6 +53,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         UNUserNotificationCenter.current().delegate = BatteryNotifier.shared
 
+        // Wi‑Fi 自動登入（核心與獨立 App 共用，見 CaptivePortalIntegration.swift）
+        CaptivePortalIntegration.start()
+
         // 主題與懸浮視窗的設定改變時重新套用。
         monitor.appearanceChanged
             .merge(with: monitor.floatWindowChanged)
@@ -134,6 +137,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         // 重複的實例沒有最新資料，不要覆寫正在執行那一份的紀錄。
         guard !isDuplicateInstance else { return }
+        CaptivePortalIntegration.stop()
         monitor.saveAppUsageHistory(force: true)
         monitor.saveBatteryHistory(force: true)
         monitor.saveHourlyTraffic(force: true)

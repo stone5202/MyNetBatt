@@ -8,7 +8,9 @@ import IOKit.ps
 nonisolated struct PeripheralDevice: Identifiable, Equatable, Codable {
     enum Kind: String, Codable { case keyboard, mouse, trackpad, headphones, speaker, gamepad, other }
 
-    var id: String { name }
+    /// 畫面、通知用的身分：配件電源有系統的識別碼（AirPods 用 Group Identifier）就用它，
+    /// 同名的兩台裝置才分得開；其他來源只有名稱。兩種加上不同前綴，名稱再怎麼取都不會和識別碼撞號。
+    var id: String { identity.map { "acc:" + $0 } ?? "name:" + name }
     let name: String
     let kind: Kind
     /// 單一電量（鍵盤、滑鼠等）；耳機改看 left／right／case。
@@ -16,12 +18,10 @@ nonisolated struct PeripheralDevice: Identifiable, Equatable, Codable {
     var left: Int?
     var right: Int?
     var caseLevel: Int?
+    /// 配件電源的 Group Identifier／Accessory Identifier；system_profiler 與 HID 沒有。
+    var identity: String? = nil
 
     /// 列表與選單列用的代表值：耳機取左右耳較低的一個。
-    func renamed(_ newName: String) -> PeripheralDevice {
-        PeripheralDevice(name: newName, kind: kind, level: level, left: left, right: right, caseLevel: caseLevel)
-    }
-
     var primaryLevel: Int? {
         if let level { return level }
         let buds = [left, right].compactMap { $0 }
@@ -159,7 +159,7 @@ nonisolated enum PeripheralBatteryReader {
             guard let name, level != nil || left != nil || right != nil || caseLevel != nil else { return nil }
             return PeripheralDevice(
                 name: name, kind: kind(category: category, name: name),
-                level: level, left: left, right: right, caseLevel: caseLevel
+                level: level, left: left, right: right, caseLevel: caseLevel, identity: key
             )
         }
     }
@@ -184,37 +184,32 @@ nonisolated enum PeripheralBatteryReader {
     }
 
     /// 以名稱合併，後面的來源覆蓋前面的同欄位：system_profiler → 配件電源 → IOKit HID（最即時）。
-    /// 配件電源裡有同名的多台裝置（識別碼不同）時，各自保留並在名稱後加「 (2)」等編號；
+    /// 配件電源裡有同名的多台裝置（識別碼不同）時，各自以識別碼保留、名稱不變；
     /// 其他來源只有名稱、分不出是哪一台，同名的資料不拿來覆蓋。
     static func merge(profiler: [PeripheralDevice], accessories: [PeripheralDevice] = [], hid: [PeripheralDevice]) -> [PeripheralDevice] {
         let counts = Dictionary(accessories.map { ($0.name, 1) }, uniquingKeysWith: +)
         let ambiguous = Set(counts.filter { $0.value > 1 }.keys)
-        var seen: [String: Int] = [:]
-        let numbered = accessories.map { device -> PeripheralDevice in
-            guard ambiguous.contains(device.name) else { return device }
-            seen[device.name, default: 0] += 1
-            let index = seen[device.name]!
-            return index == 1 ? device : device.renamed("\(device.name) (\(index))")
-        }
-        var byName: [String: PeripheralDevice] = [:]
         let others = { (list: [PeripheralDevice]) in list.filter { !ambiguous.contains($0.name) } }
-        for device in others(profiler) + numbered + others(hid) {
-            guard var existing = byName[device.name] else { byName[device.name] = device; continue }
+        var merged: [String: PeripheralDevice] = [:]
+        for device in others(profiler) + accessories + others(hid) {
+            let key = ambiguous.contains(device.name) ? device.id : "name:" + device.name
+            guard let existing = merged[key] else { merged[key] = device; continue }
             // 新來源帶了左右耳，就整組採用它的（包括總電量），不留下舊來源的總電量蓋住左右耳。
             let hasBuds = device.left != nil || device.right != nil
-            existing = PeripheralDevice(
+            merged[key] = PeripheralDevice(
                 name: existing.name,
                 kind: existing.kind == .other ? device.kind : existing.kind,
                 level: hasBuds ? device.level : (device.level ?? existing.level),
                 left: hasBuds ? device.left : existing.left,
                 right: hasBuds ? device.right : existing.right,
-                caseLevel: device.caseLevel ?? existing.caseLevel
+                caseLevel: device.caseLevel ?? existing.caseLevel,
+                identity: device.identity ?? existing.identity
             )
-            byName[device.name] = existing
         }
-        return byName.values.sorted { lhs, rhs in
+        return merged.values.sorted { lhs, rhs in
             if lhs.kind != rhs.kind { return order(lhs.kind) < order(rhs.kind) }
-            return lhs.name.localizedStandardCompare(rhs.name) == .orderedAscending
+            let byName = lhs.name.localizedStandardCompare(rhs.name)
+            return byName == .orderedSame ? lhs.id < rhs.id : byName == .orderedAscending
         }
     }
 

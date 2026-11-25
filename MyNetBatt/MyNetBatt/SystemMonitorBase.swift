@@ -66,6 +66,7 @@ final class SystemMonitor {
     var popNetShowActive: Bool = storedSetting("popNetShowActive", true) { didSet { UserDefaults.standard.set(popNetShowActive, forKey: "popNetShowActive") } }
     var popNetShowAppUsage: Bool = storedSetting("popNetShowAppUsage", true) { didSet { UserDefaults.standard.set(popNetShowAppUsage, forKey: "popNetShowAppUsage") } }
     var popNetShowDisk: Bool = storedSetting("popNetShowDisk", true) { didSet { UserDefaults.standard.set(popNetShowDisk, forKey: "popNetShowDisk") } }
+    var popNetShowCaptive: Bool = storedSetting("popNetShowCaptive", true) { didSet { UserDefaults.standard.set(popNetShowCaptive, forKey: "popNetShowCaptive") } }
     var popNetShowBarToggles: Bool = storedSetting("popNetShowBarToggles", true) { didSet { UserDefaults.standard.set(popNetShowBarToggles, forKey: "popNetShowBarToggles") } }
     var popBatShowChart: Bool = storedSetting("popBatShowChart", true) { didSet { UserDefaults.standard.set(popBatShowChart, forKey: "popBatShowChart") } }
     var popBatShowDevices: Bool = storedSetting("popBatShowDevices", true) { didSet { UserDefaults.standard.set(popBatShowDevices, forKey: "popBatShowDevices") } }

@@ -4,6 +4,23 @@
 
 This document summarizes the major changes in each MyNetBatt release. Versions before 3.0 were uploaded by replacing earlier copies, so their original per-version Git history can no longer be fully recovered. Changes from 1.0 through 2.x are therefore consolidated from the source code that can still be verified, without attributing uncertain details to individual releases.
 
+## [4.3] - 2026-11-25
+
+Kicked off public Wi‑Fi? MyNetBatt signs you back in. New Wi‑Fi Auto Login: when a hospital, café, or other public Wi‑Fi network drops you and asks you to tap "Agree" again, MyNetBatt does it in the background and restores the connection.
+
+### New features
+
+- Wi‑Fi Auto Login: add the public Wi‑Fi networks you use to the list. When one of them kicks you off and shows its login page asking you to tap "Agree" or "OK" again, MyNetBatt presses it in the background and gets you back online, with an optional notification. Only networks on your list are handled; if a login page asks for a username or password, MyNetBatt never fills it in and notifies you to sign in yourself.
+- Teaching mode: if a login page is unusual and the button can't be found automatically, show MyNetBatt once where to click on the login page, and it will repeat those steps next time.
+- Automatic reconnect: when you are connected to a Wi‑Fi network on your list but there is still no internet, MyNetBatt turns Wi‑Fi off and on again.
+- The network popover header now has an Auto Login switch next to the Wi‑Fi name. Click it to see the current status, open the login page, or add the current network to the list; a small red dot appears when something needs your attention. The network list, teaching mode, and log are on the Network page of the monitor window; check frequency and notifications are in Settings › General. When the list is empty, MyNetBatt does not check the network on a timer.
+
+### Fixes
+
+- Displays used in portrait orientation (rotated 90° or 270°) are no longer reported as not running at their native resolution.
+- Two accessories with the same name (such as two mice of the same model) now get their own low-battery notifications instead of overriding each other, and the desktop widget shows them separately.
+- Charge path resistance: the first reading taken right after MyNetBatt launches is no longer counted towards the charge path; collection starts with the next update.
+
 ## [4.2.1] - 2026-10-25
 
 ### Fixes

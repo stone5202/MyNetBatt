@@ -185,7 +185,7 @@ nonisolated extension SystemReaders {
     }
 
     /// macOS 目前接著的外接螢幕：用 EDID 的廠商／產品／序號對應，取目前更新率與原生解析度下可選的更新率。
-    private struct ScreenMode { let vendor: Int; let model: Int; let serial: Int; let current: Double; let width: Int; let height: Int; let modes: [(w: Int, h: Int, refresh: Int)] }
+    private struct ScreenMode { let vendor: Int; let model: Int; let serial: Int; let current: Double; let width: Int?; let height: Int?; let modes: [(w: Int, h: Int, refresh: Int)] }
     private static func screenModes() -> [ScreenMode] {
         var count: UInt32 = 0
         var ids = [CGDirectDisplayID](repeating: 0, count: 16)
@@ -194,10 +194,14 @@ nonisolated extension SystemReaders {
         return ids.prefix(Int(count)).compactMap { id in
             guard CGDisplayIsBuiltin(id) == 0, let mode = CGDisplayCopyDisplayMode(id) else { return nil }
             let all = (CGDisplayCopyAllDisplayModes(id, options) as? [CGDisplayMode]) ?? []
+            // 直立螢幕的模式寬高是對調的，換回 EDID 的方向；非直角旋轉時不比解析度。
+            let rotation = CGDisplayRotation(id)
+            let current = DisplayDiagnosis.unrotated(width: mode.pixelWidth, height: mode.pixelHeight, rotation: rotation)
+            let sizes = all.map { DisplayDiagnosis.ScreenModeSize(pixelWidth: $0.pixelWidth, pixelHeight: $0.pixelHeight,
+                                                                  width: $0.width, height: $0.height, refresh: $0.refreshRate) }
             return ScreenMode(vendor: Int(CGDisplayVendorNumber(id)), model: Int(CGDisplayModelNumber(id)),
-                              serial: Int(CGDisplaySerialNumber(id)), current: mode.refreshRate, width: mode.pixelWidth, height: mode.pixelHeight,
-                              modes: all.flatMap { [($0.pixelWidth, $0.pixelHeight, Int($0.refreshRate.rounded())),
-                                                    ($0.width, $0.height, Int($0.refreshRate.rounded()))] })
+                              serial: Int(CGDisplaySerialNumber(id)), current: mode.refreshRate, width: current?.width, height: current?.height,
+                              modes: DisplayDiagnosis.orientedModes(sizes, rotation: rotation))
         }
     }
 
@@ -220,7 +224,7 @@ nonisolated extension SystemReaders {
                 var matches = screens.filter { $0.vendor == edid.vendorID && $0.model == edid.productID }
                 if matches.count > 1 { matches = matches.filter { $0.serial == edid.serial } }
                 let screen = matches.count == 1 ? matches[0] : nil
-                let offered = Set(screen?.modes.filter { $0.w == best.width && $0.h == best.height }.map(\.refresh) ?? [])
+                let offered = DisplayDiagnosis.offeredRefreshes(screen?.modes ?? [], native: best)
                 diagnosis = DisplayDiagnosis.evaluate(
                     edid: edid, currentRefresh: screen?.current, offeredRefreshes: offered,
                     linkRate: DisplayDiagnosis.rate(from: rate), lanes: lanes,

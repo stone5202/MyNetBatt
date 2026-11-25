@@ -40,14 +40,14 @@ nonisolated struct ResistanceSampler: Equatable {
 
     /// 加入一筆系統讀值。同一個更新時間只算一次；電流太小（幾乎沒在用充電器）不收。
     mutating func add(volts: Double, amps: Double, updateTime: Int, context: [Int]) {
-        // 換了充電器或重新協商：清掉舊樣本。第一次看到新 context 時的讀數可能是協商前就更新好的
-        // （系統在 160 秒更新、161 秒才重新協商，App 下一輪才一起讀到），分不出屬於哪條路徑，
-        // 所以這筆只當邊界、不收，等系統下一次更新。App 剛啟動（從沒讀過）時不需要等。
+        // 換了充電器、重新協商或 App 剛啟動：清掉舊樣本。第一次看到這個 context 時的讀數可能是協商前
+        // 就更新好的（系統在 160 秒更新、161 秒才重新協商，App 下一輪或剛啟動時才一起讀到），
+        // 分不出屬於哪條路徑，所以這筆只當邊界、不收，等系統下一次更新。
         if context != self.context {
-            let isFirstReading = lastUpdateTime == nil
             samples = []
             self.context = context
-            if !isFirstReading { lastUpdateTime = updateTime; return }
+            lastUpdateTime = updateTime
+            return
         }
         guard updateTime != lastUpdateTime else { return }
         lastUpdateTime = updateTime

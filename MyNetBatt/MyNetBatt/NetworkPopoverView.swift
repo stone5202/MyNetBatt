@@ -23,6 +23,7 @@ struct NetworkPopoverView: View {
                         Text(monitor.networkDetailStatus).font(.caption).foregroundStyle(.secondary)
                     }
                     Spacer()
+                    if monitor.popNetShowCaptive { CaptiveHeaderToggle(monitor: monitor) }
                     Button { showDetails.toggle() } label: {
                         Image(systemName: "ellipsis").font(.title3.bold()).frame(width: 34, height: 28).background(Color.secondary.opacity(0.08)).clipShape(Capsule())
                     }.buttonStyle(.plain)

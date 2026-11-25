@@ -62,13 +62,15 @@ nonisolated struct WidgetExtras: Codable {
     }
 
     struct Peripheral: Codable, Identifiable {
-        var id: String { name }
+        var id: String { key ?? name }
         var name: String
         var symbol: String
         var level: Int?
         var left: Int?
         var right: Int?
         var caseLevel: Int?
+        /// 主程式的裝置身分；同名的兩台裝置靠它區分（舊版資料沒有這個欄位）。
+        var key: String? = nil
     }
 
     var updated: Date

@@ -196,6 +196,34 @@ nonisolated struct DisplayDiagnosis: Equatable {
         rate * Double(lanes) * (rate > 8.1 ? 128.0 / 132.0 : 0.8)
     }
 
+    /// 螢幕旋轉 90°／270°（直立）時，macOS 回報的模式寬高會對調；換回螢幕本身（EDID）的方向才能和原生解析度比較。
+    /// 不是直角（差 1° 以上）時無法只靠對調還原，回傳 nil，不拿來判斷解析度。
+    static func unrotated(width: Int, height: Int, rotation: Double) -> (width: Int, height: Int)? {
+        guard rotation.isFinite else { return nil }
+        let degrees = rotation.truncatingRemainder(dividingBy: 360) + (rotation < 0 ? 360 : 0)
+        let turns = (degrees / 90).rounded()
+        guard abs(degrees - turns * 90) < 1 else { return nil }
+        return Int(turns) % 2 == 1 ? (height, width) : (width, height)
+    }
+
+    /// macOS 回報的一個顯示模式：像素尺寸、點尺寸（HiDPI 時是一半）與更新率。
+    struct ScreenModeSize { let pixelWidth: Int; let pixelHeight: Int; let width: Int; let height: Int; let refresh: Double }
+
+    /// 把所有模式換回 EDID 的方向，像素尺寸與點尺寸各算一筆；非直角旋轉時無法比較，回傳空陣列。
+    static func orientedModes(_ modes: [ScreenModeSize], rotation: Double) -> [(w: Int, h: Int, refresh: Int)] {
+        modes.flatMap { m -> [(w: Int, h: Int, refresh: Int)] in
+            let refresh = Int(m.refresh.rounded())
+            guard let pixel = unrotated(width: m.pixelWidth, height: m.pixelHeight, rotation: rotation),
+                  let point = unrotated(width: m.width, height: m.height, rotation: rotation) else { return [] }
+            return [(pixel.width, pixel.height, refresh), (point.width, point.height, refresh)]
+        }
+    }
+
+    /// macOS 在原生解析度提供的更新率（四捨五入）。
+    static func offeredRefreshes(_ modes: [(w: Int, h: Int, refresh: Int)], native: DisplayTiming) -> Set<Int> {
+        Set(modes.filter { $0.w == native.width && $0.h == native.height }.map(\.refresh))
+    }
+
     /// 從「8.1 Gbps (HBR3)」取出 8.1。
     static func rate(from description: String) -> Double? {
         description.split(separator: " ").first.flatMap { Double($0) }

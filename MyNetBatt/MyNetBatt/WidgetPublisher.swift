@@ -61,7 +61,7 @@ extension SystemMonitor {
         )
 
         let peripheralsOut = peripherals.map {
-            WidgetExtras.Peripheral(name: $0.name, symbol: $0.symbol, level: $0.level, left: $0.left, right: $0.right, caseLevel: $0.caseLevel)
+            WidgetExtras.Peripheral(name: $0.name, symbol: $0.symbol, level: $0.level, left: $0.left, right: $0.right, caseLevel: $0.caseLevel, key: $0.id)
         }
 
         let extras = WidgetExtras(

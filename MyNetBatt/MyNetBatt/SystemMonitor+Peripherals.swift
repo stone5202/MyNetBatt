@@ -41,13 +41,15 @@ extension SystemMonitor {
     /// 周邊裝置電量降到 10% 時通知一次，充電回 20% 以上才重新計算；通知關閉時不算已提醒。
     func evaluatePeripheralNotifications() {
         let result = AlertPolicy.peripherals(
-            peripherals.map { ($0.name, $0.primaryLevel) }, notified: peripheralLowNotified, enabled: notifyPeripheralLow
+            peripherals.map { ($0.id, $0.primaryLevel) }, notified: peripheralLowNotified, enabled: notifyPeripheralLow
         )
         peripheralLowNotified = result.notified
-        for name in result.notify {
-            let level = peripherals.first { $0.name == name }?.primaryLevel ?? 0
+        // 通知狀態以裝置身分（id）記錄，同名的兩台各算各的。
+        for id in result.notify {
+            guard let device = peripherals.first(where: { $0.id == id }) else { continue }
+            let name = device.name, level = device.primaryLevel ?? 0
             BatteryNotifier.shared.post(
-                id: "peripheral-\(name)", title: String(localized: "周邊裝置電量不足"),
+                id: "peripheral-\(id)", title: String(localized: "周邊裝置電量不足"),
                 body: String(localized: "「\(name)」電量剩餘 \(level)%，請記得充電。"),
                 sound: notificationSound
             )

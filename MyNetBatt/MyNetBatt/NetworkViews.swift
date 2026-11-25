@@ -20,6 +20,8 @@ struct NetworkDetailView: View {
 
                 NetworkConnectionInfoCard(monitor: monitor)
 
+                CaptivePortalPanel()
+
                 HStack(spacing: 16) {
                     NetworkSpeedCard(title: String(localized: "上傳"), symbol: "arrow.up", value: monitor.upSpeedStr, total: monitor.totalUpStr, history: monitor.trafficHistory, upload: true, color: Palette.upload)
                     NetworkSpeedCard(title: String(localized: "下載"), symbol: "arrow.down", value: monitor.downSpeedStr, total: monitor.totalDownStr, history: monitor.trafficHistory, upload: false, color: Palette.download)
