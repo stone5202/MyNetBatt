@@ -71,7 +71,7 @@ final class PortalWindowModel: NSObject, ObservableObject, WKNavigationDelegate,
         let rule: NetworkRule
         if let id = targetRuleID, let i = store.ruleIndex(id: id) {
             store.rules[i].steps = captured
-            if store.rules[i].portalHost == nil, let h = capturedHost { store.rules[i].portalHost = h }
+            if let h = capturedHost { store.rules[i].addHost(h) }
             rule = store.rules[i]
         } else {
             rule = store.saveSteps(captured, ssid: targetSSID, portalHost: capturedHost ?? targetHost)

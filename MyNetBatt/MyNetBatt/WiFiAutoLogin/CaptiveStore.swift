@@ -11,6 +11,8 @@ final class CaptiveStore: ObservableObject {
     @Published var rules: [NetworkRule] { didSet { saveRules() } }
     @Published var checkInterval: Double { didSet { defaults.set(checkInterval, forKey: k("checkInterval")) } }
     @Published var notifyOnSuccess: Bool { didSet { defaults.set(notifyOnSuccess, forKey: k("notifyOnSuccess")) } }
+    /// 自動登入成功後，把 macOS 自己跳出的登入視窗（Captive Network Assistant）關掉
+    @Published var closeSystemWindow: Bool { didSet { defaults.set(closeSystemWindow, forKey: k("closeSystemWindow")) } }
     @Published var paused: Bool { didSet { defaults.set(paused, forKey: k("paused")) } }
     /// 最近的自動登入時間（統計用，最多留 200 筆）
     @Published private(set) var loginDates: [Date] { didSet { defaults.set(loginDates, forKey: k("loginDates")) } }
@@ -30,6 +32,7 @@ final class CaptiveStore: ObservableObject {
         let interval = defaults.double(forKey: (p + "checkInterval"))
         checkInterval = interval >= 2 ? interval : 20
         notifyOnSuccess = defaults.object(forKey: (p + "notifyOnSuccess")) as? Bool ?? true
+        closeSystemWindow = defaults.object(forKey: (p + "closeSystemWindow")) as? Bool ?? true
         paused = defaults.bool(forKey: (p + "paused"))
         loginDates = defaults.array(forKey: (p + "loginDates")) as? [Date] ?? []
     }
@@ -53,7 +56,7 @@ final class CaptiveStore: ObservableObject {
             // 補上缺的欄位
             if let i = ruleIndex(id: existing.id) {
                 if rules[i].ssid == nil, let ssid { rules[i].ssid = ssid }
-                if rules[i].portalHost == nil, let portalHost { rules[i].portalHost = portalHost }
+                if let portalHost { rules[i].addHost(portalHost) }
                 return rules[i]
             }
         }

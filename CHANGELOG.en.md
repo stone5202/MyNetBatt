@@ -4,6 +4,23 @@
 
 This document summarizes the major changes in each MyNetBatt release. Versions before 3.0 were uploaded by replacing earlier copies, so their original per-version Git history can no longer be fully recovered. Changes from 1.0 through 2.x are therefore consolidated from the source code that can still be verified, without attributing uncertain details to individual releases.
 
+## [4.3.1] - 2026-11-26
+
+### Fixes
+
+- Auto Login now works when a public Wi‑Fi network kicks you off and macOS opens its own login window. Previously MyNetBatt could not reach the login page in this situation, so it never tapped "Agree". It now reads the login page directly over Wi‑Fi and submits the agreement, falling back to the web page only when it can't understand the page, so you are usually back online within a second or two.
+- Networks that use a proxy server are no longer mistaken for having no internet.
+- Auto Login only presses "Agree" or "OK" buttons and never presses "Decline" or paid-plan options.
+
+### New features
+
+- After signing in, MyNetBatt closes the login window macOS opened. You can turn this off in Settings.
+- When the same Wi‑Fi network sends you to different login pages in different areas, all of them are remembered under one network; you can see them in the network list and forget any of them.
+
+### Improvements
+
+- Auto Login in the network popover header is now a shield button whose symbol and color show the current status. Click it for details and the on/off switch; when something needs your attention, a one-line notice with an action button appears at the top of the popover.
+
 ## [4.3] - 2026-11-25
 
 Kicked off public Wi‑Fi? MyNetBatt signs you back in. New Wi‑Fi Auto Login: when a hospital, café, or other public Wi‑Fi network drops you and asks you to tap "Agree" again, MyNetBatt does it in the background and restores the connection.

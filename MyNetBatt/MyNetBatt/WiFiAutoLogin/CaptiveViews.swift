@@ -69,8 +69,21 @@ struct CaptiveRuleRow: View {
                             .background(Capsule().fill(Color.accentColor.opacity(0.2)))
                     }
                 }
-                if let host = rule.portalHost, rule.ssid != nil {
-                    Text("登入頁：\(host)").font(.caption).foregroundStyle(.secondary)
+                let hosts = rule.hosts
+                if !hosts.isEmpty, rule.ssid != nil || hosts.count > 1 {
+                    HStack(spacing: 4) {
+                        Text("登入頁：\(hosts.joined(separator: "、"))")
+                            .font(.caption).foregroundStyle(.secondary)
+                            .lineLimit(2).textSelection(.enabled)
+                        Menu {
+                            ForEach(hosts, id: \.self) { h in
+                                Button("忘記 \(h)") { rule.removeHost(h) }
+                            }
+                        } label: { Image(systemName: "ellipsis.circle") }
+                        .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
+                        .help("同一個網路可能有好幾個登入頁（例如醫院不同區域）。登入成功時會自動記下，最多 \(NetworkRule.maxHosts) 個")
+                        .accessibilityLabel(Text("管理登入頁"))
+                    }
                 }
                 Text(rule.steps.isEmpty ? String(localized: "自動找「同意／確認」按鈕") : String(localized: "照教學的 \(rule.steps.count) 個動作：") +
                      rule.steps.map { $0.text.isEmpty ? String(localized: "（按鈕）") : $0.text }.joined(separator: " → "))

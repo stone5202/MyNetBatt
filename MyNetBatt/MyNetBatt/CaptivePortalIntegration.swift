@@ -18,6 +18,15 @@ enum CaptivePortalIntegration {
                                         sound: true, userInfo: openPortal ? ["openCaptivePortal": true] : [:])
         }
         CaptiveConfig.openPortal = { learn, ruleID in CaptivePortalWindow.show(learn: learn, ruleID: ruleID) }
+        #if DEBUG
+        // 截圖用：-captiveDemo attention｜busy｜online，只設畫面上的狀態，不跑自動登入
+        if let demo = UserDefaults.standard.string(forKey: "captiveDemo") {
+            let status: CaptiveStatus = demo == "attention" ? .attention(String(localized: "找不到同意按鈕，請用「教學模式」按一次"))
+                : demo == "busy" ? .loggingIn : .online
+            CaptiveEngine.shared.demo(status: status, ssid: nil)
+            return
+        }
+        #endif
         CaptiveEngine.shared.start()
     }
 
@@ -76,123 +85,88 @@ extension CaptiveStatus {
     var chipSymbol: String {
         switch self {
         case .online: return "checkmark.shield.fill"
-        case .loggingIn, .reconnecting, .starting: return "arrow.triangle.2.circlepath"
+        case .loggingIn, .reconnecting, .starting: return "shield.lefthalf.filled"
         case .captive, .attention: return "exclamationmark.shield.fill"
         case .offline: return "wifi.exclamationmark"
-        case .paused: return "pause.fill"
+        case .paused: return "shield.slash"
         case .wifiOff, .notConnected: return "wifi.slash"
         }
     }
 }
 
-// MARK: - 網路小視窗頁首的開關（取代原本的卡片）
+// MARK: - 網路小視窗：頁首盾牌按鈕＋需要處理時的提醒條（方案五）
 
-/// 網路小視窗頁首、Wi‑Fi 名稱旁的膠囊：左半邊點了跳出狀態與動作，右半邊是開關。
-/// 需要使用者處理時（被踢、這個網路還不在清單、要先允許讀取 Wi‑Fi 名稱）圖示變橘色並加小紅點。
-struct CaptiveHeaderToggle: View {
-    @Bindable var monitor: SystemMonitor
-    @ObservedObject private var engine = CaptiveEngine.shared
-    @ObservedObject private var wifi = CaptiveWiFi.shared
-    @ObservedObject private var store = CaptiveStore.shared
-    @State private var showStatus = false
+/// 小視窗頁首、提醒條、狀態框共用的判斷與外觀。
+/// 共用狀態規則：形狀＋顏色一起表示狀態（不只靠顏色），只有「需要處理」才有紅點。
+@MainActor
+struct CaptivePresentation {
+    enum Action: Equatable { case nothing, attention(String), needLocation, addRule, enableRule(UUID) }
 
-    private var rule: NetworkRule? {
-        guard let r = engine.currentRule, store.ruleIndex(id: r.id) != nil else { return nil }
-        return r
-    }
+    let symbol: String
+    let tint: Color?            // nil＝灰色（關閉、不在清單）
+    let action: Action
+    let busy: Bool              // 登入中／重連中：圖示脈動
+    let title: String
+    let detail: String
+    let rule: NetworkRule?          // 這個網路的規則（啟用中才有）
+    let disabledRule: NetworkRule?  // 這個網路有規則但被停用
 
-    private enum Action { case nothing, attention, needLocation, addRule }
+    var needsAttention: Bool { action != .nothing }
 
-    private var action: Action {
-        if store.paused { return .nothing }
-        if case .attention = engine.status { return .attention }
-        guard rule == nil else { return .nothing }
-        if engine.ssid == nil, !wifi.locationAuthorized { return engine.status == .captive ? .needLocation : .nothing }
-        if engine.ssid != nil || engine.portalURL != nil { return engine.status == .captive ? .addRule : .nothing }
-        return .nothing
-    }
-
-    /// 只在真的需要處理時提醒；一般網路不在清單裡不算。
-    private var needsAttention: Bool { action != .nothing }
-
-    var body: some View {
-        HStack(spacing: 4) {
-            Button { showStatus.toggle() } label: {
-                HStack(spacing: 5) {
-                    Image(systemName: store.paused ? "shield.slash" : engine.status.chipSymbol)
-                        .font(.caption.bold())
-                        .foregroundStyle(store.paused ? Color.secondary : (needsAttention ? .orange : engine.status.tint))
-                        .overlay(alignment: .topTrailing) {
-                            if needsAttention {
-                                Circle().fill(.red).frame(width: 6, height: 6).offset(x: 3, y: -2)
-                            }
-                        }
-                    Text("自動登入").font(.caption.weight(.semibold))
-                        .foregroundStyle(store.paused ? .secondary : .primary)
+    init(engine: CaptiveEngine, store: CaptiveStore, wifi: CaptiveWiFi) {
+        let matched = engine.currentRule.flatMap { r in store.ruleIndex(id: r.id).map { store.rules[$0] } }
+        let rule = matched?.enabled == true ? matched : nil
+        let disabledRule = matched?.enabled == false ? matched : nil
+        self.rule = rule
+        self.disabledRule = disabledRule
+        // 綠色只代表「這個網路受保護而且現在有網路」；沒網路、停用都不顯示綠色
+        let protected = rule != nil && engine.status == .online
+        var symbol = protected ? "checkmark.shield.fill" : "shield"
+        var tint: Color? = protected ? .green : nil
+        var action = Action.nothing
+        var busy = false
+        if store.paused {
+            symbol = "shield.slash"; tint = nil
+        } else {
+            switch engine.status {
+            case .attention(let msg):
+                symbol = "exclamationmark.shield.fill"; tint = .orange; action = .attention(msg)
+            case .loggingIn, .reconnecting, .starting:
+                symbol = "shield.lefthalf.filled"; tint = .blue; busy = true
+            case .captive where rule == nil:
+                // 這個網路要登入但沒有啟用中的規則：停用的就請使用者啟用；讀不到名稱就先要權限；否則請使用者加入清單
+                if let disabledRule {
+                    action = .enableRule(disabledRule.id)
+                } else if engine.ssid == nil, !wifi.locationAuthorized {
+                    action = .needLocation
+                } else if engine.ssid != nil || engine.portalURL != nil {
+                    action = .addRule
                 }
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .help(String(localized: "Wi‑Fi 自動登入的狀態"))
-            .popover(isPresented: $showStatus, arrowEdge: .bottom) { statusPopover }
-
-            Toggle("", isOn: Binding(get: { !store.paused }, set: { engine.setPaused(!$0) }))
-                .labelsHidden().toggleStyle(.switch).controlSize(.mini)
-        }
-        .padding(.leading, 9).padding(.trailing, 5)
-        .frame(height: 28)
-        .background(Color.secondary.opacity(0.08))
-        .clipShape(Capsule())
-        .fixedSize()
-    }
-
-    private var statusPopover: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Label("Wi‑Fi 自動登入", systemImage: "checkmark.shield")
-                .font(.subheadline.bold())
-            HStack(alignment: .top, spacing: 10) {
-                IconChip(symbol: store.paused ? "pause.fill" : engine.status.chipSymbol,
-                         color: store.paused ? .gray : engine.status.tint, size: 26)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(store.paused ? CaptiveStatus.paused.title : engine.status.title)
-                        .font(.subheadline.weight(.semibold))
-                    Text(detail).font(.caption).foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                Spacer(minLength: 0)
-            }
-            switch action {
-            case .attention:
-                HStack(spacing: 8) {
-                    Button("打開登入頁") { showStatus = false; CaptivePortalWindow.show(learn: false) }
-                    Button("教學模式") { showStatus = false; CaptivePortalWindow.show(learn: true, ruleID: rule?.id) }
-                }
-                .controlSize(.small)
-            case .needLocation:
-                // 讀不到 Wi‑Fi 名稱就沒辦法加入清單：用 MyNetBatt 原本的按鈕要定位權限
-                WiFiNameAccessButton(monitor: monitor)
-            case .addRule:
-                addRuleButton
-            case .nothing:
-                // 一般網路不提醒，但仍可以從這裡加入清單
-                if !store.paused, rule == nil, engine.ssid != nil { addRuleButton }
+                if action != .nothing { symbol = "exclamationmark.shield.fill"; tint = .orange }
+            default:
+                break
             }
         }
-        .padding(14)
-        .frame(width: 290, alignment: .leading)
+        self.symbol = symbol
+        self.tint = tint
+        self.action = action
+        self.busy = busy
+        self.title = store.paused ? CaptiveStatus.paused.title : engine.status.title
+        self.detail = Self.detail(engine: engine, store: store, wifi: wifi, rule: rule, disabled: disabledRule != nil)
     }
 
-    private var addRuleButton: some View {
-        Button {
-            store.addRule(ssid: engine.ssid, portalHost: engine.portalURL?.host)
-            engine.checkNow()
-        } label: {
-            Label("把「\(engine.ssid ?? engine.portalURL?.host ?? "")」加入自動登入", systemImage: "plus.circle")
+    /// 提醒條上的一行字
+    var stripMessage: String {
+        switch action {
+        case .attention(let msg): return msg
+        case .needLocation: return String(localized: "要先允許讀取 Wi‑Fi 名稱，才能自動登入")
+        case .addRule: return String(localized: "這個網路需要登入，還沒加入自動登入")
+        case .enableRule: return String(localized: "這個網路需要登入，但它的自動登入已停用")
+        case .nothing: return ""
         }
-        .controlSize(.small)
     }
 
-    private var detail: String {
+    private static func detail(engine: CaptiveEngine, store: CaptiveStore, wifi: CaptiveWiFi, rule: NetworkRule?, disabled: Bool) -> String {
         if store.paused { return String(localized: "已關閉，不會自動登入或重連") }
         if case .attention(let msg) = engine.status { return msg }
         let count = store.loginsToday
@@ -200,9 +174,197 @@ struct CaptiveHeaderToggle: View {
             let base = rule.steps.isEmpty ? String(localized: "被踢時會自動按「同意／確認」") : String(localized: "被踢時會照教學的動作自動登入")
             return count > 0 ? String(localized: "\(base) · 今天自動登入 \(count) 次") : base
         }
+        if disabled { return String(localized: "這個網路的自動登入已停用") }
         if engine.status == .captive { return String(localized: "這個網路需要登入，加入清單後就會自動處理") }
         if engine.ssid == nil, !wifi.locationAuthorized { return String(localized: "要先允許讀取 Wi‑Fi 名稱，才能把這個網路加入自動登入") }
         return String(localized: "這個網路不在自動登入清單")
+    }
+
+    /// 底色：有狀態色時帶色，灰色時跟「⋯」一樣淡；深色模式稍微加深才看得到邊界
+    func background(_ scheme: ColorScheme) -> Color {
+        if let tint { return tint.opacity(scheme == .dark ? 0.24 : 0.18) }
+        return Color.secondary.opacity(scheme == .dark ? 0.14 : 0.08)
+    }
+}
+
+/// 把目前網路加入自動登入清單（狀態框與提醒條共用）
+@MainActor
+private func captiveAddCurrentNetwork() {
+    let engine = CaptiveEngine.shared
+    CaptiveStore.shared.addRule(ssid: engine.ssid, portalHost: engine.portalURL?.host)
+    engine.checkNow()
+}
+
+/// 重新啟用這個網路的規則
+@MainActor
+private func captiveEnableRule(_ id: UUID) {
+    let store = CaptiveStore.shared
+    guard let i = store.ruleIndex(id: id) else { return }
+    store.rules[i].enabled = true
+    CaptiveEngine.shared.checkNow()
+}
+
+/// 目前網路的名稱（加入清單、無障礙標籤用）
+@MainActor
+private var captiveCurrentName: String {
+    CaptiveEngine.shared.ssid ?? CaptiveEngine.shared.portalURL?.host ?? String(localized: "這個網路")
+}
+
+/// 頁首、「⋯」旁邊的盾牌按鈕：和「⋯」一樣 34×28，點了跳出狀態框（開關在框裡）。
+struct CaptiveHeaderButton: View {
+    @Bindable var monitor: SystemMonitor
+    @ObservedObject private var engine = CaptiveEngine.shared
+    @ObservedObject private var wifi = CaptiveWiFi.shared
+    @ObservedObject private var store = CaptiveStore.shared
+    @Environment(\.colorScheme) private var scheme
+    @State private var showStatus = false
+
+    var body: some View {
+        let p = CaptivePresentation(engine: engine, store: store, wifi: wifi)
+        Button { showStatus.toggle() } label: {
+            Image(systemName: p.symbol)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(p.tint ?? Color.secondary)
+                .contentTransition(.symbolEffect(.replace))
+                .symbolEffect(.pulse, isActive: p.busy)
+                .frame(width: 34, height: 28)
+                .background(p.background(scheme))
+                .clipShape(Capsule())
+                .overlay(alignment: .topTrailing) {
+                    if p.needsAttention {
+                        Circle().fill(Color.red)
+                            .frame(width: 8, height: 8)
+                            .overlay(Circle().stroke(Color(nsColor: .windowBackgroundColor), lineWidth: 1.5))
+                            .offset(x: 1, y: -1)
+                    }
+                }
+                .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .help(String(localized: "Wi‑Fi 自動登入：\(p.title)"))
+        .accessibilityLabel(String(localized: "Wi‑Fi 自動登入：\(p.title)"))
+        .popover(isPresented: $showStatus, arrowEdge: .bottom) {
+            CaptiveStatusPopover(monitor: monitor) { showStatus = false }
+        }
+    }
+}
+
+/// 點盾牌跳出的狀態框：標題列右邊是開關，下面是狀態與需要時的動作。
+struct CaptiveStatusPopover: View {
+    @Bindable var monitor: SystemMonitor
+    let close: () -> Void
+    @ObservedObject private var engine = CaptiveEngine.shared
+    @ObservedObject private var wifi = CaptiveWiFi.shared
+    @ObservedObject private var store = CaptiveStore.shared
+
+    var body: some View {
+        let p = CaptivePresentation(engine: engine, store: store, wifi: wifi)
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Wi‑Fi 自動登入").font(.subheadline.bold())
+                Spacer()
+                Toggle("", isOn: Binding(get: { !store.paused }, set: { engine.setPaused(!$0) }))
+                    .labelsHidden().toggleStyle(.switch).controlSize(.small)
+                    .accessibilityLabel(Text("Wi‑Fi 自動登入"))
+            }
+            HStack(alignment: .top, spacing: 10) {
+                IconChip(symbol: p.symbol, color: p.tint ?? .gray, size: 28)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(p.title).font(.subheadline.weight(.semibold))
+                    Text(p.detail).font(.caption).foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 0)
+            }
+            switch p.action {
+            case .attention:
+                HStack(spacing: 8) {
+                    Button("打開登入頁") { close(); CaptivePortalWindow.show(learn: false) }
+                        .buttonStyle(.borderedProminent)
+                    Button("教學模式") { close(); CaptivePortalWindow.show(learn: true, ruleID: p.rule?.id) }
+                }
+                .controlSize(.small)
+            case .needLocation:
+                WiFiNameAccessButton(monitor: monitor)
+            case .addRule:
+                addButton(prominent: true)
+            case .enableRule(let id):
+                Button("啟用這個網路的自動登入") { captiveEnableRule(id) }
+                    .buttonStyle(.borderedProminent).controlSize(.small)
+            case .nothing:
+                // 一般網路不提醒，但仍可以從這裡加入清單
+                if !store.paused, p.rule == nil, engine.ssid != nil { addButton(prominent: false) }
+            }
+        }
+        .padding(14)
+        .frame(width: 290, alignment: .leading)
+    }
+
+    @ViewBuilder
+    private func addButton(prominent: Bool) -> some View {
+        let b = Button { captiveAddCurrentNetwork() } label: {
+            Label("把「\(engine.ssid ?? engine.portalURL?.host ?? "")」加入自動登入", systemImage: "plus.circle")
+        }
+        .controlSize(.small)
+        if prominent { b.buttonStyle(.borderedProminent) } else { b }
+    }
+}
+
+/// 需要處理時才從頁首下面滑出的一行提醒：說明＋一顆主要按鈕，處理完自動收起。
+struct CaptiveAttentionStrip: View {
+    @Bindable var monitor: SystemMonitor
+    @ObservedObject private var engine = CaptiveEngine.shared
+    @ObservedObject private var wifi = CaptiveWiFi.shared
+    @ObservedObject private var store = CaptiveStore.shared
+    @Environment(\.colorScheme) private var scheme
+
+    /// 白字在按鈕上要夠清楚：比系統橘深一點
+    private static let actionTint = Color(red: 0.70, green: 0.36, blue: 0.0)
+
+    var body: some View {
+        let p = CaptivePresentation(engine: engine, store: store, wifi: wifi)
+        Group {
+            if p.needsAttention {
+                HStack(spacing: 8) {
+                    Image(systemName: "exclamationmark.shield.fill")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(.orange)
+                    Text(p.stripMessage)
+                        .font(.caption.weight(.semibold))
+                        .lineLimit(1).truncationMode(.tail)
+                        .help(p.stripMessage)
+                    Spacer(minLength: 4)
+                    actionButton(p.action)
+                        .buttonStyle(.borderedProminent)
+                        .tint(Self.actionTint)
+                        .controlSize(.small)
+                }
+                .padding(.vertical, 6).padding(.leading, 10).padding(.trailing, 6)
+                .background(Color.orange.opacity(scheme == .dark ? 0.22 : 0.16),
+                            in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+        .animation(.spring(response: 0.3, dampingFraction: 0.85), value: p.needsAttention)
+    }
+
+    @ViewBuilder
+    private func actionButton(_ action: CaptivePresentation.Action) -> some View {
+        switch action {
+        case .attention:
+            Button("打開登入頁") { CaptivePortalWindow.show(learn: false) }
+                .accessibilityLabel(Text("打開「\(captiveCurrentName)」的登入頁"))
+        case .needLocation:
+            Button("允許…") { monitor.requestWiFiNameAccess() }
+                .accessibilityLabel(Text("允許讀取 Wi‑Fi 名稱"))
+        case .addRule:
+            Button("加入清單") { captiveAddCurrentNetwork() }
+                .accessibilityLabel(Text("把「\(captiveCurrentName)」加入自動登入"))
+        case .enableRule(let id):
+            Button("啟用") { captiveEnableRule(id) }
+                .accessibilityLabel(Text("啟用「\(captiveCurrentName)」的自動登入"))
+        case .nothing: EmptyView()
+        }
     }
 }
 
@@ -261,6 +423,8 @@ struct CaptivePortalSettingsSection: View {
             .onChange(of: store.checkInterval) { _, _ in engine.restartTimer() }
             .disabled(store.paused)
             Toggle("自動登入成功時通知", isOn: $store.notifyOnSuccess)
+                .disabled(store.paused)
+            Toggle("登入成功後關閉系統跳出的登入視窗", isOn: $store.closeSystemWindow)
                 .disabled(store.paused)
         } header: {
             Text("Wi‑Fi 自動登入")

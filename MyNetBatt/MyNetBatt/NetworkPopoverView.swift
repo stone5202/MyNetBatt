@@ -23,7 +23,7 @@ struct NetworkPopoverView: View {
                         Text(monitor.networkDetailStatus).font(.caption).foregroundStyle(.secondary)
                     }
                     Spacer()
-                    if monitor.popNetShowCaptive { CaptiveHeaderToggle(monitor: monitor) }
+                    if monitor.popNetShowCaptive { CaptiveHeaderButton(monitor: monitor) }
                     Button { showDetails.toggle() } label: {
                         Image(systemName: "ellipsis").font(.title3.bold()).frame(width: 34, height: 28).background(Color.secondary.opacity(0.08)).clipShape(Capsule())
                     }.buttonStyle(.plain)
@@ -31,6 +31,8 @@ struct NetworkPopoverView: View {
                         NetworkDetailsPopover(monitor: monitor)
                     }
                 }
+                // 需要處理時才出現的提醒條（方案五）
+                if monitor.popNetShowCaptive { CaptiveAttentionStrip(monitor: monitor) }
 
                 NetworkLiveRow(title: String(localized: "上傳"), arrow: "arrow.up", speed: monitor.upSpeedStr, total: monitor.totalUpStr, average: monitor.avgUpStr, history: monitor.trafficHistory, upload: true, color: .pink)
                 Divider()

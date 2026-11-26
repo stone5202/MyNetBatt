@@ -1171,19 +1171,19 @@
         }
       }
     },
-    "Wi‑Fi 自動登入的狀態": {
+    "Wi‑Fi 自動登入：%@": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wi‑Fi Auto Login status"
+            "value": "Wi‑Fi Auto Login: %@"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wi‑Fi 自動登入的狀態"
+            "value": "Wi‑Fi 自動登入：%@"
           }
         }
       }
@@ -2514,6 +2514,40 @@
         }
       }
     },
+    "允許…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow…"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "允許…"
+          }
+        }
+      }
+    },
+    "允許讀取 Wi‑Fi 名稱": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow access to the Wi‑Fi name"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "允許讀取 Wi‑Fi 名稱"
+          }
+        }
+      }
+    },
     "充滿通知": {
       "extractionState": "manual",
       "localizations": {
@@ -3109,6 +3143,23 @@
         }
       }
     },
+    "加入清單": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to List"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "加入清單"
+          }
+        }
+      }
+    },
     "加入目前的網路": {
       "extractionState": "manual",
       "localizations": {
@@ -3461,6 +3512,23 @@
         }
       }
     },
+    "同一個網路可能有好幾個登入頁（例如醫院不同區域）。登入成功時會自動記下，最多 %lld 個": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One network can have several login pages (for example, different areas of a hospital). Each one is remembered after a successful login, up to %lld."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "同一個網路可能有好幾個登入頁（例如醫院不同區域）。登入成功時會自動記下，最多 %lld 個"
+          }
+        }
+      }
+    },
     "否": {
       "extractionState": "manual",
       "localizations": {
@@ -3648,6 +3716,23 @@
         }
       }
     },
+    "啟用「%@」的自動登入": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn on Auto Login for “%@”"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "啟用「%@」的自動登入"
+          }
+        }
+      }
+    },
     "啟用網路模組": {
       "extractionState": "manual",
       "localizations": {
@@ -3661,6 +3746,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "啟用網路模組"
+          }
+        }
+      }
+    },
+    "啟用這個網路的自動登入": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn On Auto Login for This Network"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "啟用這個網路的自動登入"
           }
         }
       }
@@ -4137,6 +4239,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "容量"
+          }
+        }
+      }
+    },
+    "密碼": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "a password"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "密碼"
           }
         }
       }
@@ -4646,6 +4765,23 @@
         }
       }
     },
+    "已送出同意，但網路還沒恢復": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The agreement was sent, but the internet isn't back yet"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已送出同意，但網路還沒恢復"
+          }
+        }
+      }
+    },
     "已連接": {
       "extractionState": "manual",
       "localizations": {
@@ -4799,6 +4935,23 @@
         }
       }
     },
+    "已關閉系統的登入視窗": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Closed the system login window"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已關閉系統的登入視窗"
+          }
+        }
+      }
+    },
     "已關閉，不會自動登入或重連": {
       "extractionState": "manual",
       "localizations": {
@@ -4918,6 +5071,23 @@
         }
       }
     },
+    "忘記 %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forget %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "忘記 %@"
+          }
+        }
+      }
+    },
     "快捷鍵不可用": {
       "extractionState": "manual",
       "localizations": {
@@ -5033,6 +5203,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "打不開：%@"
+          }
+        }
+      }
+    },
+    "打開「%@」的登入頁": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open the login page for “%@”"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打開「%@」的登入頁"
           }
         }
       }
@@ -6516,6 +6703,23 @@
         }
       }
     },
+    "檢查網址不對": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "invalid check address"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "檢查網址不對"
+          }
+        }
+      }
+    },
     "檢查網址回 204": {
       "extractionState": "manual",
       "localizations": {
@@ -7281,6 +7485,23 @@
         }
       }
     },
+    "登入成功後關閉系統跳出的登入視窗": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close the system login window after logging in"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登入成功後關閉系統跳出的登入視窗"
+          }
+        }
+      }
+    },
     "登入頁": {
       "extractionState": "manual",
       "localizations": {
@@ -7667,6 +7888,74 @@
         }
       }
     },
+    "直接讀登入頁失敗（%@），改用網頁方式": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't read the login page directly (%@); trying the web view"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "直接讀登入頁失敗（%@），改用網頁方式"
+          }
+        }
+      }
+    },
+    "直接讀登入頁逾時，改用網頁方式": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading the login page directly timed out; trying the web view"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "直接讀登入頁逾時，改用網頁方式"
+          }
+        }
+      }
+    },
+    "直接送出不適用（%@），改用網頁方式": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Direct submission doesn't fit this page (%@); trying the web view"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "直接送出不適用（%@），改用網頁方式"
+          }
+        }
+      }
+    },
+    "看不懂這個登入頁": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "the login page wasn't recognized"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "看不懂這個登入頁"
+          }
+        }
+      }
+    },
     "睡眠 %@，電量由 %lld%% 降到 %lld%%，可能有 App 或周邊裝置讓 Mac 無法進入深度睡眠。": {
       "extractionState": "manual",
       "localizations": {
@@ -7956,6 +8245,23 @@
         }
       }
     },
+    "管理登入頁": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manage login pages"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "管理登入頁"
+          }
+        }
+      }
+    },
     "範圍": {
       "extractionState": "manual",
       "localizations": {
@@ -8003,23 +8309,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "系統"
-          }
-        }
-      }
-    },
-    "系統不允許這個 http 網址": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The system doesn’t allow this http URL"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "系統不允許這個 http 網址"
           }
         }
       }
@@ -8772,23 +9061,6 @@
         }
       }
     },
-    "自動登入": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Auto Login"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "自動登入"
-          }
-        }
-      }
-    },
     "自動登入中…": {
       "extractionState": "manual",
       "localizations": {
@@ -9129,6 +9401,23 @@
         }
       }
     },
+    "要先允許讀取 Wi‑Fi 名稱，才能自動登入": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow access to the Wi‑Fi name to use Auto Login"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "要先允許讀取 Wi‑Fi 名稱，才能自動登入"
+          }
+        }
+      }
+    },
     "要把「%@」移到垃圾桶嗎？": {
       "extractionState": "manual",
       "localizations": {
@@ -9273,6 +9562,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "訊號強度"
+          }
+        }
+      }
+    },
+    "記下「%@」的登入頁：%@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remembered a login page for “%@”: %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "記下「%@」的登入頁：%@"
           }
         }
       }
@@ -9651,6 +9957,23 @@
         }
       }
     },
+    "轉址太多次": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "too many redirects"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "轉址太多次"
+          }
+        }
+      }
+    },
     "轉址網址無效（%lld）": {
       "extractionState": "manual",
       "localizations": {
@@ -9804,6 +10127,40 @@
         }
       }
     },
+    "送出同意失敗（%@），改用網頁方式": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't send the agreement (%@); trying the web view"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "送出同意失敗（%@），改用網頁方式"
+          }
+        }
+      }
+    },
+    "送出同意後沒有收到回應（%@）": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No response after sending the agreement (%@)"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "送出同意後沒有收到回應（%@）"
+          }
+        }
+      }
+    },
     "這個 USB‑C 埠同時傳 USB 3 資料，影像只剩 %lld 條通道（約 %@ Gbps），%@ 約需 %@ Gbps，所以目前只能 %@。可在螢幕選單把 USB‑C 改成影像優先（USB 會降為 2.0），或改用 Thunderbolt／DisplayPort 線。": {
       "extractionState": "manual",
       "localizations": {
@@ -9872,6 +10229,40 @@
         }
       }
     },
+    "這個網路的自動登入已停用": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auto Login is turned off for this network"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這個網路的自動登入已停用"
+          }
+        }
+      }
+    },
+    "這個網路需要登入，但它的自動登入已停用": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This network needs a login, but its Auto Login is turned off"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這個網路需要登入，但它的自動登入已停用"
+          }
+        }
+      }
+    },
     "這個網路需要登入，加入清單後就會自動處理": {
       "extractionState": "manual",
       "localizations": {
@@ -9885,6 +10276,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "這個網路需要登入，加入清單後就會自動處理"
+          }
+        }
+      }
+    },
+    "這個網路需要登入，還沒加入自動登入": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This network needs a login and isn't on your Auto Login list"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這個網路需要登入，還沒加入自動登入"
           }
         }
       }
@@ -10242,23 +10650,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "連線"
-          }
-        }
-      }
-    },
-    "連線中斷": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Connection lost"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "連線中斷"
           }
         }
       }
@@ -10786,23 +11177,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "重開 Wi‑Fi 失敗，請手動開啟 Wi‑Fi"
-          }
-        }
-      }
-    },
-    "錯誤 %lld": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Error %lld"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "錯誤 %lld"
           }
         }
       }
@@ -11806,6 +12180,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "頁面上的按鈕：%@"
+          }
+        }
+      }
+    },
+    "頁面沒有表單": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "the page has no form"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "頁面沒有表單"
           }
         }
       }

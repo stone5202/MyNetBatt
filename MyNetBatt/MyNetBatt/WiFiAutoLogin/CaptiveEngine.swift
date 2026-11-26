@@ -237,16 +237,24 @@ final class CaptiveEngine: ObservableObject {
         setStatus(.loggingIn)
         log.add(String(localized: "「\(rule.displayName)」需要登入，自動處理中"))
         let gen = generation
-        let agent = PortalAgent()
-        let outcome = await agent.run(
-            startURL: start, steps: rule.steps, probeURL: probeURL,
-            shouldContinue: { [weak self] in
-                guard let self else { return false }
-                return gen == self.generation && !self.store.paused
-                    && self.store.rules.first(where: { $0.id == rule.id })?.enabled != false
-                    && self.wifi.snapshot().ssid == loginSSID
-            },
-            log: { [log] in log.add($0) })
+        let shouldContinue: () -> Bool = { [weak self] in
+            guard let self else { return false }
+            return gen == self.generation && !self.store.paused
+                && Self.ruleStillActive(rule, in: self.store.rules, testTrustHost: self.store.testTrustHost)
+                && self.wifi.snapshot().ssid == loginSSID
+        }
+        // 先直接送表單（綁 Wi‑Fi 介面、不開網頁，最快）；看不懂的頁面、讀不到或有教學步驟才用網頁
+        var outcome: AgentOutcome?
+        if rule.steps.isEmpty {
+            outcome = await DirectPortal.run(startURL: start, probeURL: probeURL, shouldContinue: shouldContinue,
+                                             log: { [log] in log.add($0) })
+        }
+        if outcome == nil {
+            let agent = PortalAgent()
+            outcome = await agent.run(startURL: start, steps: rule.steps, probeURL: probeURL,
+                                      shouldContinue: shouldContinue, log: { [log] in log.add($0) })
+        }
+        guard let outcome else { return }
         if gen != generation || store.paused {
             log.add(String(localized: "自動登入已中止（暫停或換了網路）"))
             if store.paused { setStatus(.paused) } else { scheduleCheck(after: 0.5) }
@@ -255,15 +263,18 @@ final class CaptiveEngine: ObservableObject {
         switch outcome {
         case .success(let text):
             // 只有成功才記下登入頁網域（沒有定位權限時用來認網路）
-            if let host = agent.finalHost ?? start.host, host != probeURL.host, rule.portalHost == nil,
-               let i = store.ruleIndex(id: rule.id) {
-                store.rules[i].portalHost = host
+            // 記下這次被轉去的登入頁網域（同一個網路可能有好幾台防火牆）。
+            // 用一開始被轉去的網址，不用網頁最後停的地方（可能是登入後跳去的醫院首頁）。
+            if let host = start.host, host != probeURL.host, let i = store.ruleIndex(id: rule.id),
+               store.rules[i].addHost(host) {
+                log.add(String(localized: "記下「\(rule.displayName)」的登入頁：\(host)"))
             }
             store.recordLogin()
             tracker.recordOnline()
             setStatus(.online)
             let what = text.map { String(localized: "按下「\($0)」") } ?? String(localized: "網路已恢復")
             log.add(String(localized: "自動登入成功（\(what)）"), .success)
+            if store.closeSystemWindow { CaptiveSystemWindow.closeAfterLogin(log: log) }
             if store.notifyOnSuccess {
                 CaptiveConfig.notify(String(localized: "已自動重新連上網路"), String(localized: "\(rule.displayName)：\(what)"), false)
             }
@@ -312,6 +323,14 @@ final class CaptiveEngine: ObservableObject {
         scheduleCheck(after: 10)
     }
 
+    /// 自動登入途中規則還有效嗎：要還在清單裡而且啟用（被刪掉就停）。
+    /// 測試模式（-testTrustHost）的臨時規則不在清單裡，依網域判斷。
+    nonisolated static func ruleStillActive(_ rule: NetworkRule, in rules: [NetworkRule], testTrustHost: String?) -> Bool {
+        if let r = rules.first(where: { $0.id == rule.id }) { return r.enabled }
+        if let t = testTrustHost, rule.portalHost == t { return true }
+        return false
+    }
+
     // MARK: - 測試用
 
     /// 截圖用：直接設定畫面上的狀態（只在 -snapshot 時呼叫）
@@ -326,9 +345,14 @@ final class CaptiveEngine: ObservableObject {
         let r = await CaptiveProbe.check(probeURL)
         log.add("連網檢查：\(r.label)")
         guard case .captive(let url) = r else { return r == .online ? 2 : 3 }
-        let agent = PortalAgent()
-        let outcome = await agent.run(startURL: url ?? probeURL, steps: [], probeURL: probeURL,
+        var outcome = await DirectPortal.run(startURL: url ?? probeURL, probeURL: probeURL,
+                                             shouldContinue: { true }, log: { [log] in log.add($0) })
+        if outcome == nil {
+            let agent = PortalAgent()
+            outcome = await agent.run(startURL: url ?? probeURL, steps: [], probeURL: probeURL,
                                       shouldContinue: { true }, log: { [log] in log.add($0) })
+        }
+        guard let outcome else { return 1 }
         switch outcome {
         case .success(let t): log.add("成功：\(t ?? "-")", .success); return 0
         case .needsInput(let f): log.add("需要輸入：\(f)"); return 4
@@ -339,3 +363,27 @@ final class CaptiveEngine: ObservableObject {
     }
 }
 
+// MARK: - 系統的登入視窗
+
+/// macOS 偵測到登入頁時會自己跳出「Captive Network Assistant」視窗。我們已經登入成功的話，它會一直留在畫面上，
+/// 所以確認連網後幫使用者關掉（和使用者自己按關閉一樣，用一般的結束要求，不強制結束）。
+/// 視窗有時比我們晚跳出來，所以 1、4、10 秒後各看一次。
+@MainActor
+enum CaptiveSystemWindow {
+    static let bundleID = "com.apple.CaptiveNetworkAssistant"
+
+    static func closeAfterLogin(log: CaptiveLog) {
+        Task { @MainActor in
+            var closed = false
+            for delay in [1.0, 3.0, 6.0] {
+                try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+                // 這段時間又斷線（例如被踢）就不關，讓使用者看得到登入頁
+                guard CaptiveEngine.shared.status == .online else { return }
+                for app in NSRunningApplication.runningApplications(withBundleIdentifier: bundleID) where app.terminate() {
+                    closed = true
+                }
+            }
+            if closed { log.add(String(localized: "已關閉系統的登入視窗")) }
+        }
+    }
+}

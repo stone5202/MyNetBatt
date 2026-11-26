@@ -28,11 +28,14 @@ struct LearnedStep: Codable, Hashable, Identifiable {
     var text: String        // 按鈕上的字（找不到選擇器時用來比對）
 }
 
-/// 一個要自動登入的網路。用 Wi‑Fi 名稱或登入頁網域比對，任一個對上就算。
+/// 一個要自動登入的網路。用 Wi‑Fi 名稱或任何一個記下的登入頁網域比對，任一個對上就算。
 struct NetworkRule: Codable, Hashable, Identifiable {
     var id = UUID()
     var ssid: String?
     var portalHost: String?
+    /// 同一個網路的其他登入頁網域（例如醫院不同區域是不同台防火牆：172.16.254.254、172.22.254.254）。
+    /// 一定要是 Optional：舊版存的設定沒有這個欄位，非 Optional 會讀不出來、整份清單不見。
+    var extraHosts: [String]?
     var enabled = true
     var autoReconnect = true
     var steps: [LearnedStep] = []
@@ -43,9 +46,48 @@ struct NetworkRule: Codable, Hashable, Identifiable {
         return String(localized: "未命名網路")
     }
 
+    /// 一筆規則最多記幾個登入頁網域（超過就丟掉最舊的）
+    static let maxHosts = 8
+
+    /// 記下的所有登入頁網域（第一個是 portalHost），不分大小寫去重複
+    var hosts: [String] {
+        var out: [String] = []
+        for h in [portalHost].compactMap({ $0 }) + (extraHosts ?? []) where !h.isEmpty {
+            if !out.contains(where: { $0.caseInsensitiveCompare(h) == .orderedSame }) { out.append(h) }
+        }
+        return out
+    }
+
+    func hasHost(_ host: String) -> Bool {
+        hosts.contains { $0.caseInsensitiveCompare(host) == .orderedSame }
+    }
+
+    /// 記下一個登入頁網域；已經有就不動，回傳是否新增
+    @discardableResult
+    mutating func addHost(_ host: String) -> Bool {
+        let h = host.trimmingCharacters(in: .whitespaces)
+        guard !h.isEmpty, !hasHost(h) else { return false }
+        if (portalHost ?? "").isEmpty {
+            portalHost = h
+        } else {
+            var extra = extraHosts ?? []
+            extra.append(h)
+            if extra.count > Self.maxHosts - 1 { extra.removeFirst(extra.count - (Self.maxHosts - 1)) }
+            extraHosts = extra
+        }
+        return true
+    }
+
+    /// 忘記一個登入頁網域（移掉主要的那個時，由下一個遞補）
+    mutating func removeHost(_ host: String) {
+        var all = hosts.filter { $0.caseInsensitiveCompare(host) != .orderedSame }
+        portalHost = all.isEmpty ? nil : all.removeFirst()
+        extraHosts = all.isEmpty ? nil : all
+    }
+
     func matches(ssid current: String?, host: String?) -> Bool {
         if let ssid, !ssid.isEmpty, ssid == current { return true }
-        if let portalHost, !portalHost.isEmpty, let host, portalHost.caseInsensitiveCompare(host) == .orderedSame { return true }
+        if let host, hasHost(host) { return true }
         return false
     }
 

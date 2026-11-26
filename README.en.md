@@ -18,7 +18,7 @@ MyNetBatt is a native macOS menu bar system monitor that brings battery, network
 >
 > 4.0 was the full redesign: a completely new monitor window with an Overview page, six desktop widgets, accessory battery levels, folder sizes and large files, an English interface, and a welcome tour.
 >
-> Current version: 4.3 · Interface languages: Traditional Chinese, English
+> Current version: 4.3.1 · Interface languages: Traditional Chinese, English
 
 See the [changelog](CHANGELOG.en.md) or [GitHub Releases](https://github.com/stone5202/MyNetBatt/releases) for the changes in each version. The changelog is also available in [Traditional Chinese](CHANGELOG.md).
 
@@ -179,7 +179,7 @@ The helper exposes only methods for reading and changing Low Power Mode. It does
 - Battery history, per-app network usage, and interface preferences are stored locally in `UserDefaults`.
 - MyNetBatt contains no analytics, advertising, or user-tracking SDKs.
 - To display the public IP address, the app sends a request to [`https://api.ipify.org`](https://api.ipify.org); that service will naturally receive the source IP address of the request.
-- Wi‑Fi Auto Login checks for internet access by contacting `http://captive.apple.com` on a timer (only when you switch networks or wake from sleep while the list is empty) and opens the public Wi‑Fi login page locally to tap "Agree". It never reads or fills in usernames or passwords, and its activity log stays on your Mac.
+- Wi‑Fi Auto Login checks for internet access by contacting `http://captive.apple.com` on a timer (only when you switch networks or wake from sleep while the list is empty) and reads the public Wi‑Fi login page to submit "Agree" (opening the page locally to tap it when it can't understand the page). It never reads or fills in usernames or passwords, and its activity log stays on your Mac.
 - Showing the Wi-Fi network name requires Location access (a macOS requirement) and is requested only when you ask for it; MyNetBatt does not record or transmit your location.
 - Storage scans read file sizes only, never file contents. The first scan of Desktop, Documents, and Downloads triggers the standard macOS access prompt.
 - Other hardware and system information comes from built-in macOS APIs and command-line tools.

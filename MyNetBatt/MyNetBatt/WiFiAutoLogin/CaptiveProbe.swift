@@ -22,7 +22,54 @@ nonisolated enum CaptiveProbeResult: Equatable {
 /// 用 Apple 的連網檢查網址判斷是不是被登入頁攔下。不跟隨轉址，才拿得到登入頁網址。
 nonisolated enum CaptiveProbe {
     static let defaultURL = URL(string: "http://captive.apple.com/hotspot-detect.html")!
-    static let safariUA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15"
+
+    /// 用綁 Wi‑Fi 介面的連線檢查（見 ScopedHTTP）：macOS 偵測到登入頁時一般連線會被擋成「未連線」，
+    /// 綁介面的才拿得到登入頁。不跟隨轉址，才拿得到登入頁網址。
+    /// 綁介面的檢查逾時／連不上／查不到主機時，再用系統一般路線（會走代理伺服器）檢查一次，
+    /// 避免「只能經代理上網」的網路被當成斷線而一直重開 Wi‑Fi。
+    static func check(_ url: URL) async -> CaptiveProbeResult {
+        let scoped = await checkScoped(url)
+        guard needsSystemRouteCheck(scoped) else { return scoped }
+        return combine(scoped: scoped, system: await checkSystemRoute(url))
+    }
+
+    static func checkScoped(_ url: URL) async -> CaptiveProbeResult {
+        do {
+            // 檢查網址本身就是本機（測試用設定）才允許連本機
+            let r = try await ScopedHTTP.request(url, allowLoopback: url.host.map(ScopedHTTP.isLoopback) ?? false,
+                                                 timeout: 6, maxBytes: 64 * 1024)
+            return classify(status: r.status, location: r.header("location"), body: r.text, base: url)
+        } catch let e as ScopedHTTPError {
+            switch e {
+            case .cancelled: return .cancelled
+            case .timedOut: return .offline(String(localized: "逾時"))
+            case .dnsFailed: return .offline(String(localized: "找不到主機"))
+            case .networkDown: return .offline(String(localized: "未連線"))
+            case .refused: return .offline(String(localized: "連不上主機"))
+            case .badResponse, .incomplete, .tooLarge: return .inconclusive(String(localized: "回應格式不對"))
+            case .invalidURL, .loopbackBlocked: return .inconclusive(String(localized: "檢查網址不對"))
+            case .other(let why): return .offline(why)
+            }
+        } catch is CancellationError {
+            return .cancelled
+        } catch {
+            return .offline(error.localizedDescription)
+        }
+    }
+
+    /// 綁介面檢查的結果是不是「可能只是走不到」：逾時、連不上、查不到主機（被擋成「未連線」的不算）
+    static func needsSystemRouteCheck(_ r: CaptiveProbeResult) -> Bool {
+        guard case .offline(let why) = r else { return false }
+        return why != String(localized: "未連線")
+    }
+
+    /// 合併兩種檢查（純函式）：系統路線通了就算有網路／被攔；系統路線也不通就維持原本的結果。
+    static func combine(scoped: CaptiveProbeResult, system: CaptiveProbeResult) -> CaptiveProbeResult {
+        switch system {
+        case .online, .captive: return system
+        default: return scoped
+        }
+    }
 
     nonisolated private final class NoRedirect: NSObject, URLSessionTaskDelegate {
         func urlSession(_ session: URLSession, task: URLSessionTask,
@@ -33,7 +80,7 @@ nonisolated enum CaptiveProbe {
         }
     }
 
-    private static let session: URLSession = {
+    private static let systemSession: URLSession = {
         let c = URLSessionConfiguration.ephemeral
         c.urlCache = nil
         c.requestCachePolicy = .reloadIgnoringLocalAndRemoteCacheData
@@ -44,29 +91,16 @@ nonisolated enum CaptiveProbe {
         return URLSession(configuration: c)
     }()
 
-    static func check(_ url: URL) async -> CaptiveProbeResult {
+    /// 系統一般路線（URLSession，會套用代理伺服器設定）
+    static func checkSystemRoute(_ url: URL) async -> CaptiveProbeResult {
         var req = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalAndRemoteCacheData, timeoutInterval: 6)
-        req.setValue(safariUA, forHTTPHeaderField: "User-Agent")
-        req.setValue("no-cache", forHTTPHeaderField: "Cache-Control")
+        req.setValue(ScopedHTTP.userAgent, forHTTPHeaderField: "User-Agent")
         do {
-            let (data, resp) = try await session.data(for: req, delegate: NoRedirect())
+            let (data, resp) = try await systemSession.data(for: req, delegate: NoRedirect())
             guard let http = resp as? HTTPURLResponse else { return .offline(String(localized: "回應格式不對")) }
-            let body = String(decoding: data.prefix(64 * 1024), as: UTF8.self)
-            return classify(status: http.statusCode,
-                            location: http.value(forHTTPHeaderField: "Location"),
-                            body: body, base: url)
-        } catch let e as URLError {
-            switch e.code {
-            case .cancelled: return .cancelled
-            case .appTransportSecurityRequiresSecureConnection: return .inconclusive(String(localized: "系統不允許這個 http 網址"))
-            case .timedOut: return .offline(String(localized: "逾時"))
-            case .cannotFindHost, .dnsLookupFailed: return .offline(String(localized: "找不到主機"))
-            case .notConnectedToInternet: return .offline(String(localized: "未連線"))
-            case .cannotConnectToHost: return .offline(String(localized: "連不上主機"))
-            case .networkConnectionLost: return .offline(String(localized: "連線中斷"))
-            default: return .offline(String(localized: "錯誤 \(e.code.rawValue)"))
-            }
-        } catch is CancellationError {
+            return classify(status: http.statusCode, location: http.value(forHTTPHeaderField: "Location"),
+                            body: String(decoding: data.prefix(64 * 1024), as: UTF8.self), base: url)
+        } catch let e as URLError where e.code == .cancelled {
             return .cancelled
         } catch {
             return .offline(error.localizedDescription)
